@@ -1,0 +1,14 @@
+# Ignore Visual Studio / C# leftovers
+*.sln
+*.csproj
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore environment files
+.env
+
+# Ignore OS junk
+.DS_Store
+Thumbs.db
