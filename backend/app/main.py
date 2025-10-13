@@ -1,0 +1,63 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
+from app.config import settings
+from app.api import game, leaderboard
+from app.websockets import game_ws
+from app.database import init_db
+import os
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize database on startup"""
+    print("🚀 Starting Ape In! Game API...")
+    print("📊 Initializing database...")
+    await init_db()
+    print("✅ Database initialized successfully!")
+    yield
+    print("👋 Shutting down...")
+
+
+app = FastAPI(
+    title="Ape In! Game API",
+    description="Backend API for Ape In! push-your-luck card and dice game",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS.split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Serve static assets (card images) if assets directory exists
+assets_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "assets")
+if os.path.exists(assets_path):
+    app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+    print(f"✅ Serving assets from: {assets_path}")
+
+# Include routers
+app.include_router(game.router, prefix="/api/game", tags=["game"])
+app.include_router(leaderboard.router, prefix="/api/leaderboard", tags=["leaderboard"])
+app.include_router(game_ws.router, prefix="/ws", tags=["websocket"])
+
+
+@app.get("/")
+async def root():
+    return {"message": "Ape In! Game API", "status": "running"}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
