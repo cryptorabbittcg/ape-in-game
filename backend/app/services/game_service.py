@@ -49,6 +49,7 @@ class GameService:
             is_ai=False
         )
         self.db.add(player)
+        await self.db.flush()  # Flush to get player.id
 
         # Create AI opponent if single-player mode
         if mode in ["sandy", "aida", "lana", "enj1n", "nifty"]:
@@ -65,7 +66,7 @@ class GameService:
         # Create game state
         game_state = GameState(
             game_id=game.id,
-            current_player_id=player.id,
+            current_player_id=player.id,  # Now player.id is guaranteed to be set
             used_bearish_flags=[],
             game_log=[]
         )
