@@ -314,18 +314,32 @@ class GameService:
         while ai_player.turn_score < target_turn_score:
             # Draw card
             card = await self.draw_card(game_id, ai_player.id)
+            
+            # Special handling for Ape In card
+            if card.name == "Ape In!":
+                actions.append({
+                    "type": "ape_in",
+                    "card": card.model_dump(),
+                    "message": "Ape In! activated"
+                })
+                continue  # AI continues to draw another card
+            
+            # Log the draw action
             actions.append({
                 "type": "draw",
                 "card": card.model_dump()
             })
-            
-            if card.name == "Ape In!":
-                continue  # AI continues after Ape In
 
             # Roll dice
             roll, success, message = await self.roll_dice_action(
                 game_id, ai_player.id, dice_profile=ai_type
             )
+            
+            # Refresh ai_player to get updated turn_score
+            result = await self.db.execute(
+                select(Player).where(Player.id == ai_player.id)
+            )
+            ai_player = result.scalar_one()
             
             actions.append({
                 "type": "roll",

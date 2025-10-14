@@ -98,6 +98,7 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
 
     try {
       const result = await gameAPI.rollDice(gameId)
+      console.log('Roll result:', result) // Debug logging
       setLastRoll(result.value)
 
       setTimeout(async () => {
@@ -105,10 +106,11 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
 
         if (result.success) {
           // Show floating success message with sats gained (KEEP CARD VISIBLE)
-          const satsGained = result.satsGained || currentCard.value
+          const satsGained = result.satsGained !== undefined ? result.satsGained : currentCard.value
+          console.log('Sats gained:', satsGained, 'Current card value:', currentCard.value, 'Ape In active:', apeInActive) // Debug
           setFloatingMessage({
             text: `Great roll! +${satsGained} sats`,
-            sats: result.turnScore || playerTurnScore + satsGained
+            sats: result.turnScore
           })
           
           // Wait for message to display, THEN clear card
@@ -158,7 +160,21 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
     for (let i = 0; i < botActions.length; i++) {
       const action = botActions[i]
       
-      if (action.type === 'draw') {
+      if (action.type === 'ape_in') {
+        // Handle Ape In card special case
+        const cardData = action.card
+        setBotTurnData({card: cardData, roll: 0, turnSats: previousTurnScore})
+        setFloatingMessage({text: `${opponentName} draws APE IN! 🚀`})
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Clear and show "Next card doubled" message
+        setFloatingMessage({text: `Next card value doubled!`})
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        setFloatingMessage(null)
+        setBotTurnData(prev => prev ? {...prev, card: null} : null)
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+      } else if (action.type === 'draw') {
         // Step 2: Show card being drawn
         const cardData = action.card
         setBotTurnData({card: cardData, roll: 0, turnSats: previousTurnScore})
