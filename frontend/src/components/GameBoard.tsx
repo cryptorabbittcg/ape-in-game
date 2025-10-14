@@ -32,6 +32,8 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
   const [isDrawing, setIsDrawing] = useState(false)
   const [isRolling, setIsRolling] = useState(false)
   const [floatingMessage, setFloatingMessage] = useState<{text: string, sats?: number} | null>(null)
+  const [botTurnData, setBotTurnData] = useState<{card: any, roll: number, turnSats: number} | null>(null)
+  const [isBotPlaying, setIsBotPlaying] = useState(false)
 
   // Refresh game state from backend
   const refreshGameState = async () => {
@@ -103,11 +105,20 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
           // Auto-hide message after 2 seconds
           setTimeout(() => setFloatingMessage(null), 2000)
         } else {
+          // Player busted - show message then replay bot turn
           setFloatingMessage({text: result.message || 'Busted! Turn ended.'})
           setCurrentCard(null)
-          await refreshGameState()
           
-          setTimeout(() => setFloatingMessage(null), 2000)
+          setTimeout(async () => {
+            setFloatingMessage(null)
+            
+            // Replay bot's turn if actions are provided
+            if (result.botActions && result.botActions.length > 0) {
+              await replayBotTurn(result.botActions)
+            } else {
+              await refreshGameState()
+            }
+          }, 1500)
         }
       }, 1000)
     } catch (error) {
@@ -117,17 +128,65 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
     }
   }
 
+  // Replay bot's turn with animations
+  const replayBotTurn = async (botActions: any[]) => {
+    if (!botActions || botActions.length === 0) return
+    
+    setIsBotPlaying(true)
+    let botTurnScore = 0
+    
+    setFloatingMessage({text: `${opponentName}'s turn...`})
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    for (const action of botActions) {
+      if (action.type === 'draw') {
+        setBotTurnData({card: action.card, roll: 0, turnSats: botTurnScore})
+        setFloatingMessage({text: `${opponentName} drew ${action.card.name}`})
+        await new Promise(resolve => setTimeout(resolve, 1200))
+      } else if (action.type === 'roll') {
+        setBotTurnData(prev => prev ? {...prev, roll: action.roll} : null)
+        setFloatingMessage({text: `${opponentName} rolled ${action.roll}`})
+        await new Promise(resolve => setTimeout(resolve, 800))
+        
+        if (action.success) {
+          botTurnScore += action.satsGained || 0
+          setBotTurnData(prev => prev ? {...prev, turnSats: botTurnScore} : null)
+          setFloatingMessage({text: `${opponentName} gained ${action.satsGained} sats!`, sats: botTurnScore})
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        } else {
+          setFloatingMessage({text: `${opponentName} ${action.message}`})
+          await new Promise(resolve => setTimeout(resolve, 1500))
+        }
+      } else if (action.type === 'stack') {
+        setFloatingMessage({text: `${opponentName} stacked ${action.sats} sats!`})
+        await new Promise(resolve => setTimeout(resolve, 1500))
+      }
+    }
+    
+    setBotTurnData(null)
+    setIsBotPlaying(false)
+    await refreshGameState()
+    setFloatingMessage(null)
+  }
+
   const handleStackSats = async () => {
     if (!isPlayerTurn || playerTurnScore === 0) return
 
     try {
-      setFloatingMessage({text: 'Stacking sats...'})
+      setFloatingMessage({text: 'Banking sats...'})
       const result = await gameAPI.stackSats(gameId)
-      setGameState(result)
-      setCurrentCard(null)
-      setFloatingMessage({text: `${playerTurnScore} sats banked! Opponent's turn.`})
       
-      setTimeout(() => setFloatingMessage(null), 2000)
+      setTimeout(async () => {
+        setFloatingMessage(null)
+        
+        // Replay bot's turn if actions are provided
+        if (result.botActions && result.botActions.length > 0) {
+          await replayBotTurn(result.botActions)
+        }
+        
+        // Final state update
+        await refreshGameState()
+      }, 800)
     } catch (error) {
       console.error('Failed to stack sats:', error)
       setFloatingMessage({text: 'Failed to stack sats. Please try again.'})
@@ -187,43 +246,53 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
         <div className="game-board text-center">
           <h3 className="text-xl font-semibold mb-2 text-slate-300">{opponentName}</h3>
           <div className="score-display">{opponentScore}</div>
+          {isBotPlaying && botTurnData && (
+            <div className="text-sm text-emerald-400 mt-2 animate-pulse">
+              Turn Sats: {botTurnData.turnSats}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Enhanced Game Area */}
       <div className="game-board">
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 lg:gap-12 py-6">
-          {/* Card Section - Clean and minimal */}
+          {/* Card Section - Shows player OR bot card */}
           <div className="flex flex-col items-center space-y-2 w-full md:w-auto">
             <div className="transform-gpu">
               <Card
-                card={currentCard}
-                isRevealing={isDrawing}
+                card={isBotPlaying && botTurnData ? botTurnData.card : currentCard}
+                isRevealing={isBotPlaying ? true : isDrawing}
               />
             </div>
-            {!currentCard && !isDrawing && (
+            {!currentCard && !isDrawing && !isBotPlaying && (
               <div className="text-xs text-slate-500 animate-pulse">👆 Click to draw</div>
+            )}
+            {isBotPlaying && (
+              <div className="text-sm text-emerald-400 font-semibold animate-pulse">
+                {opponentName}'s Turn
+              </div>
             )}
           </div>
 
-          {/* Dice Section with Action Buttons */}
+          {/* Dice Section - Shows player OR bot roll */}
           <div className="flex flex-col items-center space-y-2 sm:space-y-3 w-full sm:w-auto">
             <div className="h-6 text-sm text-slate-400">
-              {isRolling ? 'Rolling...' : 'Dice'}
+              {isRolling || isBotPlaying ? 'Rolling...' : 'Dice'}
             </div>
             
             <Dice 
-              value={lastRoll} 
-              isRolling={isRolling}
+              value={isBotPlaying && botTurnData ? botTurnData.roll : lastRoll} 
+              isRolling={isRolling || isBotPlaying}
             />
 
             {/* Stacked Action Buttons */}
             <div className="flex flex-col gap-1.5 sm:gap-2 mt-3 sm:mt-4 w-full min-w-[200px] sm:min-w-[160px]">
               <button
                 onClick={handleDrawCard}
-                disabled={!isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing}
+                disabled={!isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying}
                 className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
-                  !isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing
+                  !isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying
                     ? 'bg-slate-600 opacity-50 cursor-not-allowed'
                     : apeInActive
                     ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 animate-pulse ring-2 ring-green-400'
@@ -235,9 +304,9 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
 
               <button
                 onClick={handleRollDice}
-                disabled={!isPlayerTurn || !currentCard || isRolling}
+                disabled={!isPlayerTurn || !currentCard || isRolling || isBotPlaying}
                 className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
-                  !isPlayerTurn || !currentCard || isRolling
+                  !isPlayerTurn || !currentCard || isRolling || isBotPlaying
                     ? 'bg-slate-600 opacity-50 cursor-not-allowed'
                     : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 animate-pulse'
                 }`}
@@ -247,9 +316,9 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
 
               <button
                 onClick={handleStackSats}
-                disabled={!isPlayerTurn || playerTurnScore === 0}
+                disabled={!isPlayerTurn || playerTurnScore === 0 || isBotPlaying}
                 className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
-                  !isPlayerTurn || playerTurnScore === 0
+                  !isPlayerTurn || playerTurnScore === 0 || isBotPlaying
                     ? 'bg-slate-600 opacity-50 cursor-not-allowed'
                     : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 animate-pulse'
                 }`}
