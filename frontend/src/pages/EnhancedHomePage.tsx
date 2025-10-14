@@ -106,33 +106,38 @@ export default function EnhancedHomePage() {
   const guideSteps = [
     {
       id: 'draw',
-      icon: '🎴',
+      icon: '/assets/cards/Historacle_1_Sats.jpg',
       title: 'Draw Cards',
       desc: 'Click the deck to draw cards and earn sats (points). Each card type has different values!',
+      isImage: true,
     },
     {
       id: 'roll',
       icon: '🎲',
       title: 'Roll Dice',
       desc: 'After drawing, roll the dice. Roll a 1 and you lose all turn sats. Keep rolling to stack more!',
+      isImage: false,
     },
     {
       id: 'stack',
       icon: '💰',
       title: 'Stack Sats',
       desc: 'Bank your turn sats anytime to add them to your score. First to reach the target wins!',
+      isImage: false,
     },
     {
       id: 'bears',
       icon: '🐻',
       title: 'Watch for Bears',
       desc: 'Bearish cards threaten your score! Roll even to dodge penalties: reset, half, or -10 points.',
+      isImage: false,
     },
     {
       id: 'apein',
       icon: '🚀',
       title: 'Ape In!',
       desc: 'Draw this special card to DOUBLE your next card\'s value. Risk it all for massive gains!',
+      isImage: false,
     },
   ]
 
@@ -194,7 +199,11 @@ export default function EnhancedHomePage() {
                 className="relative group"
               >
                 <div className="px-3 py-2 rounded-lg bg-slate-800/80 backdrop-blur border border-slate-700/50 hover:border-purple-500/50 transition-all cursor-help flex items-center gap-2">
-                  <span className="text-xl">{step.icon}</span>
+                  {step.isImage ? (
+                    <img src={step.icon} alt={step.title} className="w-6 h-6 rounded object-cover" />
+                  ) : (
+                    <span className="text-xl">{step.icon}</span>
+                  )}
                   <span className="text-xs font-semibold text-slate-300">{step.title}</span>
                   <motion.span
                     animate={{ rotate: hoveredGuide === step.id ? 180 : 0 }}
