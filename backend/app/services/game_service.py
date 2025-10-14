@@ -141,6 +141,10 @@ class GameService:
         # Store card in state
         state.current_card = card.model_dump()
         
+        # Activate Ape In effect if Ape In card is drawn
+        if card.name == "Ape In!":
+            state.ape_in_active = True
+        
         await self.db.commit()
         return card
 
