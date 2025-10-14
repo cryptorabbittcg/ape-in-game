@@ -34,7 +34,7 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
   const [isDrawing, setIsDrawing] = useState(false)
   const [isRolling, setIsRolling] = useState(false)
   const [floatingMessage, setFloatingMessage] = useState<{text: string, sats?: number} | null>(null)
-  const [botTurnData, setBotTurnData] = useState<{card: any, roll: number, turnSats: number} | null>(null)
+  const [botTurnData, setBotTurnData] = useState<{card: any, roll: number, turnSats: number, isRolling?: boolean} | null>(null)
   const [isBotPlaying, setIsBotPlaying] = useState(false)
   const [showRoundPopup, setShowRoundPopup] = useState(false)
   const [currentRound, setCurrentRound] = useState(1)
@@ -163,7 +163,7 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
       if (action.type === 'ape_in') {
         // Handle Ape In card special case
         const cardData = action.card
-        setBotTurnData({card: cardData, roll: 0, turnSats: previousTurnScore})
+        setBotTurnData({card: cardData, roll: 0, turnSats: previousTurnScore, isRolling: false})
         setFloatingMessage({text: `${opponentName} draws APE IN! 🚀`})
         await new Promise(resolve => setTimeout(resolve, 2000))
         
@@ -177,7 +177,7 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
       } else if (action.type === 'draw') {
         // Step 2: Show card being drawn
         const cardData = action.card
-        setBotTurnData({card: cardData, roll: 0, turnSats: previousTurnScore})
+        setBotTurnData({card: cardData, roll: 0, turnSats: previousTurnScore, isRolling: false})
         setFloatingMessage({text: `${opponentName} draws a card...`})
         await new Promise(resolve => setTimeout(resolve, 1000))
         
@@ -199,12 +199,16 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
           setFloatingMessage({text: `${opponentName} rolls...`})
           await new Promise(resolve => setTimeout(resolve, 1000))
           
-          // Step 6: Show the roll result with dice animation
-          setBotTurnData(prev => prev ? {...prev, roll: rollValue} : null)
+          // Step 6: Start dice rolling animation
+          setBotTurnData(prev => prev ? {...prev, isRolling: true} : null)
+          await new Promise(resolve => setTimeout(resolve, 800))
+          
+          // Step 7: Show the roll result
+          setBotTurnData(prev => prev ? {...prev, roll: rollValue, isRolling: false} : null)
           setFloatingMessage({text: `Rolled: ${rollValue}`})
           await new Promise(resolve => setTimeout(resolve, 1200))
           
-          // Step 7: Show outcome
+          // Step 8: Show outcome
           if (isSuccess) {
             previousTurnScore = currentTurnScore
             setBotTurnData(prev => prev ? {...prev, turnSats: currentTurnScore} : null)
@@ -218,9 +222,9 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
           }
         }
         
-        // Step 8: Clear card and pause before next action
+        // Step 9: Clear card and pause before next action
         setFloatingMessage(null)
-        setBotTurnData(prev => prev ? {...prev, card: null, roll: 0} : null)
+        setBotTurnData(prev => prev ? {...prev, card: null, roll: 0, isRolling: false} : null)
         await new Promise(resolve => setTimeout(resolve, 800))
         
       } else if (action.type === 'stack') {
@@ -354,7 +358,7 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
             
             <Dice 
               value={isBotPlaying && botTurnData ? botTurnData.roll : lastRoll} 
-              isRolling={isRolling || isBotPlaying}
+              isRolling={isRolling || (botTurnData?.isRolling ?? false)}
             />
 
             {/* Stacked Action Buttons */}
