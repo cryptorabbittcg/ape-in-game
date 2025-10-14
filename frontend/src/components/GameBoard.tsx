@@ -56,8 +56,15 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
       await refreshGameState()
 
       if (card.name === 'Ape In!') {
-        setFloatingMessage({text: '🚀 APE IN! Next card value is doubled!'})
+        // Ape In! card - show message, clear card, allow immediate next draw
+        setFloatingMessage({text: '🚀 APE IN ACTIVATED! Next card value DOUBLED!'})
         useGameStore.getState().activateApeIn()
+        
+        // Clear the Ape In card after 1.5 seconds to allow next draw
+        setTimeout(() => {
+          setCurrentCard(null)
+          setFloatingMessage(null)
+        }, 1500)
       }
 
       setIsDrawing(false)
@@ -186,35 +193,17 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
       {/* Enhanced Game Area */}
       <div className="game-board">
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 lg:gap-12 py-6">
-          {/* Card Section - Larger and more prominent */}
-          <div className="flex flex-col items-center space-y-3 w-full md:w-auto">
-            <div className="h-6 text-sm font-semibold text-slate-300 flex items-center gap-2">
-              {isDrawing ? (
-                <>
-                  <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                    ⏳
-                  </motion.span>
-                  Drawing...
-                </>
-              ) : currentCard ? (
-                <>
-                  <span className="text-green-400">✨</span>
-                  Card Drawn
-                </>
-              ) : (
-                <>
-                  <span>🎴</span>
-                  Click to Draw
-                </>
-              )}
-            </div>
-            
+          {/* Card Section - Clean and minimal */}
+          <div className="flex flex-col items-center space-y-2 w-full md:w-auto">
             <div className="transform-gpu">
               <Card
                 card={currentCard}
                 isRevealing={isDrawing}
               />
             </div>
+            {!currentCard && !isDrawing && (
+              <div className="text-xs text-slate-500 animate-pulse">👆 Click to draw</div>
+            )}
           </div>
 
           {/* Dice Section with Action Buttons */}
@@ -232,14 +221,16 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
             <div className="flex flex-col gap-1.5 sm:gap-2 mt-3 sm:mt-4 w-full min-w-[200px] sm:min-w-[160px]">
               <button
                 onClick={handleDrawCard}
-                disabled={!isPlayerTurn || !!currentCard || isDrawing}
+                disabled={!isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing}
                 className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
-                  !isPlayerTurn || !!currentCard || isDrawing
+                  !isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing
                     ? 'bg-slate-600 opacity-50 cursor-not-allowed'
+                    : apeInActive
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 animate-pulse ring-2 ring-green-400'
                     : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 animate-pulse'
                 }`}
               >
-                {isDrawing ? '⏳ Drawing...' : '🎴 Draw Card'}
+                {isDrawing ? '⏳ Drawing...' : apeInActive ? '🚀 Draw (APE IN!)' : '🎴 Draw Card'}
               </button>
 
               <button
