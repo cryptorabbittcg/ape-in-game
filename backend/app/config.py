@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./ape_in_game.db"
     REDIS_URL: str = "redis://localhost:6379"
     SECRET_KEY: str = "dev-secret-key-change-in-production"
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173,https://ape-in-game.vercel.app"
     
     # Game settings
     MAX_SCORE: int = 150
