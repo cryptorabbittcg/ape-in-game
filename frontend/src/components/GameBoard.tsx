@@ -133,7 +133,7 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
     if (!botActions || botActions.length === 0) return
     
     setIsBotPlaying(true)
-    let botTurnScore = 0
+    let previousTurnScore = 0
     
     // Step 1: Announce bot's turn
     setFloatingMessage({text: `${opponentName}'s turn...`})
@@ -141,17 +141,18 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
     setFloatingMessage(null)
     await new Promise(resolve => setTimeout(resolve, 500))
     
-    // Process each action pair (draw + roll) ONE AT A TIME
+    // Process each action sequentially
     for (let i = 0; i < botActions.length; i++) {
       const action = botActions[i]
       
       if (action.type === 'draw') {
         // Step 2: Show card being drawn
-        setBotTurnData({card: action.card, roll: 0, turnSats: botTurnScore})
-        setFloatingMessage({text: `${opponentName} draws...`})
+        const cardData = action.card
+        setBotTurnData({card: cardData, roll: 0, turnSats: previousTurnScore})
+        setFloatingMessage({text: `${opponentName} draws a card...`})
         await new Promise(resolve => setTimeout(resolve, 1000))
         
-        // Step 3: Pause to show the card
+        // Step 3: Pause to show the card clearly
         setFloatingMessage(null)
         await new Promise(resolve => setTimeout(resolve, 1000))
         
@@ -160,21 +161,25 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
         if (nextAction && nextAction.type === 'roll') {
           i++ // Skip the roll action in next iteration
           
+          const rollValue = nextAction.value
+          const isSuccess = nextAction.success
+          const currentTurnScore = nextAction.turnScore || 0
+          const satsGained = currentTurnScore - previousTurnScore
+          
           // Step 5: Announce rolling
-          setFloatingMessage({text: `${opponentName} rolls dice...`})
+          setFloatingMessage({text: `${opponentName} rolls...`})
           await new Promise(resolve => setTimeout(resolve, 1000))
           
-          // Step 6: Show the roll result
-          setBotTurnData(prev => prev ? {...prev, roll: nextAction.roll} : null)
-          setFloatingMessage({text: `Rolled: ${nextAction.roll}`})
+          // Step 6: Show the roll result with dice animation
+          setBotTurnData(prev => prev ? {...prev, roll: rollValue} : null)
+          setFloatingMessage({text: `Rolled: ${rollValue}`})
           await new Promise(resolve => setTimeout(resolve, 1200))
           
           // Step 7: Show outcome
-          if (nextAction.success) {
-            const satsGained = nextAction.satsGained || 0
-            botTurnScore += satsGained
-            setBotTurnData(prev => prev ? {...prev, turnSats: botTurnScore} : null)
-            setFloatingMessage({text: `Success! +${satsGained} sats`, sats: botTurnScore})
+          if (isSuccess) {
+            previousTurnScore = currentTurnScore
+            setBotTurnData(prev => prev ? {...prev, turnSats: currentTurnScore} : null)
+            setFloatingMessage({text: `+${satsGained} sats`, sats: currentTurnScore})
             await new Promise(resolve => setTimeout(resolve, 1500))
           } else {
             const message = nextAction.message || 'Busted!'
@@ -191,7 +196,8 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
         
       } else if (action.type === 'stack') {
         // Bot decided to stack
-        setFloatingMessage({text: `${opponentName} banks ${botTurnScore} sats!`})
+        const finalScore = action.finalScore || 0
+        setFloatingMessage({text: `${opponentName} stacks ${previousTurnScore} sats!`})
         await new Promise(resolve => setTimeout(resolve, 2000))
       }
     }
@@ -200,7 +206,7 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
     setBotTurnData(null)
     setIsBotPlaying(false)
     setFloatingMessage({text: 'Your turn!'})
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 1200))
     setFloatingMessage(null)
     await refreshGameState()
   }
