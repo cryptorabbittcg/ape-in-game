@@ -137,19 +137,19 @@ export default function EnhancedHomePage() {
   ]
 
   return (
-    <div className="relative min-h-screen pt-16 pb-8">
+    <div className="relative min-h-screen">
       {/* Particle Background */}
       <ParticleBackground />
 
-      <div className="container mx-auto px-4 py-4 relative z-10 max-w-7xl">
+      <div className="container mx-auto px-4 pt-4 pb-4 relative z-10 max-w-6xl">
         {/* Compact Banner */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex justify-center mb-4"
+          className="flex justify-center mb-3"
         >
-          <motion.div whileHover={{ scale: 1.02 }} className="relative max-w-md w-full">
+          <motion.div whileHover={{ scale: 1.02 }} className="relative max-w-sm w-full">
             <img 
               src="/assets/cxrh-banner.png" 
               alt="CxRH Banner" 
@@ -163,12 +163,12 @@ export default function EnhancedHomePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="text-center mb-6"
+          className="text-center mb-3"
         >
-          <h1 className="text-4xl md:text-5xl font-display font-black mb-2 bg-gradient-to-r from-purple-400 via-pink-500 to-orange-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-display font-black mb-1 bg-gradient-to-r from-purple-400 via-pink-500 to-orange-500 bg-clip-text text-transparent">
             APE IN!
           </h1>
-          <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
+          <p className="text-xs md:text-sm text-slate-400 max-w-2xl mx-auto">
             Push your luck • Draw cards • Roll dice • Stack sats to victory!
           </p>
         </motion.div>
@@ -178,7 +178,7 @@ export default function EnhancedHomePage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="mb-6"
+          className="mb-4"
         >
           <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto">
             {guideSteps.map((step, idx) => (
@@ -227,9 +227,9 @@ export default function EnhancedHomePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="mb-4"
+          className="mb-2"
         >
-          <h2 className="text-xl font-bold text-center mb-4 text-slate-200">Choose Your Opponent</h2>
+          <h2 className="text-lg font-bold text-center mb-3 text-slate-200">Choose Your Opponent</h2>
           
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 max-w-5xl mx-auto">
             {gameModes.map((gameMode, index) => (
