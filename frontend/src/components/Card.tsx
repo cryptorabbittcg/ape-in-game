@@ -25,15 +25,20 @@ const getCardGradient = (type: CardType['type']) => {
 }
 
 export default function Card({ card, isRevealing = false, onClick }: CardProps) {
+  // Show card back when no card
   if (!card) {
     return (
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-48 h-72 bg-gradient-to-br from-slate-700 to-slate-900 rounded-xl border-2 border-slate-600 flex items-center justify-center cursor-pointer shadow-2xl"
+        className="w-48 h-72 rounded-xl shadow-2xl overflow-hidden cursor-pointer"
         onClick={onClick}
       >
-        <div className="text-6xl">🎴</div>
+        <img
+          src="/assets/cardback.jpg"
+          alt="Card Back"
+          className="w-full h-full object-cover"
+        />
       </motion.div>
     )
   }
@@ -49,17 +54,17 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
       onClick={onClick}
     >
       <div className={`bg-gradient-to-br ${getCardGradient(card.type)} h-full p-1`}>
-        <div className="bg-slate-900 rounded-lg h-full p-4 flex flex-col">
+        <div className="bg-slate-900 rounded-lg h-full p-2 flex flex-col">
           {/* Card Type Badge */}
-          <div className="text-xs font-semibold text-slate-400 uppercase mb-2">{card.type}</div>
+          <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1">{card.type}</div>
 
-          {/* Card Image */}
-          <div className="flex-grow flex items-center justify-center mb-4">
+          {/* Card Image - takes most of the space */}
+          <div className="flex-grow flex items-center justify-center overflow-hidden rounded-lg mb-2">
             {card.image_url ? (
               <img
                 src={card.image_url}
                 alt={card.name}
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-contain"
               />
             ) : (
               <div className="text-6xl">
@@ -68,13 +73,13 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
             )}
           </div>
 
-          {/* Card Name */}
+          {/* Card Name - compact */}
           <div className="text-center">
-            <h3 className="text-lg font-bold text-white mb-1">{card.name}</h3>
+            <h3 className="text-sm font-bold text-white mb-1 line-clamp-1">{card.name}</h3>
             {card.type !== 'Bearish' ? (
-              <div className="text-2xl font-bold text-yellow-400">{card.value} sats</div>
+              <div className="text-xl font-bold text-yellow-400">{card.value} sats</div>
             ) : (
-              <div className="text-xl font-bold text-red-400">{card.penalty}</div>
+              <div className="text-base font-bold text-red-400">{card.penalty}</div>
             )}
           </div>
         </div>

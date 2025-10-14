@@ -31,27 +31,39 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
 
   const [isDrawing, setIsDrawing] = useState(false)
   const [isRolling, setIsRolling] = useState(false)
-  const [message, setMessage] = useState('')
+  const [floatingMessage, setFloatingMessage] = useState<{text: string, sats?: number} | null>(null)
+
+  // Refresh game state from backend
+  const refreshGameState = async () => {
+    try {
+      const gameData = await gameAPI.getGameState(gameId)
+      setGameState(gameData)
+    } catch (error) {
+      console.error('Failed to refresh game state:', error)
+    }
+  }
 
   const handleDrawCard = async () => {
     if (!isPlayerTurn || isDrawing) return
 
     setIsDrawing(true)
-    setMessage('')
+    setFloatingMessage(null)
 
     try {
       const card = await gameAPI.drawCard(gameId)
-      setCurrentCard(card)
+      
+      // Refresh game state to sync
+      await refreshGameState()
 
       if (card.name === 'Ape In!') {
-        setMessage('🚀 APE IN! Next card value is doubled!')
+        setFloatingMessage({text: '🚀 APE IN! Next card value is doubled!'})
         useGameStore.getState().activateApeIn()
       }
 
       setIsDrawing(false)
     } catch (error) {
       console.error('Failed to draw card:', error)
-      setMessage('Failed to draw card. Please try again.')
+      setFloatingMessage({text: 'Failed to draw card. Please try again.'})
       setIsDrawing(false)
     }
   }
@@ -60,25 +72,40 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
     if (!isPlayerTurn || !currentCard || isRolling) return
 
     setIsRolling(true)
-    setMessage('')
+    setFloatingMessage(null)
 
     try {
       const result = await gameAPI.rollDice(gameId)
       setLastRoll(result.value)
 
-      setTimeout(() => {
+      setTimeout(async () => {
         setIsRolling(false)
 
         if (result.success) {
-          setMessage(result.message || 'Roll successful!')
-        } else {
-          setMessage(result.message || 'Busted! Turn ended.')
+          // Show floating success message with sats gained
+          const satsGained = result.satsGained || currentCard.value
+          setFloatingMessage({
+            text: `Great roll! +${satsGained} sats`,
+            sats: result.turnScore || playerTurnScore + satsGained
+          })
+          
+          // Clear the card and refresh state
           setCurrentCard(null)
+          await refreshGameState()
+          
+          // Auto-hide message after 2 seconds
+          setTimeout(() => setFloatingMessage(null), 2000)
+        } else {
+          setFloatingMessage({text: result.message || 'Busted! Turn ended.'})
+          setCurrentCard(null)
+          await refreshGameState()
+          
+          setTimeout(() => setFloatingMessage(null), 2000)
         }
       }, 1000)
     } catch (error) {
       console.error('Failed to roll dice:', error)
-      setMessage('Failed to roll dice. Please try again.')
+      setFloatingMessage({text: 'Failed to roll dice. Please try again.'})
       setIsRolling(false)
     }
   }
@@ -87,14 +114,16 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
     if (!isPlayerTurn || playerTurnScore === 0) return
 
     try {
+      setFloatingMessage({text: 'Stacking sats...'})
       const result = await gameAPI.stackSats(gameId)
       setGameState(result)
       setCurrentCard(null)
-      setMessage('Sats stacked! Opponent\'s turn.')
-      toggleTurn()
+      setFloatingMessage({text: `${playerTurnScore} sats banked! Opponent's turn.`})
+      
+      setTimeout(() => setFloatingMessage(null), 2000)
     } catch (error) {
       console.error('Failed to stack sats:', error)
-      setMessage('Failed to stack sats. Please try again.')
+      setFloatingMessage({text: 'Failed to stack sats. Please try again.'})
     }
   }
 
@@ -258,6 +287,21 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
         >
           <div className="text-lg">🚀 APE IN ACTIVE!</div>
           <div className="text-sm">Next card value doubled!</div>
+        </motion.div>
+      )}
+
+      {/* Floating Success Message */}
+      {floatingMessage && (
+        <motion.div
+          initial={{ y: 20, opacity: 0, scale: 0.9 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: -20, opacity: 0 }}
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 rounded-xl shadow-2xl border-2 border-green-300 font-bold text-center"
+        >
+          <div className="text-lg">{floatingMessage.text}</div>
+          {floatingMessage.sats !== undefined && (
+            <div className="text-sm mt-1">Turn Sats: {floatingMessage.sats}</div>
+          )}
         </motion.div>
       )}
 
