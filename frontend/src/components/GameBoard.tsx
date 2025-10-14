@@ -131,7 +131,10 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
     if (window.confirm('Are you sure you want to forfeit?')) {
       try {
         await gameAPI.forfeitGame(gameId)
-        setMessage('Game forfeited.')
+        setFloatingMessage({text: 'Game forfeited.'})
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 2000)
       } catch (error) {
         console.error('Failed to forfeit:', error)
       }
@@ -179,17 +182,6 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
           <div className="score-display">{opponentScore}</div>
         </div>
       </div>
-
-      {/* Message Display */}
-      {message && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-purple-600/20 border border-purple-500 rounded-lg p-4 text-center font-semibold"
-        >
-          {message}
-        </motion.div>
-      )}
 
       {/* Compact Game Area */}
       <div className="game-board">
