@@ -54,8 +54,8 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
       }`}
       onClick={onClick}
     >
-      {/* Pure card image with subtle gradient border */}
-      <div className={`bg-gradient-to-br ${getCardGradient(card.type)} h-full p-1 shadow-2xl relative`}>
+      {/* Pure card image with gradient border */}
+      <div className={`bg-gradient-to-br ${getCardGradient(card.type)} h-full p-2 shadow-2xl relative`}>
         {/* Glow effect for special cards */}
         {card.type === 'Special' && (
           <div className="absolute inset-0 bg-gradient-to-br from-green-400/30 to-emerald-400/30 rounded-2xl animate-pulse" />
@@ -64,16 +64,16 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
           <div className="absolute inset-0 bg-gradient-to-br from-red-400/30 to-orange-400/30 rounded-2xl animate-pulse" />
         )}
         
-        {/* Card Image - FULL SIZE */}
-        <div className="h-full w-full overflow-hidden rounded-2xl relative">
+        {/* Card Image - 10% smaller with padding */}
+        <div className="h-full w-full overflow-hidden rounded-xl relative p-2 bg-slate-900">
           {card.image_url ? (
             <img
               src={card.image_url}
               alt={card.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-slate-900 text-9xl">
+            <div className="w-full h-full flex items-center justify-center text-9xl">
               {card.type === 'Bearish' ? '🐻' : card.type === 'Special' ? '🚀' : '🎴'}
             </div>
           )}

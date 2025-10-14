@@ -91,19 +91,19 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
         setIsRolling(false)
 
         if (result.success) {
-          // Show floating success message with sats gained
+          // Show floating success message with sats gained (KEEP CARD VISIBLE)
           const satsGained = result.satsGained || currentCard.value
           setFloatingMessage({
             text: `Great roll! +${satsGained} sats`,
             sats: result.turnScore || playerTurnScore + satsGained
           })
           
-          // Clear the card and refresh state
-          setCurrentCard(null)
-          await refreshGameState()
-          
-          // Auto-hide message after 2 seconds
-          setTimeout(() => setFloatingMessage(null), 2000)
+          // Wait for message to display, THEN clear card
+          setTimeout(async () => {
+            setFloatingMessage(null)
+            setCurrentCard(null)
+            await refreshGameState()
+          }, 2000)
         } else {
           // Player busted - show message then replay bot turn
           setFloatingMessage({text: result.message || 'Busted! Turn ended.'})
@@ -128,45 +128,70 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
     }
   }
 
-  // Replay bot's turn with animations
+  // Replay bot's turn with clear sequential animations
   const replayBotTurn = async (botActions: any[]) => {
     if (!botActions || botActions.length === 0) return
     
     setIsBotPlaying(true)
     let botTurnScore = 0
     
+    // Announce bot's turn
     setFloatingMessage({text: `${opponentName}'s turn...`})
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    setFloatingMessage(null)
     
-    for (const action of botActions) {
+    // Process each action pair (draw + roll)
+    for (let i = 0; i < botActions.length; i++) {
+      const action = botActions[i]
+      
       if (action.type === 'draw') {
+        // 1. Show card being drawn
         setBotTurnData({card: action.card, roll: 0, turnSats: botTurnScore})
-        setFloatingMessage({text: `${opponentName} drew ${action.card.name}`})
+        setFloatingMessage({text: `${opponentName} draws a card...`})
         await new Promise(resolve => setTimeout(resolve, 1200))
-      } else if (action.type === 'roll') {
-        setBotTurnData(prev => prev ? {...prev, roll: action.roll} : null)
-        setFloatingMessage({text: `${opponentName} rolled ${action.roll}`})
-        await new Promise(resolve => setTimeout(resolve, 800))
         
-        if (action.success) {
-          botTurnScore += action.satsGained || 0
-          setBotTurnData(prev => prev ? {...prev, turnSats: botTurnScore} : null)
-          setFloatingMessage({text: `${opponentName} gained ${action.satsGained} sats!`, sats: botTurnScore})
+        // 2. Look for the corresponding roll action
+        const nextAction = botActions[i + 1]
+        if (nextAction && nextAction.type === 'roll') {
+          i++ // Skip the roll action in next iteration
+          
+          // 3. Show dice rolling
+          setFloatingMessage({text: `${opponentName} rolls the dice...`})
+          await new Promise(resolve => setTimeout(resolve, 800))
+          
+          setBotTurnData(prev => prev ? {...prev, roll: nextAction.roll} : null)
+          setFloatingMessage({text: `Rolled ${nextAction.roll}!`})
           await new Promise(resolve => setTimeout(resolve, 1000))
-        } else {
-          setFloatingMessage({text: `${opponentName} ${action.message}`})
-          await new Promise(resolve => setTimeout(resolve, 1500))
+          
+          // 4. Show result
+          if (nextAction.success) {
+            botTurnScore += nextAction.satsGained || 0
+            setBotTurnData(prev => prev ? {...prev, turnSats: botTurnScore} : null)
+            setFloatingMessage({text: `+${nextAction.satsGained} sats`, sats: botTurnScore})
+            await new Promise(resolve => setTimeout(resolve, 1200))
+          } else {
+            setFloatingMessage({text: nextAction.message || 'Busted!'})
+            await new Promise(resolve => setTimeout(resolve, 1500))
+            break // Bot busted, end turn
+          }
         }
+        
+        // Clear card before next draw
+        setBotTurnData(prev => prev ? {...prev, card: null, roll: 0} : null)
+        await new Promise(resolve => setTimeout(resolve, 400))
+        
       } else if (action.type === 'stack') {
-        setFloatingMessage({text: `${opponentName} stacked ${action.sats} sats!`})
-        await new Promise(resolve => setTimeout(resolve, 1500))
+        // Bot decided to stack
+        setFloatingMessage({text: `${opponentName} banks ${botTurnScore} sats!`})
+        await new Promise(resolve => setTimeout(resolve, 1800))
       }
     }
     
+    // Clean up and return to player's turn
     setBotTurnData(null)
     setIsBotPlaying(false)
-    await refreshGameState()
     setFloatingMessage(null)
+    await refreshGameState()
   }
 
   const handleStackSats = async () => {
