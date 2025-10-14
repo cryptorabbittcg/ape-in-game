@@ -25,20 +25,26 @@ const getCardGradient = (type: CardType['type']) => {
 }
 
 export default function Card({ card, isRevealing = false, onClick }: CardProps) {
-  // Show card back when no card
+  // Show card back when no card - with same padding as drawn cards
   if (!card) {
     return (
       <motion.div
         whileHover={{ scale: 1.08, rotateZ: 2 }}
         whileTap={{ scale: 0.98 }}
-        className="w-72 h-[28rem] md:w-80 md:h-[32rem] rounded-2xl shadow-2xl overflow-hidden cursor-pointer ring-4 ring-slate-700 hover:ring-purple-500 transition-all"
+        className="w-72 h-[28rem] md:w-80 md:h-[32rem] rounded-2xl shadow-2xl overflow-hidden cursor-pointer"
         onClick={onClick}
       >
-        <img
-          src="/assets/cardback.jpg"
-          alt="Card Back"
-          className="w-full h-full object-cover"
-        />
+        {/* Slate border matching drawn cards */}
+        <div className="bg-gradient-to-br from-slate-600 to-slate-800 h-full p-2 shadow-2xl relative hover:from-purple-600 hover:to-purple-800 transition-all duration-300">
+          {/* Inner container with padding for 10% smaller image */}
+          <div className="h-full w-full overflow-hidden rounded-xl relative p-2 bg-slate-900">
+            <img
+              src="/assets/cardback.jpg"
+              alt="Card Back"
+              className="w-full h-full object-contain"
+            />
+          </div>
+        </div>
       </motion.div>
     )
   }
@@ -54,7 +60,7 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
       }`}
       onClick={onClick}
     >
-      {/* Pure card image with gradient border */}
+      {/* Gradient border - proportional to card size */}
       <div className={`bg-gradient-to-br ${getCardGradient(card.type)} h-full p-2 shadow-2xl relative`}>
         {/* Glow effect for special cards */}
         {card.type === 'Special' && (
@@ -64,7 +70,7 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
           <div className="absolute inset-0 bg-gradient-to-br from-red-400/30 to-orange-400/30 rounded-2xl animate-pulse" />
         )}
         
-        {/* Card Image - 10% smaller with padding */}
+        {/* Card Image - 10% smaller with padding for even look */}
         <div className="h-full w-full overflow-hidden rounded-xl relative p-2 bg-slate-900">
           {card.image_url ? (
             <img
