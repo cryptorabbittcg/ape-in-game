@@ -183,16 +183,33 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
         </div>
       </div>
 
-      {/* Compact Game Area */}
+      {/* Enhanced Game Area */}
       <div className="game-board">
-        <div className="flex flex-col sm:flex-row items-start justify-center gap-4 sm:gap-6 md:gap-12 py-4 sm:py-6">
-          {/* Card Section */}
-          <div className="flex flex-col items-center space-y-2 sm:space-y-3 w-full sm:w-auto">
-            <div className="h-5 sm:h-6 text-xs sm:text-sm text-slate-400">
-              {isDrawing ? 'Drawing...' : currentCard ? 'Card Drawn' : 'Card Deck'}
+        <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 lg:gap-12 py-6">
+          {/* Card Section - Larger and more prominent */}
+          <div className="flex flex-col items-center space-y-3 w-full md:w-auto">
+            <div className="h-6 text-sm font-semibold text-slate-300 flex items-center gap-2">
+              {isDrawing ? (
+                <>
+                  <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                    ⏳
+                  </motion.span>
+                  Drawing...
+                </>
+              ) : currentCard ? (
+                <>
+                  <span className="text-green-400">✨</span>
+                  Card Drawn
+                </>
+              ) : (
+                <>
+                  <span>🎴</span>
+                  Click to Draw
+                </>
+              )}
             </div>
             
-            <div className="scale-90 sm:scale-100">
+            <div className="transform-gpu">
               <Card
                 card={currentCard}
                 isRevealing={isDrawing}
