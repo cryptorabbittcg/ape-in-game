@@ -11,8 +11,8 @@ class Card(BaseModel):
     penalty: str | None = None
 
 
-# Base URL for card images
-CARD_BASE_URL = "https://thecryptorabbithole.io/risk_reward/cards"
+# Base URL for card images - served from Vercel frontend
+CARD_BASE_URL = "https://ape-in-game.vercel.app/assets/cards"
 
 # Define all cards
 CIPHER_CARDS = [
