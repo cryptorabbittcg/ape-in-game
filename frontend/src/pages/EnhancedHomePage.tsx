@@ -137,11 +137,13 @@ export default function EnhancedHomePage() {
   ]
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-x-hidden">
       {/* Particle Background */}
-      <ParticleBackground />
+      <div className="fixed inset-0 z-0">
+        <ParticleBackground />
+      </div>
 
-      <div className="container mx-auto px-4 pt-4 pb-4 relative z-10 max-w-6xl">
+      <div className="container mx-auto px-4 pt-4 pb-4 relative z-20 max-w-6xl">
         {/* Compact Banner */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
