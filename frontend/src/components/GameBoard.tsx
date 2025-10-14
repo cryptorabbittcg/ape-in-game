@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import Card from './Card'
 import Dice from './Dice'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { gameAPI } from '../services/api'
 
 interface GameBoardProps {
@@ -22,6 +22,8 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
     gameStatus,
     winner,
     apeInActive,
+    roundCount,
+    maxRounds,
     setCurrentCard,
     setLastRoll,
     updateScore,
@@ -34,6 +36,8 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
   const [floatingMessage, setFloatingMessage] = useState<{text: string, sats?: number} | null>(null)
   const [botTurnData, setBotTurnData] = useState<{card: any, roll: number, turnSats: number} | null>(null)
   const [isBotPlaying, setIsBotPlaying] = useState(false)
+  const [showRoundPopup, setShowRoundPopup] = useState(false)
+  const [currentRound, setCurrentRound] = useState(1)
 
   // Refresh game state from backend
   const refreshGameState = async () => {
@@ -44,6 +48,15 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
       console.error('Failed to refresh game state:', error)
     }
   }
+
+  // Detect round changes and show popup
+  React.useEffect(() => {
+    if (roundCount > currentRound && !isBotPlaying) {
+      setCurrentRound(roundCount)
+      setShowRoundPopup(true)
+      setTimeout(() => setShowRoundPopup(false), 2500)
+    }
+  }, [roundCount, currentRound, isBotPlaying])
 
   const handleDrawCard = async () => {
     if (!isPlayerTurn || isDrawing) return
@@ -431,6 +444,25 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
             </div>
             <div className="text-xs opacity-75">
               Rolling 1, 3, or 5 = Penalty applied!
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Round Announcement Popup */}
+      {showRoundPopup && (
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.5, opacity: 0 }}
+          className="fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-gradient-to-br from-purple-600 to-pink-600 text-white px-12 py-8 rounded-2xl shadow-2xl border-4 border-purple-300"
+        >
+          <div className="text-center">
+            <div className="text-5xl font-black mb-2">
+              ROUND {roundCount}
+            </div>
+            <div className="text-lg opacity-90">
+              of {maxRounds}
             </div>
           </div>
         </motion.div>
