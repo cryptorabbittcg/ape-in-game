@@ -27,16 +27,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
-origins = settings.CORS_ORIGINS.split(",") if settings.CORS_ORIGINS != "*" else ["*"]
+# Configure CORS - Allow all origins for development and production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=False if settings.CORS_ORIGINS == "*" else True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=3600,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=False,  # Must be False when allow_origins is ["*"]
+    allow_methods=["*"],  # Allow all methods including OPTIONS
+    allow_headers=["*"],  # Allow all headers
 )
 
 # Serve static assets (card images) if assets directory exists
