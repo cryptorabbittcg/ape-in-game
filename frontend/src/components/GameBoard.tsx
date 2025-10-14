@@ -275,30 +275,30 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
   }
 
   return (
-    <div className="space-y-6">
-      {/* Score Display */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="game-board text-center">
-          <h3 className="text-xl font-semibold mb-2 text-slate-300">{playerName}</h3>
-          <div className="score-display">{playerScore}</div>
-          <div className="text-sm text-slate-400 mt-2">
-            Turn Score: <span className="text-yellow-400 font-semibold">{playerTurnScore}</span>
+    <div className="space-y-3">
+      {/* Compact Score Display */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="game-board text-center py-3">
+          <h3 className="text-base font-semibold mb-1 text-slate-300">{playerName}</h3>
+          <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">{playerScore}</div>
+          <div className="text-xs text-slate-400 mt-1">
+            Turn: <span className="text-yellow-400 font-semibold">{playerTurnScore}</span>
           </div>
         </div>
-        <div className="game-board text-center">
-          <h3 className="text-xl font-semibold mb-2 text-slate-300">{opponentName}</h3>
-          <div className="score-display">{opponentScore}</div>
+        <div className="game-board text-center py-3">
+          <h3 className="text-base font-semibold mb-1 text-slate-300">{opponentName}</h3>
+          <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">{opponentScore}</div>
           {isBotPlaying && botTurnData && (
-            <div className="text-sm text-emerald-400 mt-2 animate-pulse">
-              Turn Sats: {botTurnData.turnSats}
+            <div className="text-xs text-emerald-400 mt-1 animate-pulse">
+              Turn: {botTurnData.turnSats}
             </div>
           )}
         </div>
       </div>
 
-      {/* Enhanced Game Area */}
+      {/* Compact Game Area */}
       <div className="game-board">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 lg:gap-12 py-6">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 py-4">
           {/* Card Section - Shows player OR bot card */}
           <div className="flex flex-col items-center space-y-2 w-full md:w-auto">
             <div className="transform-gpu">
