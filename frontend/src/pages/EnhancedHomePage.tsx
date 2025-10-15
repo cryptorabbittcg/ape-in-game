@@ -222,10 +222,19 @@ export default function EnhancedHomePage() {
                     scaleY: hoveredGuide === step.id ? 1 : 0,
                   }}
                   transition={{ duration: 0.2 }}
-                  className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 bg-slate-800/95 backdrop-blur-xl rounded-lg p-3 border border-purple-500/50 shadow-2xl shadow-purple-500/20 z-50 origin-top"
-                  style={{ pointerEvents: hoveredGuide === step.id ? 'auto' : 'none' }}
+                  className="absolute top-full mt-2 left-0 w-64 bg-slate-800/95 backdrop-blur-xl rounded-lg p-3 border border-purple-500/50 shadow-2xl shadow-purple-500/20 z-50 origin-top"
+                  style={{ 
+                    pointerEvents: hoveredGuide === step.id ? 'auto' : 'none',
+                    transform: idx >= 2 ? 'translateX(-50%)' : 'translateX(0%)'
+                  }}
                 >
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 border-l border-t border-purple-500/50 rotate-45" />
+                  <div 
+                    className="absolute -top-2 w-4 h-4 bg-slate-800 border-l border-t border-purple-500/50 rotate-45"
+                    style={{ 
+                      left: idx >= 2 ? '50%' : '20px',
+                      transform: idx >= 2 ? 'translateX(-50%)' : 'translateX(0%)'
+                    }}
+                  />
                   <p className="text-xs text-slate-300 leading-relaxed relative z-10">{step.desc}</p>
                 </motion.div>
               </motion.div>
