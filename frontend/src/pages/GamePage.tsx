@@ -37,8 +37,19 @@ export default function GamePage() {
 
     const initGame = async () => {
       try {
-        // Get player name (from wallet or prompt)
-        const name = address ? `Player ${address.slice(0, 6)}` : prompt('Enter your name:') || 'Player'
+        // Get player name from stored profile or create default
+        let name = 'Player'
+        if (address) {
+          const savedProfile = localStorage.getItem(`profile_${address}`)
+          if (savedProfile) {
+            const profile = JSON.parse(savedProfile)
+            name = profile.name || `Player ${address.slice(0, 6)}`
+          } else {
+            name = `Player ${address.slice(0, 6)}`
+          }
+        } else {
+          name = prompt('Enter your name:') || 'Player'
+        }
         setPlayerName(name)
 
         // Create game
