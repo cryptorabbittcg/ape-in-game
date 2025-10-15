@@ -149,18 +149,18 @@ export default function EnhancedHomePage() {
       </div>
 
       <div className="container mx-auto px-4 pt-4 pb-4 relative z-20 max-w-6xl">
-        {/* Compact Banner */}
+        {/* Compact Banner - Moved to header, keeping minimal version */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex justify-center mb-3"
+          className="flex justify-center mb-6"
         >
-          <motion.div whileHover={{ scale: 1.02 }} className="relative max-w-sm w-full">
+          <motion.div whileHover={{ scale: 1.02 }} className="relative max-w-xs w-full">
             <img 
               src="/assets/cxrh-banner.png" 
               alt="CxRH Banner" 
-              className="w-full h-auto drop-shadow-xl"
+              className="w-full h-auto drop-shadow-xl opacity-80"
             />
           </motion.div>
         </motion.div>
@@ -221,21 +221,39 @@ export default function EnhancedHomePage() {
                     y: hoveredGuide === step.id ? 0 : -10,
                     scaleY: hoveredGuide === step.id ? 1 : 0,
                   }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute top-full mt-2 left-0 w-64 bg-slate-800/95 backdrop-blur-xl rounded-lg p-3 border border-purple-500/50 shadow-2xl shadow-purple-500/20 z-50 origin-top"
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="absolute top-full mt-1 z-50 origin-top"
                   style={{ 
                     pointerEvents: hoveredGuide === step.id ? 'auto' : 'none',
+                    left: idx >= 2 ? '50%' : '0%',
                     transform: idx >= 2 ? 'translateX(-50%)' : 'translateX(0%)'
                   }}
                 >
+                  {/* Smooth connector arrow */}
                   <div 
-                    className="absolute -top-2 w-4 h-4 bg-slate-800 border-l border-t border-purple-500/50 rotate-45"
+                    className="absolute -top-1.5 w-3 h-3 bg-gradient-to-br from-slate-800 to-slate-700 border-l border-t border-purple-500/50 rotate-45 shadow-lg"
                     style={{ 
                       left: idx >= 2 ? '50%' : '20px',
                       transform: idx >= 2 ? 'translateX(-50%)' : 'translateX(0%)'
                     }}
                   />
-                  <p className="text-xs text-slate-300 leading-relaxed relative z-10">{step.desc}</p>
+                  
+                  {/* Dropdown container - same width as parent */}
+                  <div className="bg-gradient-to-br from-slate-800/98 to-slate-700/98 backdrop-blur-xl rounded-xl p-4 border border-purple-500/30 shadow-2xl shadow-purple-500/10">
+                    <div className="flex items-start space-x-3">
+                      {step.isImage ? (
+                        <img src={step.icon} alt={step.title} className="w-8 h-8 rounded-lg object-cover flex-shrink-0 border border-purple-500/30" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
+                          <span className="text-lg">{step.icon}</span>
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-white mb-1">{step.title}</h4>
+                        <p className="text-xs text-slate-300 leading-relaxed">{step.desc}</p>
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               </motion.div>
             ))}
