@@ -187,7 +187,8 @@ export default function EnhancedHomePage() {
           transition={{ duration: 0.4, delay: 0.2 }}
           className="mb-4"
         >
-          <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto">
+          {/* How-to buttons */}
+          <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto mb-6">
             {guideSteps.map((step, idx) => (
               <motion.div
                 key={step.id}
@@ -198,13 +199,17 @@ export default function EnhancedHomePage() {
                 onMouseLeave={() => setHoveredGuide(null)}
                 className="relative group"
               >
-                <div className="px-3 py-2 rounded-lg bg-slate-800/80 backdrop-blur border border-slate-700/50 hover:border-purple-500/50 transition-all cursor-help flex items-center gap-2">
+                <div className={`px-4 py-3 rounded-xl bg-slate-800/80 backdrop-blur border transition-all cursor-help flex items-center gap-3 ${
+                  hoveredGuide === step.id 
+                    ? 'border-purple-500/70 bg-purple-900/20 shadow-lg shadow-purple-500/20' 
+                    : 'border-slate-700/50 hover:border-purple-500/50'
+                }`}>
                   {step.isImage ? (
                     <img src={step.icon} alt={step.title} className="w-6 h-6 rounded object-cover" />
                   ) : (
                     <span className="text-xl">{step.icon}</span>
                   )}
-                  <span className="text-xs font-semibold text-slate-300">{step.title}</span>
+                  <span className="text-sm font-semibold text-slate-200">{step.title}</span>
                   <motion.span
                     animate={{ rotate: hoveredGuide === step.id ? 180 : 0 }}
                     className="text-slate-500 text-xs"
@@ -212,52 +217,48 @@ export default function EnhancedHomePage() {
                     ▼
                   </motion.span>
                 </div>
-                
-                {/* Dropdown explanation */}
-                <motion.div
-                  initial={{ opacity: 0, y: -10, scaleY: 0 }}
-                  animate={{
-                    opacity: hoveredGuide === step.id ? 1 : 0,
-                    y: hoveredGuide === step.id ? 0 : -10,
-                    scaleY: hoveredGuide === step.id ? 1 : 0,
-                  }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute top-full mt-1 z-50 origin-top"
-                  style={{ 
-                    pointerEvents: hoveredGuide === step.id ? 'auto' : 'none',
-                    left: idx >= 2 ? '50%' : '0%',
-                    transform: idx >= 2 ? 'translateX(-50%)' : 'translateX(0%)'
-                  }}
-                >
-                  {/* Smooth connector arrow */}
-                  <div 
-                    className="absolute -top-1.5 w-3 h-3 bg-gradient-to-br from-slate-800 to-slate-700 border-l border-t border-purple-500/50 rotate-45 shadow-lg"
-                    style={{ 
-                      left: idx >= 2 ? '50%' : '20px',
-                      transform: idx >= 2 ? 'translateX(-50%)' : 'translateX(0%)'
-                    }}
-                  />
-                  
-                  {/* Dropdown container - same width as parent */}
-                  <div className="bg-gradient-to-br from-slate-800/98 to-slate-700/98 backdrop-blur-xl rounded-xl p-4 border border-purple-500/30 shadow-2xl shadow-purple-500/10">
-                    <div className="flex items-start space-x-3">
-                      {step.isImage ? (
-                        <img src={step.icon} alt={step.title} className="w-8 h-8 rounded-lg object-cover flex-shrink-0 border border-purple-500/30" />
-                      ) : (
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
-                          <span className="text-lg">{step.icon}</span>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-white mb-1">{step.title}</h4>
-                        <p className="text-xs text-slate-300 leading-relaxed">{step.desc}</p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
               </motion.div>
             ))}
           </div>
+
+          {/* Single static info box */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ 
+              opacity: hoveredGuide ? 1 : 0,
+              y: hoveredGuide ? 0 : 20
+            }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="max-w-2xl mx-auto"
+            style={{ pointerEvents: hoveredGuide ? 'auto' : 'none' }}
+          >
+            {hoveredGuide && (
+              <div className="bg-gradient-to-br from-slate-800/95 to-slate-700/95 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/30 shadow-2xl shadow-purple-500/10">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-4">
+                    {(() => {
+                      const step = guideSteps.find(s => s.id === hoveredGuide)
+                      return step?.isImage ? (
+                        <img src={step.icon} alt={step.title} className="w-12 h-12 rounded-xl object-cover border border-purple-500/30" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center">
+                          <span className="text-2xl">{step?.icon}</span>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    {guideSteps.find(s => s.id === hoveredGuide)?.title}
+                  </h3>
+                  
+                  <p className="text-slate-300 leading-relaxed text-base">
+                    {guideSteps.find(s => s.id === hoveredGuide)?.desc}
+                  </p>
+                </div>
+              </div>
+            )}
+          </motion.div>
         </motion.div>
 
         {/* Compact Game Modes Grid */}
