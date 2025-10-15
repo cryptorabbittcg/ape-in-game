@@ -1,5 +1,15 @@
 export type CardType = 'Cipher' | 'Oracle' | 'Historacle' | 'Bearish' | 'Special'
 
+export type GameMode = 
+  | 'sandy' 
+  | 'aida' 
+  | 'lana' 
+  | 'enj1n' 
+  | 'nifty' 
+  | 'pvp' 
+  | 'multiplayer' 
+  | 'tournament'
+
 export interface Card {
   name: string
   type: CardType
@@ -25,16 +35,6 @@ export interface GameState {
   winner: string | null
   apeInActive: boolean
 }
-
-export type GameMode = 
-  | 'sandy' 
-  | 'aida' 
-  | 'lana' 
-  | 'enj1n' 
-  | 'nifty' 
-  | 'pvp' 
-  | 'multiplayer' 
-  | 'tournament'
 
 export interface Player {
   id: string
