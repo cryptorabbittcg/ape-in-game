@@ -358,7 +358,20 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
             
             <Dice 
               value={isBotPlaying && botTurnData ? botTurnData.roll : lastRoll} 
-              isRolling={isRolling || (botTurnData?.isRolling ?? false)}
+              isRolling={(() => {
+                const shouldRoll = isRolling || (botTurnData?.isRolling ?? false);
+                if (isBotPlaying) {
+                  console.log('🎲 Dice Debug:', {
+                    isBotPlaying,
+                    isRolling,
+                    botTurnDataIsRolling: botTurnData?.isRolling,
+                    shouldRoll,
+                    botRoll: botTurnData?.roll,
+                    lastRoll
+                  });
+                }
+                return shouldRoll;
+              })()}
             />
 
             {/* Stacked Action Buttons */}
