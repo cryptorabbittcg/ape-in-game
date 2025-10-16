@@ -6,6 +6,7 @@ import { gameAPI } from '../services/api'
 import { wsService } from '../services/websocket'
 import { useGameStore } from '../store/gameStore'
 import GameBoard from '../components/GameBoard'
+import BotIntro from '../components/BotIntro'
 import { GameMode } from '../types/game'
 
 const gameNames: Record<GameMode, string> = {
@@ -27,6 +28,7 @@ export default function GamePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [playerName, setPlayerName] = useState('')
   const [gameId, setGameId] = useState('')
+  const [showIntro, setShowIntro] = useState(true)
   const { setGameState, gameStatus } = useGameStore()
 
   useEffect(() => {
@@ -80,6 +82,10 @@ export default function GamePage() {
     }
   }, [mode, address, navigate, setGameState])
 
+  const handleIntroComplete = (skip: boolean) => {
+    setShowIntro(false)
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[80vh]">
@@ -96,18 +102,28 @@ export default function GamePage() {
 
   return (
     <div className="container mx-auto px-4 py-2 md:py-4">
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-3"
-      >
-        <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">
-          {mode && gameNames[mode]} Mode
-        </h1>
-        <p className="text-xs text-slate-400">First to 150 sats wins!</p>
-      </motion.div>
+      {/* Bot Introduction */}
+      {showIntro && mode && (
+        <BotIntro gameMode={mode} onComplete={handleIntroComplete} />
+      )}
 
-      <GameBoard gameId={gameId} playerName={playerName} opponentName={opponentName} />
+      {/* Game Content */}
+      {!showIntro && (
+        <>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-3"
+          >
+            <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">
+              {mode && gameNames[mode]} Mode
+            </h1>
+            <p className="text-xs text-slate-400">First to 150 sats wins!</p>
+          </motion.div>
+
+          <GameBoard gameId={gameId} playerName={playerName} opponentName={opponentName} />
+        </>
+      )}
     </div>
   )
 }
