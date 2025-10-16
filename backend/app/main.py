@@ -6,6 +6,8 @@ from app.config import settings
 from app.api import game, leaderboard, rewards
 from app.websockets import game_ws
 from app.database import init_db
+# Import all models to ensure they are registered with Base
+from app.models import *
 import os
 
 
