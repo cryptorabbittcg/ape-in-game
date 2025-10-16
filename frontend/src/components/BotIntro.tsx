@@ -148,7 +148,18 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
         className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 sm:p-8 max-w-2xl w-full border-2 border-slate-600 shadow-2xl"
       >
         {/* Bot Header */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 relative">
+          {/* Skip Button - Top Right */}
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+            onClick={handleSkipIntro}
+            className="absolute top-0 right-0 px-3 py-1.5 bg-slate-600/80 hover:bg-slate-500/80 text-white text-xs font-medium rounded-lg shadow-lg hover:shadow-xl transition-all backdrop-blur-sm"
+          >
+            ⚡ Skip
+          </motion.button>
+
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -207,7 +218,7 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
 
         {/* Progress Bar */}
         <div className="mb-6">
-          <div className="flex justify-center space-x-2">
+          <div className="flex justify-center space-x-2 mb-2">
             {introMessages.map((_, index) => (
               <div
                 key={index}
@@ -216,6 +227,15 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
                 }`}
               />
             ))}
+          </div>
+          {/* Subtle skip hint */}
+          <div className="text-center">
+            <button
+              onClick={handleSkipIntro}
+              className="text-xs text-slate-400 hover:text-slate-300 transition-colors underline"
+            >
+              Skip intro anytime
+            </button>
           </div>
         </div>
 
