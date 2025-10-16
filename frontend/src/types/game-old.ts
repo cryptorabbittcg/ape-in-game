@@ -1,6 +1,14 @@
-export type GameMode = 'sandy' | 'aida' | 'lana' | 'enj1n' | 'nifty' | 'pvp' | 'multiplayer' | 'tournament'
-
 export type CardType = 'Cipher' | 'Oracle' | 'Historacle' | 'Bearish' | 'Special'
+
+export type GameMode = 
+  | 'sandy' 
+  | 'aida' 
+  | 'lana' 
+  | 'enj1n' 
+  | 'nifty' 
+  | 'pvp' 
+  | 'multiplayer' 
+  | 'tournament'
 
 export interface Card {
   name: string
