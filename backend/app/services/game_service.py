@@ -427,27 +427,16 @@ class GameService:
             if behind_by_now >= 30:
                 opponent_push_nudge = 0.08
 
-            # Sandy-specific decision logic
+            # Sandy-specific tutorial logic (simple and predictable)
             if ai_type == "sandy" and ai_player.turn_score >= 21:
-                score_difference = behind_by_now
-                base_push = float(risk_cfg.get("basePush", 0.10))
-                behind_push = float(risk_cfg.get("behindPush", 0.618))
-                behind_gap = int(risk_cfg.get("behindGap", 50))
-                if score_difference > behind_gap:
-                    should_continue = (random.random() < scale_push(behind_push + opponent_push_nudge, score_difference))
-                    if should_continue:
-                        actions.append({
-                            "type": "decision",
-                            "message": f"Sandy is behind by {score_difference}. Risk-adjusted push."
-                        })
+                # Sandy is a tutorial bot - simple 10% chance to continue at 21
+                should_continue = (random.random() < 0.10)
+                if should_continue:
+                    actions.append({
+                        "type": "decision",
+                        "message": "Sandy decides to push her luck! (10% chance)"
+                    })
                 else:
-                    should_continue = (random.random() < scale_push(base_push + opponent_push_nudge, score_difference))
-                    if should_continue:
-                        actions.append({
-                            "type": "decision", 
-                            "message": "Sandy decides to push her luck!"
-                        })
-                if not should_continue:
                     break
             # Aida-specific decision logic
             elif ai_type == "aida":

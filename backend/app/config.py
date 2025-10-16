@@ -17,12 +17,12 @@ class Settings(BaseSettings):
     BOT_CONFIGS: Dict[str, Dict] = {
         "sandy": {
             "name": "Sandy",
-            "difficulty": "Easy",
+            "difficulty": "Tutorial",
             "winning_score": 150,
             "max_rounds": 10,
             "target_scores": [21],
-            "risk": {"basePush": 0.10, "behindPush": 0.618, "behindGap": 50},
-            "jitter": {"enabled": True, "pct": 0.10},
+            "risk": {"basePush": 0.10, "behindPush": 0.20, "behindGap": 50},
+            "jitter": {"enabled": False, "pct": 0.0},
             "diceModes": ["sandy"],
             "description": "Tutorial bot - Perfect for beginners!",
             "personality": "Friendly and encouraging"
