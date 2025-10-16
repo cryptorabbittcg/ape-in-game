@@ -372,12 +372,12 @@ class GameService:
                 should_continue = False
                 
                 if score_difference > 50:
-                    # Behind by >50 sats: 50% chance to continue
-                    should_continue = random.random() < 0.5
+                    # Behind by >50 sats: 61.8% chance to continue (Fibonacci-inspired)
+                    should_continue = random.random() < 0.618
                     if should_continue:
                         actions.append({
                             "type": "decision",
-                            "message": f"Sandy is behind by {score_difference} sats. Taking a risk!"
+                            "message": f"Sandy is behind by {score_difference} sats. Taking a Fibonacci-risk (61.8%)!"
                         })
                 else:
                     # At or ahead: 10% chance to continue
