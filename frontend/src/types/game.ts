@@ -1,3 +1,4 @@
+// Cache bust timestamp: 2024-01-17 06:58:43 UTC
 export const GameModeValues = ['sandy', 'aida', 'lana', 'enj1n', 'nifty', 'pvp', 'multiplayer', 'tournament'] as const
 export type GameMode = typeof GameModeValues[number]
 
@@ -114,6 +115,20 @@ export const createLeaderboardEntry = (entry: {
   gamesPlayed: number
 }): LeaderboardEntry => entry
 
+// Runtime exports for direct interface imports
+export const LeaderboardEntry = {
+  create: createLeaderboardEntry,
+  // Default empty entry for type checking
+  empty: () => ({
+    rank: 0,
+    playerName: '',
+    walletAddress: undefined,
+    totalWins: 0,
+    highScore: 0,
+    gamesPlayed: 0
+  })
+}
+
 export const createCard = (card: {
   name: string
   type: CardType
@@ -152,3 +167,55 @@ export const createWebSocketMessage = (message: {
   type: 'game_update' | 'player_joined' | 'game_started' | 'game_ended' | 'error'
   data: any
 }): WebSocketMessage => message
+
+// Runtime exports for direct interface imports (for SES compatibility)
+export const Card = {
+  create: createCard,
+  empty: () => ({
+    name: '',
+    type: 'Cipher' as CardType,
+    value: 0,
+    image_url: '',
+    penalty: undefined
+  })
+}
+
+export const GameState = {
+  create: createGameState,
+  empty: () => ({
+    gameId: '',
+    mode: 'sandy' as GameMode,
+    playerScore: 0,
+    opponentScore: 0,
+    playerTurnScore: 0,
+    opponentTurnScore: 0,
+    currentCard: null,
+    lastRoll: null,
+    roundCount: 0,
+    maxRounds: 0,
+    winningScore: 0,
+    isPlayerTurn: false,
+    gameStatus: 'waiting' as const,
+    winner: null,
+    apeInActive: false
+  })
+}
+
+export const Player = {
+  create: createPlayer,
+  empty: () => ({
+    id: '',
+    name: '',
+    walletAddress: undefined,
+    score: 0,
+    turnScore: 0
+  })
+}
+
+export const WebSocketMessage = {
+  create: createWebSocketMessage,
+  empty: () => ({
+    type: 'error' as const,
+    data: null
+  })
+}

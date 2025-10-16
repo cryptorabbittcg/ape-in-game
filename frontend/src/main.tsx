@@ -8,11 +8,12 @@ import './index.css'
 console.log('🚀 Starting React app...')
 
 // Test import to see if all exports work
-import('./types/game').then(({ GameMode, GameModeValues, createLeaderboardEntry, CardType }) => {
+import('./types/game').then(({ GameMode, GameModeValues, LeaderboardEntry, Card, GameState }) => {
   console.log('✅ GameMode import successful:', GameMode)
   console.log('✅ GameModeValues import successful:', GameModeValues)
-  console.log('✅ createLeaderboardEntry import successful:', createLeaderboardEntry)
-  console.log('✅ CardType import successful:', CardType)
+  console.log('✅ LeaderboardEntry import successful:', LeaderboardEntry)
+  console.log('✅ Card import successful:', Card)
+  console.log('✅ GameState import successful:', GameState)
 }).catch((error) => {
   console.error('❌ Types import failed:', error)
 })
