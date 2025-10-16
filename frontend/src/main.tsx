@@ -7,6 +7,13 @@ import './index.css'
 
 console.log('🚀 Starting React app...')
 
+// Test import to see if GameMode works
+import('./types/game').then(({ GameMode }) => {
+  console.log('✅ GameMode import successful:', GameMode)
+}).catch((error) => {
+  console.error('❌ GameMode import failed:', error)
+})
+
 try {
   const rootElement = document.getElementById('root')
   console.log('🎯 Root element found:', rootElement)

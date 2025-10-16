@@ -1,5 +1,6 @@
 export const GameModeValues = ['sandy', 'aida', 'lana', 'enj1n', 'nifty', 'pvp', 'multiplayer', 'tournament'] as const
 export type GameMode = typeof GameModeValues[number]
+// Cache bust - updated for browser refresh
 
 export type CardType = 'Cipher' | 'Oracle' | 'Historacle' | 'Bearish' | 'Special'
 
