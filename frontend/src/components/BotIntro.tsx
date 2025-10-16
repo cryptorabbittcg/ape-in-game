@@ -168,18 +168,26 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
           >
             {/* Bot Portrait - Show image if available, fallback to emoji */}
             {(gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
-              <img 
-                src={`/assets/bots/${gameMode}.png?v=${Date.now()}`} 
-                alt={`${gameMode} avatar`} 
-                className="w-full h-full object-cover rounded-full" 
-                onError={(e) => {
-                  console.error(`Failed to load portrait for ${gameMode}:`, e);
-                  e.currentTarget.style.display = 'none';
-                }}
-                onLoad={(e) => {
-                  console.log(`Successfully loaded portrait for ${gameMode}`);
-                }}
-              />
+              <div className="w-full h-full relative">
+                <img 
+                  src={`${window.location.origin}/assets/bots/${gameMode}.png?v=${Date.now()}`} 
+                  alt={`${gameMode} avatar`} 
+                  className="w-full h-full object-cover rounded-full absolute inset-0" 
+                  onError={(e) => {
+                    console.error(`Failed to load header portrait for ${gameMode}:`, e);
+                    e.currentTarget.style.display = 'none';
+                    // Show emoji fallback
+                    const fallback = e.currentTarget.nextElementSibling;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                  onLoad={(e) => {
+                    console.log(`Successfully loaded header portrait for ${gameMode}`);
+                  }}
+                />
+                <span className="absolute inset-0 flex items-center justify-center text-4xl" style={{ display: 'none' }}>
+                  {botEmoji}
+                </span>
+              </div>
             ) : (
               <span className="flex items-center justify-center">
                 {botEmoji}
@@ -219,7 +227,7 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
                   className="flex-shrink-0"
                 >
                   <img 
-                    src={`/assets/bots/${gameMode}.png?v=${Date.now()}`} 
+                    src={`${window.location.origin}/assets/bots/${gameMode}.png?v=${Date.now()}`} 
                     alt={`${gameMode} avatar`} 
                     className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
                     onError={(e) => {
