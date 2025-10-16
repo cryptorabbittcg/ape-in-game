@@ -303,14 +303,15 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
           <div className="flex items-center justify-center space-x-3">
             {/* Bot Avatar in Game Over Screen */}
             <img 
-              src={`/assets/bots/${gameMode}.png`} 
+              src={`/assets/bots/${gameMode}.gif`} 
               alt={`${gameMode} avatar`} 
               className="w-8 h-8 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
               onError={(e) => {
-                console.error(`Failed to load Game Over portrait for ${gameMode}:`, e);
+                console.log(`GIF failed for ${gameMode} Game Over, trying PNG...`);
+                e.currentTarget.src = `/assets/bots/${gameMode}.png`;
               }}
               onLoad={(e) => {
-                console.log(`Successfully loaded Game Over portrait for ${gameMode}`);
+                console.log(`Successfully loaded GIF Game Over portrait for ${gameMode}`);
               }}
             />
             <span>{opponentName} Score: <span className="score-display">{opponentScore}</span></span>
@@ -338,14 +339,15 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
           {/* Bot Avatar */}
           <div className="flex justify-center mb-2">
             <img 
-              src={`/assets/bots/${gameMode}.png`} 
+              src={`/assets/bots/${gameMode}.gif`} 
               alt={`${gameMode} avatar`} 
               className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
               onError={(e) => {
-                console.error(`Failed to load GameBoard score portrait for ${gameMode}:`, e);
+                console.log(`GIF failed for ${gameMode} GameBoard, trying PNG...`);
+                e.currentTarget.src = `/assets/bots/${gameMode}.png`;
               }}
               onLoad={(e) => {
-                console.log(`Successfully loaded GameBoard score portrait for ${gameMode}`);
+                console.log(`Successfully loaded GIF GameBoard score portrait for ${gameMode}`);
               }}
             />
           </div>

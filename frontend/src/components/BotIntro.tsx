@@ -168,14 +168,15 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
           >
             {/* Bot Portrait */}
             <img 
-              src={`/assets/bots/${gameMode}.png`} 
+              src={`/assets/bots/${gameMode}.gif`} 
               alt={`${gameMode} avatar`} 
               className="w-full h-full object-cover rounded-full" 
               onError={(e) => {
-                console.error(`Failed to load header portrait for ${gameMode}:`, e);
+                console.log(`GIF failed for ${gameMode}, trying PNG...`);
+                e.currentTarget.src = `/assets/bots/${gameMode}.png`;
               }}
               onLoad={(e) => {
-                console.log(`Successfully loaded header portrait for ${gameMode}`);
+                console.log(`Successfully loaded GIF header portrait for ${gameMode}`);
               }}
             />
           </motion.div>
@@ -211,14 +212,15 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
               className="flex-shrink-0"
             >
               <img 
-                src={`/assets/bots/${gameMode}.png`} 
+                src={`/assets/bots/${gameMode}.gif`} 
                 alt={`${gameMode} avatar`} 
                 className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
                 onError={(e) => {
-                  console.error(`Failed to load message portrait for ${gameMode}:`, e);
+                  console.log(`GIF failed for ${gameMode} message, trying PNG...`);
+                  e.currentTarget.src = `/assets/bots/${gameMode}.png`;
                 }}
                 onLoad={(e) => {
-                  console.log(`Successfully loaded message portrait for ${gameMode}`);
+                  console.log(`Successfully loaded GIF message portrait for ${gameMode}`);
                 }}
               />
             </motion.div>
