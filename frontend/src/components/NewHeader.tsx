@@ -98,11 +98,11 @@ export default function NewHeader() {
             : 'bg-slate-900/80 backdrop-blur-md border-b border-slate-700/30'
         }`}
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             
             {/* Left: Logo */}
-            <Link to="/" className="flex items-center group">
+            <Link to="/" className="flex items-center group flex-shrink-0">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="relative"
@@ -110,32 +110,32 @@ export default function NewHeader() {
                 <img 
                   src="/assets/cxrh-banner.png" 
                   alt="The Crypto Rabbit Hole" 
-                  className="h-8 w-auto"
+                  className="h-6 sm:h-8 w-auto"
                 />
               </motion.div>
             </Link>
 
             {/* Center: Ape In! Title (Clickable) */}
-            <Link to="/" className="flex items-center">
+            <Link to="/" className="flex items-center flex-shrink-0 mx-2">
               <motion.div
                 whileHover={{ scale: 1.05, rotate: 2 }}
                 whileTap={{ scale: 0.95 }}
-                className="text-3xl font-display font-black bg-gradient-to-r from-purple-400 via-pink-500 to-orange-500 bg-clip-text text-transparent cursor-pointer"
+                className="text-xl sm:text-2xl md:text-3xl font-display font-black bg-gradient-to-r from-purple-400 via-pink-500 to-orange-500 bg-clip-text text-transparent cursor-pointer"
               >
                 APE IN!
               </motion.div>
             </Link>
 
             {/* Right: Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 flex-shrink-0">
               
               {/* Leaderboard Button */}
               <Link
                 to="/leaderboard"
-                className="hidden md:flex items-center space-x-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:border-purple-500/50 transition-all group"
+                className="flex items-center px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:border-purple-500/50 transition-all group"
               >
-                <span className="text-lg">🏆</span>
-                <span className="text-sm font-semibold text-slate-200 group-hover:text-white">Leaderboard</span>
+                <span className="text-sm sm:text-lg">🏆</span>
+                <span className="hidden sm:inline text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-white ml-1 sm:ml-2">Leaderboard</span>
               </Link>
 
               {/* Wallet Connection / Account */}
@@ -146,10 +146,10 @@ export default function NewHeader() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowAccountMenu(!showAccountMenu)}
-                    className="flex items-center space-x-3 px-4 py-2 rounded-xl bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 hover:border-green-500/50 transition-all"
+                    className="flex items-center space-x-1 sm:space-x-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 hover:border-green-500/50 transition-all"
                   >
                     {/* Avatar */}
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center text-lg">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center text-sm sm:text-lg">
                       {userProfile?.avatar || '👤'}
                     </div>
                     
@@ -164,7 +164,7 @@ export default function NewHeader() {
                     </div>
                     
                     {/* Connection Status */}
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full animate-pulse"></div>
                   </motion.button>
 
                   {/* Account Dropdown */}

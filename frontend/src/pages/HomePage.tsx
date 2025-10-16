@@ -148,15 +148,15 @@ export default function HomePage() {
         <ParticleBackground />
       </div>
 
-      <div className="container mx-auto px-4 pt-4 pb-4 relative z-20 max-w-6xl">
+      <div className="container mx-auto px-2 sm:px-4 pt-2 sm:pt-4 pb-2 sm:pb-4 relative z-20 max-w-6xl">
         {/* Compact Hero Section - Tagline directly under banner */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="text-center mb-6"
+          className="text-center mb-3 sm:mb-6"
         >
-          <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
+          <p className="text-xs sm:text-sm md:text-base text-slate-400 max-w-2xl mx-auto px-2 leading-relaxed">
             Push your luck • Draw cards • Roll dice • Stack sats to victory!
           </p>
         </motion.div>
@@ -169,7 +169,7 @@ export default function HomePage() {
           className="mb-4"
         >
           {/* How-to buttons */}
-          <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto mb-6">
+          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 max-w-4xl mx-auto mb-3 sm:mb-6 px-2">
             {guideSteps.map((step, idx) => (
               <motion.div
                 key={step.id}
@@ -180,20 +180,20 @@ export default function HomePage() {
                 onMouseLeave={() => setHoveredGuide(null)}
                 className="relative group"
               >
-                <div className={`px-4 py-3 rounded-xl bg-slate-800/80 backdrop-blur border transition-all cursor-help flex items-center gap-3 ${
+                <div className={`px-2 sm:px-4 py-2 sm:py-3 rounded-xl bg-slate-800/80 backdrop-blur border transition-all cursor-help flex items-center gap-2 sm:gap-3 ${
                   hoveredGuide === step.id 
                     ? 'border-purple-500/70 bg-purple-900/20 shadow-lg shadow-purple-500/20' 
                     : 'border-slate-700/50 hover:border-purple-500/50'
                 }`}>
                   {step.isImage ? (
-                    <img src={step.icon} alt={step.title} className="w-6 h-6 rounded object-cover" />
+                    <img src={step.icon} alt={step.title} className="w-5 h-5 sm:w-6 sm:h-6 rounded object-cover" />
                   ) : (
-                    <span className="text-xl">{step.icon}</span>
+                    <span className="text-lg sm:text-xl">{step.icon}</span>
                   )}
-                  <span className="text-sm font-semibold text-slate-200">{step.title}</span>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-200">{step.title}</span>
                   <motion.span
                     animate={{ rotate: hoveredGuide === step.id ? 180 : 0 }}
-                    className="text-slate-500 text-xs"
+                    className="text-slate-500 text-xs hidden sm:inline"
                   >
                     ▼
                   </motion.span>
@@ -249,9 +249,9 @@ export default function HomePage() {
           transition={{ delay: 0.4 }}
           className="mb-2"
         >
-          <h2 className="text-lg font-bold text-center mb-3 text-slate-200">Choose Your Opponent</h2>
+          <h2 className="text-base sm:text-lg font-bold text-center mb-2 sm:mb-3 text-slate-200 px-2">Choose Your Opponent</h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto px-2">
             {gameModes.map((gameMode, index) => (
               <CompactGameCard
                 key={gameMode.mode}
@@ -298,27 +298,27 @@ function CompactGameCard({
       className={`${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} relative`}
     >
       <div className={`bg-gradient-to-br ${gameMode.color} p-[1px] rounded-xl h-full shadow-lg hover:shadow-xl transition-shadow`}>
-        <div className="bg-slate-800/95 rounded-xl p-3 h-full flex flex-col relative overflow-hidden">
+        <div className="bg-slate-800/95 rounded-xl p-2 sm:p-3 h-full flex flex-col relative overflow-hidden">
           {disabled && (
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm rounded-xl flex items-center justify-center z-20">
               <span className="text-xs font-bold text-slate-400 px-2 py-1 bg-slate-800/80 rounded">Coming Soon</span>
             </div>
           )}
           
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-3xl">{gameMode.icon}</span>
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <span className="text-2xl sm:text-3xl">{gameMode.icon}</span>
             {gameMode.difficulty && (
-              <span className="text-[10px] font-semibold text-slate-400 uppercase px-1.5 py-0.5 rounded bg-slate-700/50">
+              <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase px-1 sm:px-1.5 py-0.5 rounded bg-slate-700/50">
                 {gameMode.difficulty}
               </span>
             )}
           </div>
 
-          <h3 className="text-base font-bold mb-1 text-white">{gameMode.name}</h3>
-          <p className="text-slate-400 text-[11px] mb-3 line-clamp-2 leading-tight">{gameMode.description}</p>
+          <h3 className="text-sm sm:text-base font-bold mb-1 text-white">{gameMode.name}</h3>
+          <p className="text-slate-400 text-[10px] sm:text-[11px] mb-2 sm:mb-3 line-clamp-2 leading-tight">{gameMode.description}</p>
           
           <button
-            className={`w-full px-2 py-1.5 rounded-lg font-semibold text-xs bg-gradient-to-r ${gameMode.color} mt-auto ${disabled ? 'opacity-50' : 'hover:opacity-90'}`}
+            className={`w-full px-2 py-1 sm:py-1.5 rounded-lg font-semibold text-[10px] sm:text-xs bg-gradient-to-r ${gameMode.color} mt-auto ${disabled ? 'opacity-50' : 'hover:opacity-90'}`}
             disabled={disabled}
           >
             {disabled ? 'Soon' : 'Play →'}
