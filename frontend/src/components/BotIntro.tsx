@@ -171,17 +171,20 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
               <img 
                 src={`/assets/bots/${gameMode}.png?v=${Date.now()}`} 
                 alt={`${gameMode} avatar`} 
-                className="w-full h-full object-cover rounded-full absolute inset-0 z-20" 
+                className="w-full h-full object-cover rounded-full" 
                 onError={(e) => {
-                  // Fallback to emoji if image fails to load
+                  console.error(`Failed to load portrait for ${gameMode}:`, e);
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling.style.display = 'flex';
+                }}
+                onLoad={(e) => {
+                  console.log(`Successfully loaded portrait for ${gameMode}`);
                 }}
               />
-            ) : null}
-            <span className="relative z-10 flex items-center justify-center" style={{ display: (gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? 'none' : 'flex' }}>
-              {botEmoji}
-            </span>
+            ) : (
+              <span className="flex items-center justify-center">
+                {botEmoji}
+              </span>
+            )}
           </motion.div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
             {gameMode === 'sandy' && '🐰 Sandy Challenge'}
@@ -220,11 +223,11 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
                     alt={`${gameMode} avatar`} 
                     className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
                     onError={(e) => {
-                      console.error(`Failed to load portrait for ${gameMode}:`, e);
+                      console.error(`Failed to load message portrait for ${gameMode}:`, e);
                       e.currentTarget.style.display = 'none';
                     }}
                     onLoad={(e) => {
-                      console.log(`Successfully loaded portrait for ${gameMode}`);
+                      console.log(`Successfully loaded message portrait for ${gameMode}`);
                     }}
                   />
                 </motion.div>
