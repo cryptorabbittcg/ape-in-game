@@ -121,7 +121,7 @@ export default function GamePage() {
             <p className="text-xs text-slate-400">First to 150 sats wins!</p>
           </motion.div>
 
-          <GameBoard gameId={gameId} playerName={playerName} opponentName={opponentName} />
+          <GameBoard gameId={gameId} playerName={playerName} opponentName={opponentName} gameMode={mode} />
         </>
       )}
     </div>

@@ -166,9 +166,22 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className={`w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${botColor} flex items-center justify-center text-4xl shadow-lg overflow-hidden`}
           >
-            {/* TODO: Replace with actual bot avatar images when provided */}
-            {/* <img src={`/assets/bots/${gameMode}.png`} alt={`${gameMode} avatar`} className="w-full h-full object-cover" /> */}
-            <span className="relative z-10">{botEmoji}</span>
+            {/* Bot Portrait - Show image if available, fallback to emoji */}
+            {(gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
+              <img 
+                src={`/assets/bots/${gameMode}.png`} 
+                alt={`${gameMode} avatar`} 
+                className="w-full h-full object-cover rounded-full" 
+                onError={(e) => {
+                  // Fallback to emoji if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling.style.display = 'block';
+                }}
+              />
+            ) : null}
+            <span className="relative z-10" style={{ display: (gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? 'none' : 'block' }}>
+              {botEmoji}
+            </span>
           </motion.div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
             {gameMode === 'sandy' && '🐰 Sandy Challenge'}
@@ -192,9 +205,29 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5 }}
-              className="text-center"
+              className="flex items-center justify-center space-x-4"
             >
-              <div className="text-lg sm:text-xl text-slate-200 leading-relaxed">
+              {/* Bot Portrait on the left */}
+              {(gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex-shrink-0"
+                >
+                  <img 
+                    src={`/assets/bots/${gameMode}.png`} 
+                    alt={`${gameMode} avatar`} 
+                    className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </motion.div>
+              ) : null}
+              
+              {/* Message text */}
+              <div className="text-lg sm:text-xl text-slate-200 leading-relaxed text-center flex-1">
                 {introMessages[currentMessageIndex]}
               </div>
               

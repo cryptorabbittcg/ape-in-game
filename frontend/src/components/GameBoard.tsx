@@ -4,14 +4,16 @@ import Card from './Card'
 import Dice from './Dice'
 import React, { useState } from 'react'
 import { gameAPI } from '../services/api'
+import { GameMode } from '../types/game'
 
 interface GameBoardProps {
   gameId: string
   playerName: string
   opponentName: string
+  gameMode?: GameMode
 }
 
-export default function GameBoard({ gameId, playerName, opponentName }: GameBoardProps) {
+export default function GameBoard({ gameId, playerName, opponentName, gameMode }: GameBoardProps) {
   const {
     playerScore,
     opponentScore,
@@ -298,7 +300,20 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
         )}
         <div className="text-2xl mb-8">
           <div>Your Score: <span className="score-display">{playerScore}</span></div>
-          <div>{opponentName} Score: <span className="score-display">{opponentScore}</span></div>
+          <div className="flex items-center justify-center space-x-3">
+            {/* Bot Avatar in Game Over Screen */}
+            {gameMode && (gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
+              <img 
+                src={`/assets/bots/${gameMode}.png`} 
+                alt={`${gameMode} avatar`} 
+                className="w-8 h-8 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : null}
+            <span>{opponentName} Score: <span className="score-display">{opponentScore}</span></span>
+          </div>
         </div>
         <button onClick={() => window.location.href = '/'} className="btn-primary text-lg">
           Play Again
@@ -319,6 +334,19 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
           </div>
         </div>
         <div className="game-board text-center py-3">
+          {/* Bot Avatar */}
+          {gameMode && (gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
+            <div className="flex justify-center mb-2">
+              <img 
+                src={`/assets/bots/${gameMode}.png`} 
+                alt={`${gameMode} avatar`} 
+                className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          ) : null}
           <h3 className="text-base font-semibold mb-1 text-slate-300">{opponentName}</h3>
           <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">{opponentScore}</div>
           {isBotPlaying && botTurnData && (
