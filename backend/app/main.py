@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from app.config import settings
-from app.api import game, leaderboard
+from app.api import game, leaderboard, rewards
 from app.websockets import game_ws
 from app.database import init_db
 import os
@@ -45,6 +45,7 @@ if os.path.exists(assets_path):
 # Include routers
 app.include_router(game.router, prefix="/api/game", tags=["game"])
 app.include_router(leaderboard.router, prefix="/api/leaderboard", tags=["leaderboard"])
+app.include_router(rewards.router, prefix="/api/rewards", tags=["rewards"])
 app.include_router(game_ws.router, prefix="/ws", tags=["websocket"])
 
 

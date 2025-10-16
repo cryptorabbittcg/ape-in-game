@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { GameMode } from '../types/game'
 import { useState } from 'react'
 import ParticleBackground from '../components/ParticleBackground'
+import { useActiveAccount } from 'thirdweb/react'
+import { PaymentService } from '../services/paymentService'
 
 interface GameModeCard {
   mode: GameMode
@@ -12,6 +14,7 @@ interface GameModeCard {
   difficulty?: string
   icon: string
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
+  price: number
 }
 
 const gameModes: GameModeCard[] = [
@@ -23,6 +26,7 @@ const gameModes: GameModeCard[] = [
     difficulty: 'Tutorial',
     icon: '🟡',
     rarity: 'common',
+    price: 0, // Free
   },
   {
     mode: 'aida',
@@ -32,6 +36,7 @@ const gameModes: GameModeCard[] = [
     difficulty: 'Easy',
     icon: '🟣',
     rarity: 'uncommon',
+    price: 0.10, // 0.10 APE
   },
   {
     mode: 'lana',
@@ -41,6 +46,7 @@ const gameModes: GameModeCard[] = [
     difficulty: 'Medium',
     icon: '🔵',
     rarity: 'rare',
+    price: 0.10, // 0.10 APE
   },
   {
     mode: 'enj1n',
@@ -50,6 +56,7 @@ const gameModes: GameModeCard[] = [
     difficulty: 'Hard',
     icon: '🔴',
     rarity: 'epic',
+    price: 0.10, // 0.10 APE
   },
   {
     mode: 'nifty',
@@ -59,6 +66,7 @@ const gameModes: GameModeCard[] = [
     difficulty: 'Medium',
     icon: '🟠',
     rarity: 'rare',
+    price: 0.10, // 0.10 APE
   },
   {
     mode: 'pvp',
@@ -96,10 +104,31 @@ const rarityGlow = {
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const account = useActiveAccount()
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [hoveredGuide, setHoveredGuide] = useState<string | null>(null)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
 
-  const handleModeSelect = (mode: GameMode) => {
+  const handleModeSelect = async (mode: GameMode) => {
+    setPaymentError(null)
+    
+    // Check if wallet is connected for paid games
+    if (mode !== 'sandy' && !account) {
+      setPaymentError('Please connect your wallet to play paid games')
+      return
+    }
+
+    // Validate payment for paid games
+    if (mode !== 'sandy') {
+      const requiredAmount = PaymentService.getGamePrice(mode)
+      const validation = await PaymentService.validatePayment(account, requiredAmount)
+      
+      if (!validation.hasEnoughBalance) {
+        setPaymentError(`Insufficient ApeCoin balance. You need ${PaymentService.formatApeCoin(validation.requiredAmount)} but only have ${PaymentService.formatApeCoin(validation.currentBalance)}`)
+        return
+      }
+    }
+
     navigate(`/game/${mode}`)
   }
 
@@ -242,6 +271,21 @@ export default function HomePage() {
           </motion.div>
         </motion.div>
 
+        {/* Payment Error Display */}
+        {paymentError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="max-w-md mx-auto mb-4 p-4 bg-red-500/20 border border-red-500/30 rounded-xl backdrop-blur-sm"
+          >
+            <div className="flex items-center space-x-2">
+              <span className="text-red-400">⚠️</span>
+              <p className="text-red-300 text-sm font-medium">{paymentError}</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Compact Game Modes Grid */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -316,6 +360,21 @@ function CompactGameCard({
 
           <h3 className="text-sm sm:text-base font-bold mb-1 text-white">{gameMode.name}</h3>
           <p className="text-slate-400 text-[10px] sm:text-[11px] mb-2 sm:mb-3 line-clamp-2 leading-tight">{gameMode.description}</p>
+          
+          {/* Price Display */}
+          <div className="mb-2 sm:mb-3">
+            {gameMode.price === 0 ? (
+              <div className="flex items-center justify-center px-2 py-1 bg-green-500/20 rounded-lg border border-green-500/30">
+                <span className="text-[9px] sm:text-[10px] font-bold text-green-400">FREE</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center px-2 py-1 bg-orange-500/20 rounded-lg border border-orange-500/30">
+                <span className="text-[9px] sm:text-[10px] font-bold text-orange-400">
+                  🪙 {gameMode.price} APE
+                </span>
+              </div>
+            )}
+          </div>
           
           <button
             className={`w-full px-2 py-1 sm:py-1.5 rounded-lg font-semibold text-[10px] sm:text-xs bg-gradient-to-r ${gameMode.color} mt-auto ${disabled ? 'opacity-50' : 'hover:opacity-90'}`}

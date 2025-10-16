@@ -4,6 +4,7 @@ import { client, wallet } from '../lib/thirdweb'
 import { createWallet } from 'thirdweb/wallets'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
+import { useApeCoinBalance } from '../hooks/useApeCoinBalance'
 
 interface UserProfile {
   name: string
@@ -20,6 +21,7 @@ export default function NewHeader() {
   const [showNameModal, setShowNameModal] = useState(false)
   const [playerName, setPlayerName] = useState('')
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const { balance: apeCoinBalance, isLoading: balanceLoading } = useApeCoinBalance()
 
   // Load user profile from localStorage
   useEffect(() => {
@@ -183,9 +185,28 @@ export default function NewHeader() {
                             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center text-2xl">
                               {userProfile?.avatar || '👤'}
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <h3 className="font-semibold text-white">{userProfile?.name || 'Player'}</h3>
                               <p className="text-xs text-slate-400 font-mono">{formatAddress(account.address)}</p>
+                            </div>
+                          </div>
+                          
+                          {/* ApeCoin Balance */}
+                          <div className="mt-3 p-3 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-lg border border-orange-500/20">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-lg">🪙</span>
+                                <span className="text-sm font-semibold text-orange-400">ApeCoin</span>
+                              </div>
+                              <div className="text-right">
+                                {balanceLoading ? (
+                                  <div className="w-12 h-4 bg-slate-700/50 rounded animate-pulse"></div>
+                                ) : (
+                                  <span className="text-sm font-bold text-white">
+                                    {parseFloat(apeCoinBalance).toFixed(2)} APE
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>

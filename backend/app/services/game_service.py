@@ -11,6 +11,7 @@ from app.game_logic import (
     check_bust,
 )
 from app.config import settings
+from app.services.rewards_service import RewardsService
 
 
 class GameService:
@@ -18,6 +19,7 @@ class GameService:
 
     def __init__(self, db: AsyncSession):
         self.db = db
+        self.rewards_service = RewardsService(db)
 
     async def create_game(
         self,
@@ -71,6 +73,19 @@ class GameService:
             game_log=[]
         )
         self.db.add(game_state)
+
+        # Record payment for non-Sandy games
+        if mode != "sandy" and wallet_address:
+            bot_config = settings.BOT_CONFIGS.get(mode, {})
+            game_price = 0.10  # Default price for paid games
+            
+            await self.rewards_service.record_game_payment(
+                game_id=game.id,
+                player_id=player.id,
+                wallet_address=wallet_address,
+                amount_apecoin=game_price,
+                game_mode=mode
+            )
 
         await self.db.commit()
         await self.db.refresh(game)
