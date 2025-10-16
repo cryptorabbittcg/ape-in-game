@@ -5,6 +5,9 @@ import { defineChain } from "thirdweb/chains";
 // Create the ThirdWeb client
 // Get your client ID from: https://thirdweb.com/dashboard/settings/api-keys
 // Using a placeholder ID for development - replace with your actual client ID
+console.log('🔧 Thirdweb Client ID:', import.meta.env.VITE_THIRDWEB_CLIENT_ID)
+console.log('🔧 All env vars:', import.meta.env)
+
 export const client = createThirdwebClient({
   clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID || "placeholder-client-id-replace-me",
 });
