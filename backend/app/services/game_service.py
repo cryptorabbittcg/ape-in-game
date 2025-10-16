@@ -555,4 +555,4 @@ class GameService:
 
         entry.total_score += player.score
 
-        await self.db.commit()
+        # Note: Don't commit here - let the calling method handle the commit
