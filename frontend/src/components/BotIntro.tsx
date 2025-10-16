@@ -166,33 +166,18 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className={`w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${botColor} flex items-center justify-center text-4xl shadow-lg overflow-hidden relative`}
           >
-            {/* Bot Portrait - Show image if available, fallback to emoji */}
-            {(gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
-              <div className="w-full h-full relative">
-                <img 
-                  src={`/assets/bots/${gameMode}.png`} 
-                  alt={`${gameMode} avatar`} 
-                  className="w-full h-full object-cover rounded-full absolute inset-0" 
-                  onError={(e) => {
-                    console.error(`Failed to load header portrait for ${gameMode}:`, e);
-                    e.currentTarget.style.display = 'none';
-                    // Show emoji fallback
-                    const fallback = e.currentTarget.nextElementSibling;
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
-                  onLoad={(e) => {
-                    console.log(`Successfully loaded header portrait for ${gameMode}`);
-                  }}
-                />
-                <span className="absolute inset-0 flex items-center justify-center text-4xl" style={{ display: 'none' }}>
-                  {botEmoji}
-                </span>
-              </div>
-            ) : (
-              <span className="flex items-center justify-center">
-                {botEmoji}
-              </span>
-            )}
+            {/* Bot Portrait */}
+            <img 
+              src={`/assets/bots/${gameMode}.png`} 
+              alt={`${gameMode} avatar`} 
+              className="w-full h-full object-cover rounded-full" 
+              onError={(e) => {
+                console.error(`Failed to load header portrait for ${gameMode}:`, e);
+              }}
+              onLoad={(e) => {
+                console.log(`Successfully loaded header portrait for ${gameMode}`);
+              }}
+            />
           </motion.div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
             {gameMode === 'sandy' && '🐰 Sandy Challenge'}
@@ -218,28 +203,25 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
               transition={{ duration: 0.5 }}
               className="flex items-center justify-center space-x-4"
             >
-              {/* Bot Portrait on the left */}
-              {(gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="flex-shrink-0"
-                >
-                  <img 
-                    src={`/assets/bots/${gameMode}.png`} 
-                    alt={`${gameMode} avatar`} 
-                    className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
-                    onError={(e) => {
-                      console.error(`Failed to load message portrait for ${gameMode}:`, e);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                    onLoad={(e) => {
-                      console.log(`Successfully loaded message portrait for ${gameMode}`);
-                    }}
-                  />
-                </motion.div>
-              ) : null}
+            {/* Bot Portrait on the left */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex-shrink-0"
+            >
+              <img 
+                src={`/assets/bots/${gameMode}.png`} 
+                alt={`${gameMode} avatar`} 
+                className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
+                onError={(e) => {
+                  console.error(`Failed to load message portrait for ${gameMode}:`, e);
+                }}
+                onLoad={(e) => {
+                  console.log(`Successfully loaded message portrait for ${gameMode}`);
+                }}
+              />
+            </motion.div>
               
               {/* Message text */}
               <div className="text-lg sm:text-xl text-slate-200 leading-relaxed text-center flex-1">

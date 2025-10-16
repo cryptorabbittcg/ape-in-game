@@ -302,20 +302,17 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
           <div>Your Score: <span className="score-display">{playerScore}</span></div>
           <div className="flex items-center justify-center space-x-3">
             {/* Bot Avatar in Game Over Screen */}
-            {gameMode && (gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
-              <img 
-                src={`/assets/bots/${gameMode}.png`} 
-                alt={`${gameMode} avatar`} 
-                className="w-8 h-8 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
-                onError={(e) => {
-                  console.error(`Failed to load Game Over portrait for ${gameMode}:`, e);
-                  e.currentTarget.style.display = 'none';
-                }}
-                onLoad={(e) => {
-                  console.log(`Successfully loaded Game Over portrait for ${gameMode}`);
-                }}
-              />
-            ) : null}
+            <img 
+              src={`/assets/bots/${gameMode}.png`} 
+              alt={`${gameMode} avatar`} 
+              className="w-8 h-8 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
+              onError={(e) => {
+                console.error(`Failed to load Game Over portrait for ${gameMode}:`, e);
+              }}
+              onLoad={(e) => {
+                console.log(`Successfully loaded Game Over portrait for ${gameMode}`);
+              }}
+            />
             <span>{opponentName} Score: <span className="score-display">{opponentScore}</span></span>
           </div>
         </div>
@@ -339,22 +336,19 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
         </div>
         <div className="game-board text-center py-3">
           {/* Bot Avatar */}
-          {gameMode && (gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
-            <div className="flex justify-center mb-2">
-              <img 
-                src={`/assets/bots/${gameMode}.png`} 
-                alt={`${gameMode} avatar`} 
-                className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
-                onError={(e) => {
-                  console.error(`Failed to load GameBoard score portrait for ${gameMode}:`, e);
-                  e.currentTarget.style.display = 'none';
-                }}
-                onLoad={(e) => {
-                  console.log(`Successfully loaded GameBoard score portrait for ${gameMode}`);
-                }}
-              />
-            </div>
-          ) : null}
+          <div className="flex justify-center mb-2">
+            <img 
+              src={`/assets/bots/${gameMode}.png`} 
+              alt={`${gameMode} avatar`} 
+              className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
+              onError={(e) => {
+                console.error(`Failed to load GameBoard score portrait for ${gameMode}:`, e);
+              }}
+              onLoad={(e) => {
+                console.log(`Successfully loaded GameBoard score portrait for ${gameMode}`);
+              }}
+            />
+          </div>
           <h3 className="text-base font-semibold mb-1 text-slate-300">{opponentName}</h3>
           <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">{opponentScore}</div>
           {isBotPlaying && botTurnData && (

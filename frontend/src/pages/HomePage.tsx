@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { GameMode } from '../types/game'
 import { useState } from 'react'
 import ParticleBackground from '../components/ParticleBackground'
-import ImageTest from '../components/ImageTest'
 
 interface GameModeCard {
   mode: GameMode
@@ -150,9 +149,6 @@ export default function HomePage() {
       </div>
 
       <div className="container mx-auto px-2 sm:px-4 pt-2 sm:pt-4 pb-2 sm:pb-4 relative z-20 max-w-6xl">
-        {/* Temporary Image Test */}
-        <ImageTest />
-        
         {/* Compact Hero Section - Tagline directly under banner */}
         <motion.div
           initial={{ opacity: 0 }}
