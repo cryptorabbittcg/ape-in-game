@@ -331,24 +331,25 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
 
       {/* Compact Game Area */}
       <div className="game-board">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 py-4">
-          {/* Card Section - Shows player OR bot card */}
-          <div className="flex flex-col items-center space-y-2 w-full md:w-auto">
-            <div className="transform-gpu">
-              <Card
-                card={isBotPlaying && botTurnData ? botTurnData.card : currentCard}
-                isRevealing={isBotPlaying ? true : isDrawing}
-              />
-            </div>
-            {isBotPlaying && (
-              <div className="text-sm text-emerald-400 font-semibold animate-pulse">
-                {opponentName}'s Turn
-              </div>
-            )}
+        {/* Card Section - Full width on top */}
+        <div className="flex flex-col items-center space-y-2 mb-4">
+          <div className="transform-gpu">
+            <Card
+              card={isBotPlaying && botTurnData ? botTurnData.card : currentCard}
+              isRevealing={isBotPlaying ? true : isDrawing}
+            />
           </div>
+          {isBotPlaying && (
+            <div className="text-sm text-emerald-400 font-semibold animate-pulse">
+              {opponentName}'s Turn
+            </div>
+          )}
+        </div>
 
-          {/* Dice Section - Shows player OR bot roll */}
-          <div className="flex flex-col items-center space-y-2 sm:space-y-3 w-full sm:w-auto">
+        {/* Mobile: 2-column layout (Dice left, Buttons right) | Desktop: Horizontal layout */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-4 sm:gap-6">
+          {/* Dice Section - Left column on mobile */}
+          <div className="flex flex-col items-center space-y-2 w-full sm:w-auto">
             <div className="h-6 text-sm text-slate-400">
               {isRolling || (botTurnData?.isRolling ?? false) ? 'Rolling...' : 'Dice'}
             </div>
@@ -370,54 +371,54 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
                 return shouldRoll;
               })()}
             />
+          </div>
 
-            {/* Stacked Action Buttons */}
-            <div className="flex flex-col gap-1.5 sm:gap-2 mt-3 sm:mt-4 w-full min-w-[200px] sm:min-w-[160px]">
-              <button
-                onClick={handleDrawCard}
-                disabled={!isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying}
-                className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
-                  !isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying
-                    ? 'bg-slate-600 opacity-50 cursor-not-allowed'
-                    : apeInActive
-                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 animate-pulse ring-2 ring-green-400'
-                    : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 animate-pulse'
-                }`}
-              >
-                {isDrawing ? '⏳ Drawing...' : apeInActive ? '🚀 Draw (APE IN!)' : '🎴 Draw Card'}
-              </button>
+          {/* Action Buttons - Right column on mobile */}
+          <div className="flex flex-col gap-1.5 sm:gap-2 w-full sm:w-auto sm:min-w-[160px]">
+            <button
+              onClick={handleDrawCard}
+              disabled={!isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
+                !isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying
+                  ? 'bg-slate-600 opacity-50 cursor-not-allowed'
+                  : apeInActive
+                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 animate-pulse ring-2 ring-green-400'
+                  : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 animate-pulse'
+              }`}
+            >
+              {isDrawing ? '⏳ Drawing...' : apeInActive ? '🚀 Draw (APE IN!)' : '🎴 Draw Card'}
+            </button>
 
-              <button
-                onClick={handleRollDice}
-                disabled={!isPlayerTurn || !currentCard || isRolling || isBotPlaying}
-                className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
-                  !isPlayerTurn || !currentCard || isRolling || isBotPlaying
-                    ? 'bg-slate-600 opacity-50 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 animate-pulse'
-                }`}
-              >
-                {isRolling ? '⏳ Rolling...' : '🎲 Roll Dice'}
-              </button>
+            <button
+              onClick={handleRollDice}
+              disabled={!isPlayerTurn || !currentCard || isRolling || isBotPlaying}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
+                !isPlayerTurn || !currentCard || isRolling || isBotPlaying
+                  ? 'bg-slate-600 opacity-50 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 animate-pulse'
+              }`}
+            >
+              {isRolling ? '⏳ Rolling...' : '🎲 Roll Dice'}
+            </button>
 
-              <button
-                onClick={handleStackSats}
-                disabled={!isPlayerTurn || playerTurnScore === 0 || isBotPlaying}
-                className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
-                  !isPlayerTurn || playerTurnScore === 0 || isBotPlaying
-                    ? 'bg-slate-600 opacity-50 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 animate-pulse'
-                }`}
-              >
-                💰 Stack {playerTurnScore > 0 ? `(${playerTurnScore})` : ''}
-              </button>
+            <button
+              onClick={handleStackSats}
+              disabled={!isPlayerTurn || playerTurnScore === 0 || isBotPlaying}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
+                !isPlayerTurn || playerTurnScore === 0 || isBotPlaying
+                  ? 'bg-slate-600 opacity-50 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 animate-pulse'
+              }`}
+            >
+              💰 Stack {playerTurnScore > 0 ? `(${playerTurnScore})` : ''}
+            </button>
 
-              <button
-                onClick={handleForfeit}
-                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all"
-              >
-                🏳️ Forfeit
-              </button>
-            </div>
+            <button
+              onClick={handleForfeit}
+              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all"
+            >
+              🏳️ Forfeit
+            </button>
           </div>
         </div>
 
