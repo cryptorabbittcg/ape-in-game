@@ -16,26 +16,35 @@ Based on the working Cryptoku setup, here are the correct values:
 Go to your Vercel project dashboard → Settings → Environment Variables and add:
 
 ```
+VITE_THIRDWEB_CLIENT_ID=c9199aa4c25c849a9014f465e22ec9e4
+THIRDWEB_SECRET_KEY=h_ojYf9C9Jq63KfoPJfMeqbvmnqkqgMPv0UfczgGLu-G5j1Z9yQKBz2RgKz4xPepVpjpjOBo_Wqzn-QbFektOQ
 VITE_CHAIN_ID=33111
 VITE_RPC_URL=https://curtis.rpc.caldera.xyz/http
 VITE_CHAIN_NAME=ApeChain Curtis Testnet
 VITE_TOKEN_SYMBOL=APE
 VITE_TOKEN_DECIMALS=18
-VITE_THIRDWEB_CLIENT_ID=your_thirdweb_client_id
-VITE_THIRDWEB_SECRET_KEY=your_thirdweb_secret_key
 ```
 
-## Example Values (Working Configuration)
+## Local Development (.env.local)
+
+For local development, create `frontend/.env.local` with:
 
 ```
+VITE_THIRDWEB_CLIENT_ID=c9199aa4c25c849a9014f465e22ec9e4
+THIRDWEB_SECRET_KEY=h_ojYf9C9Jq63KfoPJfMeqbvmnqkqgMPv0UfczgGLu-G5j1Z9yQKBz2RgKz4xPepVpjpjOBo_Wqzn-QbFektOQ
 VITE_CHAIN_ID=33111
 VITE_RPC_URL=https://curtis.rpc.caldera.xyz/http
 VITE_CHAIN_NAME=ApeChain Curtis Testnet
 VITE_TOKEN_SYMBOL=APE
 VITE_TOKEN_DECIMALS=18
-VITE_THIRDWEB_CLIENT_ID=your_actual_thirdweb_client_id
-VITE_THIRDWEB_SECRET_KEY=your_actual_thirdweb_secret_key
 ```
+
+## ✅ Configuration Status
+
+- **Thirdweb Credentials**: ✅ Added (matching Cryptoku)
+- **CURTIS Testnet**: ✅ Configured (Chain ID: 33111)
+- **RPC Endpoint**: ✅ Set to Caldera RPC
+- **Token Settings**: ✅ Native APE configuration
 
 ## What Changed
 
