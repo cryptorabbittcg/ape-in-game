@@ -13,11 +13,12 @@ const api = axios.create({
 // Game API
 export const gameAPI = {
   // Create a new game
-  createGame: async (mode: GameMode, playerName: string, walletAddress?: string) => {
+  createGame: async (mode: GameMode, playerName: string, walletAddress?: string, isDailyFree?: boolean) => {
     const response = await api.post<GameState>('/api/game/create', {
       mode,
       playerName,
       walletAddress,
+      isDailyFree: isDailyFree || false,
     })
     return response.data
   },

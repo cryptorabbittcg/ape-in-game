@@ -25,7 +25,8 @@ class GameService:
         self,
         mode: str,
         player_name: str,
-        wallet_address: Optional[str] = None
+        wallet_address: Optional[str] = None,
+        is_daily_free: bool = False
     ) -> Dict:
         """Create a new game"""
         # Get bot-specific configuration
@@ -74,8 +75,8 @@ class GameService:
         )
         self.db.add(game_state)
 
-        # Record payment for non-Sandy games
-        if mode != "sandy" and wallet_address:
+        # Record payment for non-Sandy games (but not for daily free games)
+        if mode != "sandy" and wallet_address and not is_daily_free:
             bot_config = settings.BOT_CONFIGS.get(mode, {})
             game_price = 0.10  # Default price for paid games
             

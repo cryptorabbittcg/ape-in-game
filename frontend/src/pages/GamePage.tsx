@@ -9,6 +9,7 @@ import GameBoard from '../components/GameBoard'
 import BotIntro from '../components/BotIntro'
 import { GameMode } from '../types/game'
 import { BOT_CONFIGS } from '../config/botConfig'
+import { DailyFreeGameService } from '../services/dailyFreeGames'
 
 const gameNames: Record<GameMode, string> = {
   sandy: 'Sandy',
@@ -55,8 +56,11 @@ export default function GamePage() {
         }
         setPlayerName(name)
 
+        // Check if this is a daily free game
+        const isDailyFree = address && DailyFreeGameService.isEligibleForDailyFree(address, mode)
+        
         // Create game
-        const game = await gameAPI.createGame(mode, name, address)
+        const game = await gameAPI.createGame(mode, name, address, isDailyFree)
         setGameId(game.gameId)
         setGameState(game)
 

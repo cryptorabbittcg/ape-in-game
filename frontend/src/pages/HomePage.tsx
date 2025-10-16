@@ -6,6 +6,7 @@ import ParticleBackground from '../components/ParticleBackground'
 import { useActiveAccount } from 'thirdweb/react'
 import { PaymentService } from '../services/paymentService'
 import { BOT_CONFIGS } from '../config/botConfig'
+import { DailyFreeGameService } from '../services/dailyFreeGames'
 
 interface GameModeCard {
   mode: GameMode
@@ -120,8 +121,11 @@ export default function HomePage() {
       return
     }
 
-    // Validate payment for paid games
-    if (mode !== 'sandy') {
+    // Check if this is a daily free game
+    const isDailyFreeEligible = account && DailyFreeGameService.isEligibleForDailyFree(account.address, mode)
+    
+    // Validate payment for paid games (skip if using daily free)
+    if (mode !== 'sandy' && !isDailyFreeEligible) {
       const requiredAmount = PaymentService.getGamePrice(mode)
       const validation = await PaymentService.validatePayment(account, requiredAmount)
       
@@ -129,6 +133,11 @@ export default function HomePage() {
         setPaymentError(`Insufficient ApeCoin balance. You need ${PaymentService.formatApeCoin(validation.requiredAmount)} but only have ${PaymentService.formatApeCoin(validation.currentBalance)}`)
         return
       }
+    }
+
+    // Mark daily free game as used if applicable
+    if (isDailyFreeEligible && account) {
+      DailyFreeGameService.useDailyFreeGame(account.address, mode)
     }
 
     navigate(`/game/${mode}`)
@@ -306,6 +315,7 @@ export default function HomePage() {
                 onSelect={handleModeSelect}
                 isHovered={hoveredCard === gameMode.mode}
                 onHoverChange={setHoveredCard}
+                account={account}
               />
             ))}
           </div>
@@ -321,15 +331,32 @@ function CompactGameCard({
   index, 
   onSelect,
   isHovered,
-  onHoverChange
+  onHoverChange,
+  account
 }: { 
   gameMode: GameModeCard
   index: number
   onSelect: (mode: GameMode) => void
   isHovered: boolean
   onHoverChange: (mode: string | null) => void
+  account: any
 }) {
   const disabled = ['pvp', 'multiplayer', 'tournament'].includes(gameMode.mode)
+  
+  // Check if this is a daily free game
+  const isDailyFreeEligible = account && DailyFreeGameService.isEligibleForDailyFree(account.address, gameMode.mode)
+  const botConfig = BOT_CONFIGS[gameMode.mode]
+  
+  // Determine display price
+  const getDisplayPrice = () => {
+    if (gameMode.mode === 'sandy') return { price: 0, text: 'FREE', isFree: true }
+    if (isDailyFreeEligible && botConfig.hasDailyFree) {
+      return { price: 0, text: 'Free Daily Play', isFree: true, isDailyFree: true }
+    }
+    return { price: gameMode.price, text: `🪙 ${gameMode.price} APE`, isFree: false }
+  }
+  
+  const displayPrice = getDisplayPrice()
 
   return (
     <motion.div
@@ -365,14 +392,22 @@ function CompactGameCard({
           
           {/* Price Display */}
           <div className="mb-2 sm:mb-3">
-            {gameMode.price === 0 ? (
-              <div className="flex items-center justify-center px-2 py-1 bg-green-500/20 rounded-lg border border-green-500/30">
-                <span className="text-[9px] sm:text-[10px] font-bold text-green-400">FREE</span>
+            {displayPrice.isFree ? (
+              <div className={`flex items-center justify-center px-2 py-1 rounded-lg border ${
+                displayPrice.isDailyFree 
+                  ? 'bg-blue-500/20 border-blue-500/30' 
+                  : 'bg-green-500/20 border-green-500/30'
+              }`}>
+                <span className={`text-[9px] sm:text-[10px] font-bold ${
+                  displayPrice.isDailyFree ? 'text-blue-400' : 'text-green-400'
+                }`}>
+                  {displayPrice.text}
+                </span>
               </div>
             ) : (
               <div className="flex items-center justify-center px-2 py-1 bg-orange-500/20 rounded-lg border border-orange-500/30">
                 <span className="text-[9px] sm:text-[10px] font-bold text-orange-400">
-                  🪙 {gameMode.price} APE
+                  {displayPrice.text}
                 </span>
               </div>
             )}

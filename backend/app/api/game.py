@@ -12,6 +12,7 @@ class CreateGameRequest(BaseModel):
     mode: str
     playerName: str
     walletAddress: Optional[str] = None
+    isDailyFree: Optional[bool] = False
 
 
 class JoinGameRequest(BaseModel):
@@ -30,7 +31,8 @@ async def create_game(
         game_data = await service.create_game(
             mode=request.mode,
             player_name=request.playerName,
-            wallet_address=request.walletAddress
+            wallet_address=request.walletAddress,
+            is_daily_free=request.isDailyFree
         )
         return game_data
     except Exception as e:
