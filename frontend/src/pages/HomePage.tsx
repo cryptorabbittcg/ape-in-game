@@ -5,6 +5,7 @@ import { useState } from 'react'
 import ParticleBackground from '../components/ParticleBackground'
 import { useActiveAccount } from 'thirdweb/react'
 import { PaymentService } from '../services/paymentService'
+import { BOT_CONFIGS } from '../config/botConfig'
 
 interface GameModeCard {
   mode: GameMode
@@ -17,56 +18,57 @@ interface GameModeCard {
   price: number
 }
 
+// Generate game modes from bot config
 const gameModes: GameModeCard[] = [
   {
     mode: 'sandy',
-    name: 'Sandy',
-    description: 'Learn the ropes with Sandy. Perfect for beginners!',
+    name: BOT_CONFIGS.sandy.name,
+    description: BOT_CONFIGS.sandy.description,
     color: 'from-yellow-500 to-orange-500',
-    difficulty: 'Tutorial',
+    difficulty: BOT_CONFIGS.sandy.difficulty,
     icon: '🟡',
     rarity: 'common',
-    price: 0, // Free
+    price: BOT_CONFIGS.sandy.price,
   },
   {
     mode: 'aida',
-    name: 'Aida',
-    description: 'Strategic and efficient. A balanced challenge.',
+    name: BOT_CONFIGS.aida.name,
+    description: BOT_CONFIGS.aida.description,
     color: 'from-purple-500 to-pink-500',
-    difficulty: 'Easy',
+    difficulty: BOT_CONFIGS.aida.difficulty,
     icon: '🟣',
     rarity: 'uncommon',
-    price: 0.10, // 0.10 APE
+    price: BOT_CONFIGS.aida.price,
   },
   {
     mode: 'lana',
-    name: 'Lana',
-    description: 'High-risk, high-reward gameplay. Can you keep up?',
+    name: BOT_CONFIGS.lana.name,
+    description: BOT_CONFIGS.lana.description,
     color: 'from-blue-500 to-cyan-500',
-    difficulty: 'Medium',
+    difficulty: BOT_CONFIGS.lana.difficulty,
     icon: '🔵',
     rarity: 'rare',
-    price: 0.10, // 0.10 APE
+    price: BOT_CONFIGS.lana.price,
   },
   {
     mode: 'enj1n',
-    name: 'En-J1n',
-    description: 'Relentless and aggressive. Only for the brave!',
+    name: BOT_CONFIGS.enj1n.name,
+    description: BOT_CONFIGS.enj1n.description,
     color: 'from-red-500 to-orange-600',
-    difficulty: 'Hard',
+    difficulty: BOT_CONFIGS.enj1n.difficulty,
     icon: '🔴',
     rarity: 'epic',
-    price: 0.10, // 0.10 APE
+    price: BOT_CONFIGS.enj1n.price,
   },
   {
     mode: 'nifty',
-    name: 'Nifty',
-    description: 'Unpredictable and creative strategies await.',
+    name: BOT_CONFIGS.nifty.name,
+    description: BOT_CONFIGS.nifty.description,
     color: 'from-orange-500 to-yellow-500',
-    difficulty: 'Medium',
+    difficulty: BOT_CONFIGS.nifty.difficulty,
     icon: '🟠',
     rarity: 'rare',
-    price: 0.10, // 0.10 APE
+    price: BOT_CONFIGS.nifty.price,
   },
   {
     mode: 'pvp',

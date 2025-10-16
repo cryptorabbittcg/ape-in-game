@@ -37,6 +37,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
   const [isRolling, setIsRolling] = useState(false)
   const [floatingMessage, setFloatingMessage] = useState<{text: string, sats?: number} | null>(null)
   const [botTurnData, setBotTurnData] = useState<{card: any, roll: number | null, turnSats: number, isRolling?: boolean} | null>(null)
+  const [showEnlargedAvatar, setShowEnlargedAvatar] = useState(false)
   const [isBotPlaying, setIsBotPlaying] = useState(false)
   const [showRoundPopup, setShowRoundPopup] = useState(false)
   const [currentRound, setCurrentRound] = useState(1)
@@ -341,7 +342,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
             <img 
               src={`/assets/bots/${gameMode}.gif`} 
               alt={`${gameMode} avatar`} 
-              className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
+              className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full border-2 border-purple-500/50 shadow-lg cursor-pointer hover:scale-110 transition-transform duration-200" 
               onError={(e) => {
                 console.log(`GIF failed for ${gameMode} GameBoard, trying PNG...`);
                 e.currentTarget.src = `/assets/bots/${gameMode}.png`;
@@ -349,6 +350,8 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
               onLoad={(e) => {
                 console.log(`Successfully loaded GIF GameBoard score portrait for ${gameMode}`);
               }}
+              onMouseEnter={() => setShowEnlargedAvatar(true)}
+              onMouseLeave={() => setShowEnlargedAvatar(false)}
             />
           </div>
           <h3 className="text-base font-semibold mb-1 text-slate-300">{opponentName}</h3>
@@ -520,6 +523,49 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
               of {maxRounds}
             </div>
           </div>
+        </motion.div>
+      )}
+
+      {/* Enlarged Avatar Display */}
+      {showEnlargedAvatar && gameMode && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onMouseEnter={() => setShowEnlargedAvatar(true)}
+          onMouseLeave={() => setShowEnlargedAvatar(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="bg-slate-800/95 backdrop-blur-xl rounded-2xl border border-purple-500/30 p-6 shadow-2xl max-w-sm w-full"
+          >
+            <div className="text-center">
+              <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-purple-500/50 shadow-xl">
+                <img 
+                  src={`/assets/bots/${gameMode}.gif`} 
+                  alt={`${gameMode} avatar`} 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    console.log(`GIF failed for ${gameMode} enlarged, trying PNG...`);
+                    e.currentTarget.src = `/assets/bots/${gameMode}.png`;
+                  }}
+                  onLoad={(e) => {
+                    console.log(`Successfully loaded GIF enlarged portrait for ${gameMode}`);
+                  }}
+                />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">{opponentName}</h3>
+              <p className="text-slate-300 text-sm">
+                {gameMode === 'sandy' && "🐰 Friendly tutorial bot - Perfect for beginners!"}
+                {gameMode === 'aida' && "🧠 Strategic and analytical - Balanced challenge"}
+                {gameMode === 'lana' && "🔧 High-risk, high-reward - Aggressive gameplay"}
+                {gameMode === 'enj1n' && "🔥 Relentless and aggressive - Only for the brave!"}
+                {gameMode === 'nifty' && "🎨 Unpredictable and creative - Unique strategies"}
+              </p>
+            </div>
+          </motion.div>
         </motion.div>
       )}
     </div>

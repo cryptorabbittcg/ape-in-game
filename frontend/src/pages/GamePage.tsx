@@ -8,6 +8,7 @@ import { useGameStore } from '../store/gameStore'
 import GameBoard from '../components/GameBoard'
 import BotIntro from '../components/BotIntro'
 import { GameMode } from '../types/game'
+import { BOT_CONFIGS } from '../config/botConfig'
 
 const gameNames: Record<GameMode, string> = {
   sandy: 'Sandy',
@@ -118,7 +119,9 @@ export default function GamePage() {
             <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">
               {playerName} vs {mode && gameNames[mode]}
             </h1>
-            <p className="text-xs text-slate-400">First to 150 sats wins!</p>
+            <p className="text-xs text-slate-400">
+              First to {mode ? BOT_CONFIGS[mode].winningScore : 150} sats wins!
+            </p>
           </motion.div>
 
           <GameBoard gameId={gameId} playerName={playerName} opponentName={opponentName} gameMode={mode} />

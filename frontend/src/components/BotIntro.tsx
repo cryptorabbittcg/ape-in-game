@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameMode } from '../types/game'
+import { BOT_CONFIGS } from '../config/botConfig'
 
 interface BotIntroProps {
   gameMode: GameMode
   onComplete: (skip: boolean) => void
 }
 
-const BOT_INTROS: Record<GameMode, string[]> = {
+// Generate dynamic bot intros based on config
+const generateBotIntros = (gameMode: GameMode): string[] => {
+  const config = BOT_CONFIGS[gameMode]
+  const winningScore = config.winningScore
+  
+  const baseIntros: Record<GameMode, string[]> = {
   sandy: [
     "🐰 Sandy: Welcome to the future of gaming...",
     "🚀 APE IN! - ApeChain's first Push-Your-Luck game!",
     "🦍 In this epic game of Risk vs Reward, you'll face off against me!",
-    "🎯 First to stack 150 sats wins the game!",
+    `🎯 First to stack ${winningScore} sats wins the game!`,
     "🎴 Draw cards, 🎲 roll dice, and ⚠️ dodge bearish penalties!",
     "📈 Push your luck to the limit… or risk losing it all!",
     "🌟 Ready to become an Ape In! legend?",
@@ -23,7 +29,7 @@ const BOT_INTROS: Record<GameMode, string[]> = {
     "🚀 Welcome to APE IN! - ApeChain's revolutionary Push-Your-Luck game!",
     "🦍 In this game of Risk vs Reward, data meets intuition.",
     "📊 I calculate every probability, but can you beat the odds?",
-    "🎯 First to 150 sats wins! Outsmart me if you can!",
+    `🎯 First to ${winningScore} sats wins! Outsmart me if you can!`,
     "🌟 The ApeChain community awaits your legend!",
     "➡️ Let's APE IN!"
   ],
@@ -32,7 +38,7 @@ const BOT_INTROS: Record<GameMode, string[]> = {
     "🚀 Welcome to APE IN! - Where ApeChain meets Push-Your-Luck!",
     "🦍 In this high-stakes game of Risk vs Reward, I play aggressively.",
     "⚡ I chase big wins and push every limit!",
-    "🎯 First to 150 sats wins! Can you match my intensity?",
+    `🎯 First to ${winningScore} sats wins! Can you match my intensity?`,
     "🌟 Time to prove you're worthy of the ApeChain legacy!",
     "➡️ Let's APE IN!"
   ],
@@ -41,7 +47,7 @@ const BOT_INTROS: Record<GameMode, string[]> = {
     "🚀 Welcome to APE IN! - ApeChain's most intense Push-Your-Luck game!",
     "🦍 In this relentless game of Risk vs Reward, I never stop!",
     "💥 No brakes. No mercy. Just pure sats-stacking madness!",
-    "🎯 First to 150 sats wins! Prepare for volatility!",
+    `🎯 First to ${winningScore} sats wins! Prepare for volatility!`,
     "🌟 Ready to ride the wildest waves of ApeChain?",
     "➡️ Let's APE IN!"
   ],
@@ -50,7 +56,7 @@ const BOT_INTROS: Record<GameMode, string[]> = {
     "🚀 Welcome to APE IN! - ApeChain's creative Push-Your-Luck masterpiece!",
     "🦍 In this artistic game of Risk vs Reward, creativity meets strategy.",
     "🎭 I love unpredictable moves and bold plays!",
-    "🎯 First to 150 sats wins! Show me your unique style!",
+    `🎯 First to ${winningScore} sats wins! Show me your unique style!`,
     "🌟 Let's create some legendary ApeChain moments!",
     "➡️ Let's APE IN!"
   ],
@@ -59,7 +65,7 @@ const BOT_INTROS: Record<GameMode, string[]> = {
     "🚀 Welcome to APE IN! - ApeChain's first Push-Your-Luck game!",
     "🦍 Face another Cipher in this epic game of Risk vs Reward!",
     "🏆 Stack smarter, survive longer, dominate harder!",
-    "🎯 First to 150 sats wins! Who will be the legend?",
+    `🎯 First to ${winningScore} sats wins! Who will be the legend?`,
     "🌟 The ApeChain community is watching!",
     "➡️ Let's APE IN!"
   ],
@@ -68,7 +74,7 @@ const BOT_INTROS: Record<GameMode, string[]> = {
     "🚀 Welcome to APE IN! - ApeChain's revolutionary Push-Your-Luck game!",
     "🦍 Compete with 3-10 players in this chaotic game of Risk vs Reward!",
     "🔢 Multiple Ciphers, one goal: become the legend!",
-    "🎯 First to 150 sats wins! May the best ape prevail!",
+    `🎯 First to ${winningScore} sats wins! May the best ape prevail!`,
     "🌟 This is where ApeChain legends are born!",
     "➡️ Let's APE IN!"
   ],
@@ -77,10 +83,12 @@ const BOT_INTROS: Record<GameMode, string[]> = {
     "🚀 Welcome to APE IN! - ApeChain's premier Push-Your-Luck tournament!",
     "🦍 Compete in structured brackets in this game of Risk vs Reward!",
     "🏅 Multiple rounds, elimination battles, ultimate glory!",
-    "🎯 First to 150 sats wins! Prove you're the ultimate Cipher!",
+    `🎯 First to ${winningScore} sats wins! Prove you're the ultimate Cipher!`,
     "🌟 The ApeChain hall of fame awaits your name!",
     "➡️ Let's APE IN!"
   ]
+  
+  return baseIntros[gameMode]
 }
 
 const BOT_COLORS: Record<GameMode, string> = {
@@ -110,7 +118,7 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
   const [isTyping, setIsTyping] = useState(true)
   const [showButtons, setShowButtons] = useState(false)
 
-  const introMessages = BOT_INTROS[gameMode] || BOT_INTROS.sandy
+  const introMessages = generateBotIntros(gameMode)
   const botColor = BOT_COLORS[gameMode] || BOT_COLORS.sandy
   const botEmoji = BOT_EMOJIS[gameMode] || BOT_EMOJIS.sandy
 
