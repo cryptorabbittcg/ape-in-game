@@ -102,15 +102,16 @@ export default function NewHeader() {
           <div className="flex items-center justify-between">
             
             {/* Left: Logo */}
-            <Link to="/" className="flex items-center space-x-3 group">
+            <Link to="/" className="flex items-center group">
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-2"
+                className="relative"
               >
-                <div className="text-2xl">🐰</div>
-                <div className="text-sm font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
-                  The Crypto Rabbit Hole
-                </div>
+                <img 
+                  src="/assets/cxrh-banner.png" 
+                  alt="The Crypto Rabbit Hole" 
+                  className="h-8 w-auto"
+                />
               </motion.div>
             </Link>
 

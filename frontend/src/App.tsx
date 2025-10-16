@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import EnhancedHomePage from './pages/EnhancedHomePage'
+import HomePage from './pages/HomePage'
 import GamePage from './pages/GamePage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import NewHeader from './components/NewHeader'
@@ -11,7 +11,7 @@ function App() {
       <ParticleBackground />
       <NewHeader />
       <Routes>
-        <Route path="/" element={<EnhancedHomePage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/game/:mode" element={<GamePage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
       </Routes>
