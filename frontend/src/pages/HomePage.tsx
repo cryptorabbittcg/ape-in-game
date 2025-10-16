@@ -111,20 +111,23 @@ export default function HomePage() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [hoveredGuide, setHoveredGuide] = useState<string | null>(null)
   const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [paymentLoading, setPaymentLoading] = useState<string | null>(null)
 
   const handleModeSelect = async (mode: GameMode) => {
     setPaymentError(null)
+    setPaymentLoading(mode)
     
-    // Check if wallet is connected for paid games
-    if (mode !== 'sandy' && !account) {
-      setPaymentError('Please connect your wallet to play paid games')
-      return
-    }
+    try {
+      // Check if wallet is connected for paid games
+      if (mode !== 'sandy' && !account) {
+        setPaymentError('Please connect your wallet to play paid games')
+        return
+      }
 
     // Check if this is a daily free game
     const isDailyFreeEligible = account && DailyFreeGameService.isEligibleForDailyFree(account.address, mode)
     
-    // Validate payment for paid games (skip if using daily free)
+    // Validate and execute payment for paid games (skip if using daily free)
     if (mode !== 'sandy' && !isDailyFreeEligible) {
       const requiredAmount = PaymentService.getGamePrice(mode)
       const validation = await PaymentService.validatePayment(account, requiredAmount)
@@ -133,6 +136,17 @@ export default function HomePage() {
         setPaymentError(`Insufficient ApeCoin balance. You need ${PaymentService.formatApeCoin(validation.requiredAmount)} but only have ${PaymentService.formatApeCoin(validation.currentBalance)}`)
         return
       }
+
+      // Execute the actual payment
+      console.log('💸 Executing payment for game mode:', mode)
+      const paymentResult = await PaymentService.executePayment(account, requiredAmount)
+      
+      if (!paymentResult.success) {
+        setPaymentError(`Payment failed: ${paymentResult.error}`)
+        return
+      }
+      
+      console.log('✅ Payment successful! Transaction hash:', paymentResult.transactionHash)
     }
 
     // Mark daily free game as used if applicable
@@ -140,7 +154,13 @@ export default function HomePage() {
       DailyFreeGameService.useDailyFreeGame(account.address, mode)
     }
 
-    navigate(`/game/${mode}`)
+      navigate(`/game/${mode}`)
+    } catch (error) {
+      console.error('❌ Game mode selection failed:', error)
+      setPaymentError('Failed to start game. Please try again.')
+    } finally {
+      setPaymentLoading(null)
+    }
   }
 
   const guideSteps = [
@@ -316,6 +336,7 @@ export default function HomePage() {
                 isHovered={hoveredCard === gameMode.mode}
                 onHoverChange={setHoveredCard}
                 account={account}
+                isLoading={paymentLoading === gameMode.mode}
               />
             ))}
           </div>
@@ -332,7 +353,8 @@ function CompactGameCard({
   onSelect,
   isHovered,
   onHoverChange,
-  account
+  account,
+  isLoading = false
 }: { 
   gameMode: GameModeCard
   index: number
@@ -340,6 +362,7 @@ function CompactGameCard({
   isHovered: boolean
   onHoverChange: (mode: string | null) => void
   account: any
+  isLoading?: boolean
 }) {
   const disabled = ['pvp', 'multiplayer', 'tournament'].includes(gameMode.mode)
   
@@ -367,14 +390,23 @@ function CompactGameCard({
       whileTap={disabled ? {} : { scale: 0.98 }}
       onMouseEnter={() => onHoverChange(gameMode.mode)}
       onMouseLeave={() => onHoverChange(null)}
-      onClick={() => !disabled && onSelect(gameMode.mode)}
-      className={`${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} relative`}
+      onClick={() => !disabled && !isLoading && onSelect(gameMode.mode)}
+      className={`${disabled || isLoading ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} relative`}
     >
       <div className={`bg-gradient-to-br ${gameMode.color} p-[1px] rounded-xl h-full shadow-lg hover:shadow-xl transition-shadow`}>
         <div className="bg-slate-800/95 rounded-xl p-2 sm:p-3 h-full flex flex-col relative overflow-hidden">
           {disabled && (
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm rounded-xl flex items-center justify-center z-20">
               <span className="text-xs font-bold text-slate-400 px-2 py-1 bg-slate-800/80 rounded">Coming Soon</span>
+            </div>
+          )}
+          
+          {isLoading && (
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm rounded-xl flex items-center justify-center z-20">
+              <div className="flex flex-col items-center space-y-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                <span className="text-xs text-white font-semibold">Processing Payment...</span>
+              </div>
             </div>
           )}
           

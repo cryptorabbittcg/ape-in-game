@@ -74,6 +74,41 @@ export class PaymentService {
   static formatApeCoin(amount: number): string {
     return `${amount.toFixed(2)} ${TOKEN_SYMBOL}`
   }
+
+  /**
+   * Execute payment for a game by transferring APE to a game contract or treasury
+   * @param {any} account The Thirdweb active account object
+   * @param {number} amount The amount of APE to transfer
+   * @returns {Promise<{ success: boolean; transactionHash?: string; error?: string }>}
+   */
+  static async executePayment(account: any, amount: number): Promise<{ success: boolean; transactionHash?: string; error?: string }> {
+    if (!account) {
+      return { success: false, error: 'No account connected' }
+    }
+
+    try {
+      console.log('💸 Executing payment:', amount, TOKEN_SYMBOL)
+      
+      // For now, we'll simulate the payment since we don't have a game contract
+      // In production, this would send APE to a smart contract or treasury address
+      console.log('🎯 Payment simulation: Would transfer', amount, TOKEN_SYMBOL, 'from', account.address)
+      
+      // TODO: Implement actual blockchain transaction
+      // This would use Thirdweb's sendTransaction or contract interaction
+      
+      // For testing, we'll just return success
+      return { 
+        success: true, 
+        transactionHash: `0x${Math.random().toString(16).substr(2, 64)}` // Simulated tx hash
+      }
+    } catch (error) {
+      console.error('❌ Payment execution failed:', error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
+    }
+  }
 }
 
 /**
