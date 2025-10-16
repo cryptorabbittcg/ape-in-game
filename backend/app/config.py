@@ -21,42 +21,59 @@ class Settings(BaseSettings):
             "winning_score": 150,
             "max_rounds": 10,
             "target_scores": [21],
+            "risk": {"basePush": 0.10, "behindPush": 0.618, "behindGap": 50},
+            "jitter": {"enabled": True, "pct": 0.10},
+            "diceModes": ["sandy"],
             "description": "Tutorial bot - Perfect for beginners!",
             "personality": "Friendly and encouraging"
         },
         "aida": {
             "name": "Aida",
             "difficulty": "Medium",
-            "winning_score": 200,
-            "max_rounds": 12,
-            "target_scores": [21, 26],
+            "winning_score": 300,  # legacy: 300
+            "max_rounds": 20,      # legacy: 20
+            "target_scores": [21, 26, 40],
+            "risk": {"midMin": 21, "midMax": 39, "midPush": 0.50, "highStack": 40, "behindGap": 30, "behindPush": 0.60},
+            "jitter": {"enabled": True, "pct": 0.10},
+            "diceModes": ["aida", "aida_aggressive"],
             "description": "Balanced strategy with smart plays",
             "personality": "Strategic and analytical"
         },
         "lana": {
             "name": "Lana",
             "difficulty": "Hard",
-            "winning_score": 250,
-            "max_rounds": 15,
-            "target_scores": [26, 34],
+            "winning_score": 200,  # legacy: 200
+            "max_rounds": 15,      # legacy: 15
+            "target_scores": [30],
+            "risk": {"stackAt": 30, "stackBias": 0.70},
+            "jitter": {"enabled": True, "pct": 0.10},
+            "diceModes": ["lana", "lana_aggressive"],
             "description": "Aggressive player who takes big risks",
             "personality": "Bold and daring"
         },
         "enj1n": {
             "name": "EnJ1n",
             "difficulty": "Expert",
-            "winning_score": 300,
-            "max_rounds": 18,
+            "winning_score": 300,  # legacy: 300
+            "max_rounds": 15,      # legacy: 15
+            "no_round_limit": True,
             "target_scores": [34, 42, 55],
+            "risk": {"behindGap": 20, "stackAt": 50, "basePush": 0.75},
+            "jitter": {"enabled": True, "pct": 0.10},
+            "diceModes": ["enj1n", "enj1n_aggressive"],
             "description": "Master player with unpredictable moves",
             "personality": "Calculated chaos"
         },
         "nifty": {
             "name": "Nifty",
             "difficulty": "Medium-Hard",
-            "winning_score": 180,
-            "max_rounds": 12,
-            "target_scores": [21, 26, 34],
+            "winning_score": 150,  # legacy: 150
+            "max_rounds": 10,      # legacy: 10
+            "no_round_limit": True,
+            "target_scores": [50],
+            "risk": {"stackAt": 50, "behindGap": 20},
+            "jitter": {"enabled": True, "pct": 0.10},
+            "diceModes": ["nifty", "nifty_aggressive"],
             "description": "Adaptable player who changes tactics",
             "personality": "Clever and unpredictable"
         }

@@ -309,12 +309,45 @@ class GameService:
 
         # AI decision logic based on type
         ai_type = ai_player.ai_type or "sandy"
+        bot_config = settings.BOT_CONFIGS.get(ai_type, {})
+        risk_cfg = bot_config.get("risk", {})
+        jitter_cfg = bot_config.get("jitter", {"enabled": False, "pct": 0.0})
+        dice_modes = bot_config.get("diceModes", [ai_type])
+        no_round_limit = bot_config.get("no_round_limit", False)
+
+        # Compute roundsLeft (respect no_round_limit)
+        rounds_left = None if no_round_limit else max(0, game.max_rounds - game.current_round)
+
+        # Per-match deterministic jitter factor based on game.id
+        def get_jittered(value: float) -> float:
+            if not value:
+                return value
+            if not jitter_cfg.get("enabled", False):
+                return value
+            pct = float(jitter_cfg.get("pct", 0.0))
+            # Deterministic jitter from game.id hash
+            seed = hash((game.id, ai_type)) % 10000
+            rnd = (seed / 10000.0) * 2.0 - 1.0  # [-1, 1)
+            return max(0.0, value * (1.0 + pct * rnd))
+
+        # Adaptive scaling helper: increase probability when behind or low rounds left
+        def scale_push(base_prob: float, behind_by: int) -> float:
+            if base_prob <= 0.0:
+                return 0.0
+            prob = base_prob
+            # scale by behindBy (every 25 sats behind adds ~5%)
+            prob += max(0, behind_by) * 0.002
+            # scale by rounds left (if nearing end, add up to +10%)
+            if rounds_left is not None and rounds_left <= 3:
+                prob += max(0, (3 - rounds_left + 1)) * 0.03
+            return min(0.98, max(0.0, get_jittered(prob)))
+
         target_turn_score = self._get_ai_target_score(ai_type, ai_player, game)
 
         # Track actions for replay
         actions = []
 
-        # AI draws and rolls with Sandy-specific risk logic
+        # AI draws and rolls with adaptive logic
         while True:
             # Draw card
             card = await self.draw_card(game_id, ai_player.id)
@@ -334,9 +367,24 @@ class GameService:
                 "card": card.model_dump()
             })
 
-            # Roll dice
+            # Decide dice profile (conditional aggressive switch if behind or low rounds)
+            # Fetch human score for context
+            result = await self.db.execute(
+                select(Player).where(Player.game_id == game_id, Player.is_ai == False)
+            )
+            human_player = result.scalar_one()
+            behind_by_now = human_player.score - ai_player.score
+            dice_profile = ai_type
+            if len(dice_modes) > 1:
+                # switch to aggressive when notably behind or low rounds
+                if behind_by_now >= int(risk_cfg.get("behindGap", 999)) or (rounds_left is not None and rounds_left <= 2):
+                    dice_profile = dice_modes[-1]
+                else:
+                    dice_profile = dice_modes[0]
+
+            # Roll dice with selected profile
             roll, success, message = await self.roll_dice_action(
-                game_id, ai_player.id, dice_profile=ai_type
+                game_id, ai_player.id, dice_profile=dice_profile
             )
             
             # Refresh ai_player to get updated turn_score
@@ -350,132 +398,116 @@ class GameService:
                 "value": roll,
                 "success": success,
                 "message": message,
-                "turnScore": ai_player.turn_score
+                "turnScore": ai_player.turn_score,
+                "diceProfile": dice_profile
             })
 
             if not success:
                 # AI busted or hit bearish
                 break
             
+            # Helper for opponent-aware nudge: if player currently far ahead, push more
+            opponent_push_nudge = 0.0
+            if behind_by_now >= 30:
+                opponent_push_nudge = 0.08
+
             # Sandy-specific decision logic
             if ai_type == "sandy" and ai_player.turn_score >= 21:
-                # Get human player score for comparison
-                result = await self.db.execute(
-                    select(Player).where(Player.game_id == game_id, Player.is_ai == False)
-                )
-                human_player = result.scalar_one()
-                
-                # Calculate score difference
-                score_difference = human_player.score - ai_player.score
-                
-                # Decision logic
-                should_continue = False
-                
-                if score_difference > 50:
-                    # Behind by >50 sats: 61.8% chance to continue (Fibonacci-inspired)
-                    should_continue = random.random() < 0.618
+                score_difference = behind_by_now
+                base_push = float(risk_cfg.get("basePush", 0.10))
+                behind_push = float(risk_cfg.get("behindPush", 0.618))
+                behind_gap = int(risk_cfg.get("behindGap", 50))
+                if score_difference > behind_gap:
+                    should_continue = (random.random() < scale_push(behind_push + opponent_push_nudge, score_difference))
                     if should_continue:
                         actions.append({
                             "type": "decision",
-                            "message": f"Sandy is behind by {score_difference} sats. Taking a Fibonacci-risk (61.8%)!"
+                            "message": f"Sandy is behind by {score_difference}. Risk-adjusted push."
                         })
                 else:
-                    # At or ahead: 10% chance to continue
-                    should_continue = random.random() < 0.1
+                    should_continue = (random.random() < scale_push(base_push + opponent_push_nudge, score_difference))
                     if should_continue:
                         actions.append({
                             "type": "decision", 
                             "message": "Sandy decides to push her luck!"
                         })
-                
                 if not should_continue:
-                    # Sandy decides to stack
                     break
-            # Aida-specific decision logic (calculated, adaptive)
+            # Aida-specific decision logic
             elif ai_type == "aida":
-                # Get human player score for comparison
-                result = await self.db.execute(
-                    select(Player).where(Player.game_id == game_id, Player.is_ai == False)
-                )
-                human_player = result.scalar_one()
-                behind_by = human_player.score - ai_player.score
+                behind_by = behind_by_now
                 ts = ai_player.turn_score
-                if behind_by > 30:
-                    # 60% chance to continue
-                    if random.random() < 0.6:
+                mid_min = int(risk_cfg.get("midMin", 21))
+                mid_max = int(risk_cfg.get("midMax", 39))
+                mid_push = float(risk_cfg.get("midPush", 0.50))
+                high_stack = int(risk_cfg.get("highStack", 40))
+                aida_behind_gap = int(risk_cfg.get("behindGap", 30))
+                aida_behind_push = float(risk_cfg.get("behindPush", 0.60))
+                if behind_by > aida_behind_gap:
+                    if random.random() < scale_push(aida_behind_push + opponent_push_nudge, behind_by):
                         actions.append({"type": "decision", "message": "Aida takes a calculated risk to catch up."})
                         continue
                     else:
                         break
-                elif ts >= 40:
-                    # Stack at 40+
-                    actions.append({"type": "decision", "message": "Aida stacks at 40 or more."})
+                elif ts >= high_stack:
+                    actions.append({"type": "decision", "message": f"Aida stacks at {high_stack}+."})
                     break
-                elif 21 <= ts < 40:
-                    # 50% chance to continue
-                    if random.random() < 0.5:
+                elif mid_min <= ts <= mid_max:
+                    if random.random() < scale_push(mid_push + opponent_push_nudge, behind_by):
                         actions.append({"type": "decision", "message": "Aida pushes with a balanced risk."})
                         continue
                     else:
                         break
                 else:
-                    # Keep rolling under 21
                     continue
-            # Lana-specific decision logic (risky but with stack bias at 30+)
+            # Lana-specific decision logic
             elif ai_type == "lana":
                 ts = ai_player.turn_score
-                if ts >= 30:
-                    # 70% chance to stack (risk_roll > 30 stacks in legacy)
-                    if random.random() < 0.7:
-                        actions.append({"type": "decision", "message": "Lana stacks at 30 with a strong bias."})
+                stack_at = int(risk_cfg.get("stackAt", 30))
+                stack_bias = float(risk_cfg.get("stackBias", 0.70))
+                if ts >= stack_at:
+                    if random.random() < scale_push(stack_bias - 0.20, -behind_by_now):  # slight tendency to stack, less when behind
+                        actions.append({"type": "decision", "message": f"Lana stacks at {stack_at}."})
                         break
                     else:
                         continue
                 else:
                     continue
-            # En-J1n-specific decision logic (aggressive, structured thresholds)
+            # En-J1n-specific decision logic
             elif ai_type == "enj1n":
-                # Get human player score for comparison
-                result = await self.db.execute(
-                    select(Player).where(Player.game_id == game_id, Player.is_ai == False)
-                )
-                human_player = result.scalar_one()
-                behind_by = human_player.score - ai_player.score
+                behind_by = behind_by_now
                 ts = ai_player.turn_score
-                if behind_by > 20:
+                enj1n_behind_gap = int(risk_cfg.get("behindGap", 20))
+                stack_at = int(risk_cfg.get("stackAt", 50))
+                base_push = float(risk_cfg.get("basePush", 0.75))
+                if behind_by > enj1n_behind_gap:
                     actions.append({"type": "decision", "message": "En-J1n stacks aggressively to catch up."})
                     break
-                elif ts >= 50:
-                    actions.append({"type": "decision", "message": "En-J1n stacks at 50 sats."})
+                elif ts >= stack_at:
+                    actions.append({"type": "decision", "message": f"En-J1n stacks at {stack_at}."})
                     break
                 else:
-                    # 75% chance to continue
-                    if random.random() < 0.75:
+                    if random.random() < scale_push(base_push + opponent_push_nudge, behind_by):
                         actions.append({"type": "decision", "message": "En-J1n keeps pressing the attack."})
                         continue
                     else:
                         break
-            # Nifty-specific decision logic (ultra-adaptable at high turn scores)
+            # Nifty-specific decision logic
             elif ai_type == "nifty":
-                # Get human player score for comparison
-                result = await self.db.execute(
-                    select(Player).where(Player.game_id == game_id, Player.is_ai == False)
-                )
-                human_player = result.scalar_one()
-                behind_by = human_player.score - ai_player.score
+                behind_by = behind_by_now
                 ts = ai_player.turn_score
-                if ts >= 50:
-                    if behind_by >= 20:
+                stack_at = int(risk_cfg.get("stackAt", 50))
+                behind_gap = int(risk_cfg.get("behindGap", 20))
+                if ts >= stack_at:
+                    if behind_by >= behind_gap:
                         actions.append({"type": "decision", "message": "Nifty is behind—stays ultra aggressive over 50 sats."})
                         continue
                     else:
-                        actions.append({"type": "decision", "message": "Nifty stacks efficiently at 50 sats."})
+                        actions.append({"type": "decision", "message": f"Nifty stacks at {stack_at}."})
                         break
                 else:
-                    # Below 50, continue building pressure
                     continue
             elif ai_player.turn_score >= target_turn_score:
-                # Other AIs use standard target logic
                 break
 
         # Stack sats (skip AI turn to prevent recursion)

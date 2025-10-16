@@ -10,6 +10,11 @@ DICE_PROFILES: Dict[str, Dict[int, float]] = {
     "lana": {1: 0.9, 2: 1.0, 3: 1.0, 4: 1.1, 5: 1.4, 6: 1.6},
     "enj1n": {1: 0.6, 2: 1.1, 3: 1.2, 4: 1.3, 5: 1.4, 6: 1.4},
     "nifty": {1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0},
+    # Aggressive variants (slightly bias toward higher outcomes, small bust increase where appropriate)
+    "aida_aggressive": {1: 0.85, 2: 1.0, 3: 1.1, 4: 1.2, 5: 1.3, 6: 1.4},
+    "lana_aggressive": {1: 1.0, 2: 0.9, 3: 1.0, 4: 1.2, 5: 1.6, 6: 1.8},
+    "enj1n_aggressive": {1: 0.7, 2: 1.0, 3: 1.2, 4: 1.4, 5: 1.6, 6: 1.7},
+    "nifty_aggressive": {1: 1.0, 2: 1.0, 3: 1.1, 4: 1.2, 5: 1.3, 6: 1.4},
 }
 
 
