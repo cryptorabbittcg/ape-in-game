@@ -87,6 +87,7 @@ const generateBotIntros = (gameMode: GameMode): string[] => {
     "🌟 The ApeChain hall of fame awaits your name!",
     "➡️ Let's APE IN!"
   ]
+  }
   
   return baseIntros[gameMode]
 }
