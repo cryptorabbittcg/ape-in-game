@@ -116,7 +116,7 @@ export default function GamePage() {
             className="text-center mb-3"
           >
             <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">
-              {mode && gameNames[mode]} Mode
+              {playerName} vs {mode && gameNames[mode]}
             </h1>
             <p className="text-xs text-slate-400">First to 150 sats wins!</p>
           </motion.div>

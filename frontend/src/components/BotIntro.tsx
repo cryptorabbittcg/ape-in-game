@@ -169,7 +169,7 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
             {/* Bot Portrait - Show image if available, fallback to emoji */}
             {(gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
               <img 
-                src={`/assets/bots/${gameMode}.png`} 
+                src={`/assets/bots/${gameMode}.png?v=${Date.now()}`} 
                 alt={`${gameMode} avatar`} 
                 className="w-full h-full object-cover rounded-full absolute inset-0 z-20" 
                 onError={(e) => {
@@ -216,7 +216,7 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
                   className="flex-shrink-0"
                 >
                   <img 
-                    src={`/assets/bots/${gameMode}.png`} 
+                    src={`/assets/bots/${gameMode}.png?v=${Date.now()}`} 
                     alt={`${gameMode} avatar`} 
                     className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
                     onError={(e) => {
