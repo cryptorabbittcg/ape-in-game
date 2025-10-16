@@ -164,22 +164,22 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className={`w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${botColor} flex items-center justify-center text-4xl shadow-lg overflow-hidden`}
+            className={`w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${botColor} flex items-center justify-center text-4xl shadow-lg overflow-hidden relative`}
           >
             {/* Bot Portrait - Show image if available, fallback to emoji */}
             {(gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
               <img 
                 src={`/assets/bots/${gameMode}.png`} 
                 alt={`${gameMode} avatar`} 
-                className="w-full h-full object-cover rounded-full" 
+                className="w-full h-full object-cover rounded-full absolute inset-0 z-20" 
                 onError={(e) => {
                   // Fallback to emoji if image fails to load
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling.style.display = 'block';
+                  e.currentTarget.nextElementSibling.style.display = 'flex';
                 }}
               />
             ) : null}
-            <span className="relative z-10" style={{ display: (gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? 'none' : 'block' }}>
+            <span className="relative z-10 flex items-center justify-center" style={{ display: (gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? 'none' : 'flex' }}>
               {botEmoji}
             </span>
           </motion.div>
@@ -220,7 +220,11 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
                     alt={`${gameMode} avatar`} 
                     className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
                     onError={(e) => {
+                      console.error(`Failed to load portrait for ${gameMode}:`, e);
                       e.currentTarget.style.display = 'none';
+                    }}
+                    onLoad={(e) => {
+                      console.log(`Successfully loaded portrait for ${gameMode}`);
                     }}
                   />
                 </motion.div>
