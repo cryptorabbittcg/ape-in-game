@@ -9,70 +9,77 @@ interface BotIntroProps {
 
 const BOT_INTROS: Record<GameMode, string[]> = {
   sandy: [
-    "🤖 Sandy: Welcome to...",
-    "🎮 Risk-Reward: Stack Those Sats!",
-    "🪙 In this game, you'll face off against me — Sandy!",
-    "🎯 First to stack 150 sats wins.",
-    "🎴 You'll draw cards, 🎲 roll dice, and ⚠️ dodge bearish penalties!",
-    "📈 Stack wisely… or risk losing it all.",
-    "🤞 Good luck!",
-    "➡️ Let's begin..."
+    "🐰 Sandy: Welcome to the future of gaming...",
+    "🚀 APE IN! - ApeChain's first Push-Your-Luck game!",
+    "🦍 In this epic game of Risk vs Reward, you'll face off against me!",
+    "🎯 First to stack 150 sats wins the game!",
+    "🎴 Draw cards, 🎲 roll dice, and ⚠️ dodge bearish penalties!",
+    "📈 Push your luck to the limit… or risk losing it all!",
+    "🌟 Ready to become an Ape In! legend?",
+    "➡️ Let's APE IN!"
   ],
   aida: [
-    "🧠 Aida: Let's test your probability instincts.",
-    "🎯 Outsmart me in 20 rounds or accept defeat.",
-    "📊 Data doesn't lie. But maybe you can bend it.",
-    "🎴 Draw cards, 🎲 roll dice, 📈 stack sats, and ⚠️ dodge penalties!",
-    "🏁 First to 300 sats or most after 20 rounds wins.",
-    "Let us begin..."
+    "🧠 Aida: Prepare for the ultimate strategic challenge.",
+    "🚀 Welcome to APE IN! - ApeChain's revolutionary Push-Your-Luck game!",
+    "🦍 In this game of Risk vs Reward, data meets intuition.",
+    "📊 I calculate every probability, but can you beat the odds?",
+    "🎯 First to 150 sats wins! Outsmart me if you can!",
+    "🌟 The ApeChain community awaits your legend!",
+    "➡️ Let's APE IN!"
   ],
   lana: [
-    "🔧 Lana: Systems initialized.",
-    "🎲 Prepare for adaptive gameplay.",
-    "🧪 Let's see how you perform under strategic pressure.",
-    "🎴 High-risk, high-reward is my game. I chase big wins and play boldly.",
-    "🎯 First to 150 sats wins!",
-    "Can you keep up or will you play it safe?"
+    "🔧 Lana: Systems optimized. Game mode: EXTREME.",
+    "🚀 Welcome to APE IN! - Where ApeChain meets Push-Your-Luck!",
+    "🦍 In this high-stakes game of Risk vs Reward, I play aggressively.",
+    "⚡ I chase big wins and push every limit!",
+    "🎯 First to 150 sats wins! Can you match my intensity?",
+    "🌟 Time to prove you're worthy of the ApeChain legacy!",
+    "➡️ Let's APE IN!"
   ],
   enj1n: [
-    "🔥 En-J1n: Let's ride the volatility!",
-    "🎲 No brakes. No rules. Just risk.",
-    "💥 Beat me before I explode the sats stack!",
-    "🎴 I play to win — relentlessly. I push the limit and barely ever stop.",
-    "🎯 First to 150 sats wins!",
-    "If you're not prepared, I'll leave you in the dust. Let's roll!"
+    "🔥 En-J1n: BUCKLE UP, APE!",
+    "🚀 Welcome to APE IN! - ApeChain's most intense Push-Your-Luck game!",
+    "🦍 In this relentless game of Risk vs Reward, I never stop!",
+    "💥 No brakes. No mercy. Just pure sats-stacking madness!",
+    "🎯 First to 150 sats wins! Prepare for volatility!",
+    "🌟 Ready to ride the wildest waves of ApeChain?",
+    "➡️ Let's APE IN!"
   ],
   nifty: [
-    "🎨 Nifty: Art of probability is my game.",
-    "🎭 You'll need flair *and* strategy.",
-    "📈 The charts may favor me... let's see.",
-    "🎴 Time to mix things up! I love unpredictable games and creative strategies.",
-    "🎯 First to 150 sats wins!",
-    "Let's see what you've got in your playbook."
+    "🎨 Nifty: Time to paint with probability!",
+    "🚀 Welcome to APE IN! - ApeChain's creative Push-Your-Luck masterpiece!",
+    "🦍 In this artistic game of Risk vs Reward, creativity meets strategy.",
+    "🎭 I love unpredictable moves and bold plays!",
+    "🎯 First to 150 sats wins! Show me your unique style!",
+    "🌟 Let's create some legendary ApeChain moments!",
+    "➡️ Let's APE IN!"
   ],
   pvp: [
-    "👥 PvP Mode Activated!",
-    "🎮 Battle another player in a 20-round trading session.",
-    "🏆 Stack smarter, survive longer, win bigger.",
-    "🎴 Face off against another Cipher! The first to stack the most sats wins.",
-    "🎯 First to 150 sats wins!",
-    "Trust your gut… and maybe don't trust your opponent."
+    "👥 PvP Mode: The ultimate ApeChain showdown!",
+    "🚀 Welcome to APE IN! - ApeChain's first Push-Your-Luck game!",
+    "🦍 Face another Cipher in this epic game of Risk vs Reward!",
+    "🏆 Stack smarter, survive longer, dominate harder!",
+    "🎯 First to 150 sats wins! Who will be the legend?",
+    "🌟 The ApeChain community is watching!",
+    "➡️ Let's APE IN!"
   ],
   multiplayer: [
-    "🌐 Multiplayer Activated!",
-    "🎲 Compete with 3–10 players in a strategic sats-stacking brawl.",
-    "🔢 First to 300 wins — or be the last player standing.",
-    "🎴 Welcome to the mid-size arena. Work your strategy and watch out for unexpected busts.",
-    "🎯 First to 150 sats wins!",
-    "This is where legends are born. Stack wisely!"
+    "🌐 Multiplayer Madness: ApeChain's ultimate battle royale!",
+    "🚀 Welcome to APE IN! - ApeChain's revolutionary Push-Your-Luck game!",
+    "🦍 Compete with 3-10 players in this chaotic game of Risk vs Reward!",
+    "🔢 Multiple Ciphers, one goal: become the legend!",
+    "🎯 First to 150 sats wins! May the best ape prevail!",
+    "🌟 This is where ApeChain legends are born!",
+    "➡️ Let's APE IN!"
   ],
   tournament: [
-    "🏆 Tournament Mode!",
-    "🎮 Compete in a structured tournament format.",
-    "🏅 Multiple rounds, elimination brackets, ultimate glory!",
-    "🎴 The ultimate test of skill and strategy.",
-    "🎯 First to 150 sats wins!",
-    "May the best Cipher win!"
+    "🏆 Tournament Mode: The ApeChain championship awaits!",
+    "🚀 Welcome to APE IN! - ApeChain's premier Push-Your-Luck tournament!",
+    "🦍 Compete in structured brackets in this game of Risk vs Reward!",
+    "🏅 Multiple rounds, elimination battles, ultimate glory!",
+    "🎯 First to 150 sats wins! Prove you're the ultimate Cipher!",
+    "🌟 The ApeChain hall of fame awaits your name!",
+    "➡️ Let's APE IN!"
   ]
 }
 
@@ -88,9 +95,9 @@ const BOT_COLORS: Record<GameMode, string> = {
 }
 
 const BOT_EMOJIS: Record<GameMode, string> = {
-  sandy: '🤖',
+  sandy: '🐰',
   aida: '🧠',
-  lana: '🔧', 
+  lana: '⚡', 
   enj1n: '🔥',
   nifty: '🎨',
   pvp: '👥',
@@ -146,12 +153,21 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className={`w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${botColor} flex items-center justify-center text-4xl shadow-lg`}
+            className={`w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${botColor} flex items-center justify-center text-4xl shadow-lg overflow-hidden`}
           >
-            {botEmoji}
+            {/* TODO: Replace with actual bot avatar images when provided */}
+            {/* <img src={`/assets/bots/${gameMode}.png`} alt={`${gameMode} avatar`} className="w-full h-full object-cover" /> */}
+            <span className="relative z-10">{botEmoji}</span>
           </motion.div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            {gameMode.charAt(0).toUpperCase() + gameMode.slice(1)} Mode
+            {gameMode === 'sandy' && '🐰 Sandy Challenge'}
+            {gameMode === 'aida' && '🧠 Aida Challenge'}
+            {gameMode === 'lana' && '⚡ Lana Challenge'}
+            {gameMode === 'enj1n' && '🔥 En-J1n Challenge'}
+            {gameMode === 'nifty' && '🎨 Nifty Challenge'}
+            {gameMode === 'pvp' && '👥 Player vs Player'}
+            {gameMode === 'multiplayer' && '🌐 Multiplayer Madness'}
+            {gameMode === 'tournament' && '🏆 Tournament Mode'}
           </h2>
           <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto rounded-full"></div>
         </div>
@@ -218,7 +234,7 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
                 onClick={handleStartGame}
                 className={`px-6 py-3 bg-gradient-to-r ${botColor} text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all`}
               >
-                ▶️ Start Game
+                🚀 APE IN NOW!
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -226,7 +242,7 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
                 onClick={handleSkipIntro}
                 className="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all"
               >
-                ⏭️ Skip Intro
+                ⚡ Skip to Action
               </motion.button>
             </motion.div>
           )}
