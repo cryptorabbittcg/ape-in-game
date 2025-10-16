@@ -314,8 +314,8 @@ class GameService:
         # Track actions for replay
         actions = []
 
-        # AI draws and rolls until target reached or busted
-        while ai_player.turn_score < target_turn_score:
+        # AI draws and rolls with Sandy-specific risk logic
+        while True:
             # Draw card
             card = await self.draw_card(game_id, ai_player.id)
             
@@ -355,6 +355,44 @@ class GameService:
 
             if not success:
                 # AI busted or hit bearish
+                break
+            
+            # Sandy-specific decision logic
+            if ai_type == "sandy" and ai_player.turn_score >= 21:
+                # Get human player score for comparison
+                result = await self.db.execute(
+                    select(Player).where(Player.game_id == game_id, Player.is_ai == False)
+                )
+                human_player = result.scalar_one()
+                
+                # Calculate score difference
+                score_difference = human_player.score - ai_player.score
+                
+                # Decision logic
+                should_continue = False
+                
+                if score_difference > 50:
+                    # Behind by >50 sats: 50% chance to continue
+                    should_continue = random.random() < 0.5
+                    if should_continue:
+                        actions.append({
+                            "type": "decision",
+                            "message": f"Sandy is behind by {score_difference} sats. Taking a risk!"
+                        })
+                else:
+                    # At or ahead: 10% chance to continue
+                    should_continue = random.random() < 0.1
+                    if should_continue:
+                        actions.append({
+                            "type": "decision", 
+                            "message": "Sandy decides to push her luck!"
+                        })
+                
+                if not should_continue:
+                    # Sandy decides to stack
+                    break
+            elif ai_player.turn_score >= target_turn_score:
+                # Other AIs use standard target logic
                 break
 
         # Stack sats (skip AI turn to prevent recursion)
