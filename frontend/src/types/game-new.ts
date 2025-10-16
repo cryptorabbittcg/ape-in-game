@@ -1,5 +1,4 @@
-export const GameModeValues = ['sandy', 'aida', 'lana', 'enj1n', 'nifty', 'pvp', 'multiplayer', 'tournament'] as const
-export type GameMode = typeof GameModeValues[number]
+export type GameMode = 'sandy' | 'aida' | 'lana' | 'enj1n' | 'nifty' | 'pvp' | 'multiplayer' | 'tournament'
 
 export type CardType = 'Cipher' | 'Oracle' | 'Historacle' | 'Bearish' | 'Special'
 
