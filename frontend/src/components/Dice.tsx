@@ -86,7 +86,7 @@ export default function Dice({ value, isRolling, onRollComplete, onClick, disabl
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg font-bold whitespace-nowrap shadow-xl"
+          className="absolute -top-10 sm:-top-12 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-2 sm:px-4 py-1 sm:py-2 rounded-lg font-bold whitespace-nowrap shadow-xl text-xs sm:text-sm max-w-[90vw]"
         >
           REKT! 💀
         </motion.div>

@@ -340,9 +340,6 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
                 isRevealing={isBotPlaying ? true : isDrawing}
               />
             </div>
-            {!currentCard && !isDrawing && !isBotPlaying && (
-              <div className="text-xs text-slate-500 animate-pulse">👆 Click to draw</div>
-            )}
             {isBotPlaying && (
               <div className="text-sm text-emerald-400 font-semibold animate-pulse">
                 {opponentName}'s Turn
@@ -424,14 +421,6 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
           </div>
         </div>
 
-        {/* Turn Indicator */}
-        <div className="mt-2 text-center">
-          {isPlayerTurn ? (
-            <span className="text-green-400 font-semibold">🟢 Your Turn</span>
-          ) : (
-            <span className="text-slate-400 font-semibold">⏳ Opponent's Turn</span>
-          )}
-        </div>
       </div>
 
       {/* Floating Ape In Status Overlay */}
@@ -440,10 +429,10 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -20, opacity: 0 }}
-          className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl border-2 border-yellow-400 font-bold text-center"
+          className="fixed top-20 sm:top-24 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow-2xl border-2 border-yellow-400 font-bold text-center max-w-[90vw] mx-4"
         >
-          <div className="text-lg">🚀 APE IN ACTIVE!</div>
-          <div className="text-sm">Next card value doubled!</div>
+          <div className="text-base sm:text-lg">🚀 APE IN ACTIVE!</div>
+          <div className="text-xs sm:text-sm">Next card value doubled!</div>
         </motion.div>
       )}
 
@@ -453,11 +442,11 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
           initial={{ y: 20, opacity: 0, scale: 0.9 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: -20, opacity: 0 }}
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 rounded-xl shadow-2xl border-2 border-green-300 font-bold text-center"
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl border-2 border-green-300 font-bold text-center max-w-[90vw] mx-4"
         >
-          <div className="text-lg">{floatingMessage.text}</div>
+          <div className="text-sm sm:text-lg">{floatingMessage.text}</div>
           {floatingMessage.sats !== undefined && (
-            <div className="text-sm mt-1">Turn Sats: {floatingMessage.sats}</div>
+            <div className="text-xs sm:text-sm mt-1">Turn Sats: {floatingMessage.sats}</div>
           )}
         </motion.div>
       )}
@@ -467,12 +456,12 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-gradient-to-br from-red-600 to-red-800 text-white px-8 py-6 rounded-2xl shadow-2xl border-4 border-red-400 max-w-md mx-4"
+          className="fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-gradient-to-br from-red-600 to-red-800 text-white px-4 sm:px-8 py-4 sm:py-6 rounded-2xl shadow-2xl border-4 border-red-400 max-w-[90vw] mx-4"
         >
           <div className="text-center">
-            <div className="text-4xl mb-3">⚠️ BEARISH CARD!</div>
-            <div className="text-xl font-bold mb-2">{currentCard.penalty}</div>
-            <div className="text-sm opacity-90 mb-3">
+            <div className="text-2xl sm:text-4xl mb-2 sm:mb-3">⚠️ BEARISH CARD!</div>
+            <div className="text-lg sm:text-xl font-bold mb-2">{currentCard.penalty}</div>
+            <div className="text-xs sm:text-sm opacity-90 mb-2 sm:mb-3">
               Roll an <span className="font-bold text-yellow-300">EVEN number (2, 4, or 6)</span> to dodge the penalty!
             </div>
             <div className="text-xs opacity-75">
@@ -488,13 +477,13 @@ export default function GameBoard({ gameId, playerName, opponentName }: GameBoar
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.5, opacity: 0 }}
-          className="fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-gradient-to-br from-purple-600 to-pink-600 text-white px-12 py-8 rounded-2xl shadow-2xl border-4 border-purple-300"
+          className="fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-gradient-to-br from-purple-600 to-pink-600 text-white px-6 sm:px-12 py-6 sm:py-8 rounded-2xl shadow-2xl border-4 border-purple-300 max-w-[90vw] mx-4"
         >
           <div className="text-center">
-            <div className="text-5xl font-black mb-2">
+            <div className="text-3xl sm:text-5xl font-black mb-2">
               ROUND {roundCount}
             </div>
-            <div className="text-lg opacity-90">
+            <div className="text-sm sm:text-lg opacity-90">
               of {maxRounds}
             </div>
           </div>
