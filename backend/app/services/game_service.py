@@ -391,6 +391,89 @@ class GameService:
                 if not should_continue:
                     # Sandy decides to stack
                     break
+            # Aida-specific decision logic (calculated, adaptive)
+            elif ai_type == "aida":
+                # Get human player score for comparison
+                result = await self.db.execute(
+                    select(Player).where(Player.game_id == game_id, Player.is_ai == False)
+                )
+                human_player = result.scalar_one()
+                behind_by = human_player.score - ai_player.score
+                ts = ai_player.turn_score
+                if behind_by > 30:
+                    # 60% chance to continue
+                    if random.random() < 0.6:
+                        actions.append({"type": "decision", "message": "Aida takes a calculated risk to catch up."})
+                        continue
+                    else:
+                        break
+                elif ts >= 40:
+                    # Stack at 40+
+                    actions.append({"type": "decision", "message": "Aida stacks at 40 or more."})
+                    break
+                elif 21 <= ts < 40:
+                    # 50% chance to continue
+                    if random.random() < 0.5:
+                        actions.append({"type": "decision", "message": "Aida pushes with a balanced risk."})
+                        continue
+                    else:
+                        break
+                else:
+                    # Keep rolling under 21
+                    continue
+            # Lana-specific decision logic (risky but with stack bias at 30+)
+            elif ai_type == "lana":
+                ts = ai_player.turn_score
+                if ts >= 30:
+                    # 70% chance to stack (risk_roll > 30 stacks in legacy)
+                    if random.random() < 0.7:
+                        actions.append({"type": "decision", "message": "Lana stacks at 30 with a strong bias."})
+                        break
+                    else:
+                        continue
+                else:
+                    continue
+            # En-J1n-specific decision logic (aggressive, structured thresholds)
+            elif ai_type == "enj1n":
+                # Get human player score for comparison
+                result = await self.db.execute(
+                    select(Player).where(Player.game_id == game_id, Player.is_ai == False)
+                )
+                human_player = result.scalar_one()
+                behind_by = human_player.score - ai_player.score
+                ts = ai_player.turn_score
+                if behind_by > 20:
+                    actions.append({"type": "decision", "message": "En-J1n stacks aggressively to catch up."})
+                    break
+                elif ts >= 50:
+                    actions.append({"type": "decision", "message": "En-J1n stacks at 50 sats."})
+                    break
+                else:
+                    # 75% chance to continue
+                    if random.random() < 0.75:
+                        actions.append({"type": "decision", "message": "En-J1n keeps pressing the attack."})
+                        continue
+                    else:
+                        break
+            # Nifty-specific decision logic (ultra-adaptable at high turn scores)
+            elif ai_type == "nifty":
+                # Get human player score for comparison
+                result = await self.db.execute(
+                    select(Player).where(Player.game_id == game_id, Player.is_ai == False)
+                )
+                human_player = result.scalar_one()
+                behind_by = human_player.score - ai_player.score
+                ts = ai_player.turn_score
+                if ts >= 50:
+                    if behind_by >= 20:
+                        actions.append({"type": "decision", "message": "Nifty is behind—stays ultra aggressive over 50 sats."})
+                        continue
+                    else:
+                        actions.append({"type": "decision", "message": "Nifty stacks efficiently at 50 sats."})
+                        break
+                else:
+                    # Below 50, continue building pressure
+                    continue
             elif ai_player.turn_score >= target_turn_score:
                 # Other AIs use standard target logic
                 break
