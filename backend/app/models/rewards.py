@@ -1,8 +1,6 @@
 from sqlalchemy import Column, String, Integer, DateTime, Float
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
-
-Base = declarative_base()
+from app.database.database import Base
 
 class RewardsPool(Base):
     __tablename__ = "rewards_pool"
