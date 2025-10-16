@@ -8,8 +8,9 @@ import './index.css'
 console.log('🚀 Starting React app...')
 
 // Test import to see if GameMode works
-import('./types/game').then(({ GameMode }) => {
+import('./types/game').then(({ GameMode, GameModeValues }) => {
   console.log('✅ GameMode import successful:', GameMode)
+  console.log('✅ GameModeValues import successful:', GameModeValues)
 }).catch((error) => {
   console.error('❌ GameMode import failed:', error)
 })
