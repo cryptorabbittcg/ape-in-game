@@ -1,8 +1,9 @@
-import { useActiveAccount, useReadContract } from 'thirdweb/react'
-import { getBalance } from 'thirdweb/extensions/erc20'
+import { useActiveAccount } from 'thirdweb/react'
+import { useState, useEffect } from 'react'
 import { client, curtisChain } from '../lib/thirdweb'
 
-// Token from env to support CURTIS testnet during testing
+// CURTIS testnet configuration (matching Cryptoku working setup)
+const CURTIS_RPC_URL = import.meta.env.VITE_RPC_URL || "https://curtis.rpc.caldera.xyz/http"
 const TOKEN_ADDRESS = import.meta.env.VITE_TOKEN_ADDRESS || ''
 const TOKEN_DECIMALS = Number(import.meta.env.VITE_TOKEN_DECIMALS || 18)
 const TOKEN_SYMBOL = import.meta.env.VITE_TOKEN_SYMBOL || 'CURTIS'
@@ -26,17 +27,26 @@ export class PaymentService {
     }
 
     try {
-      const balanceResult = await getBalance({
-        contract: {
-          address: TOKEN_ADDRESS,
-          chain: curtisChain,
-          client: client,
+      // Use direct RPC call like Cryptoku (for native APE balance)
+      const response = await fetch(CURTIS_RPC_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        address: account.address,
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'eth_getBalance',
+          params: [account.address, 'latest'],
+          id: 1,
+        }),
       })
 
-      // Convert units with configured decimals
-      const currentBalance = Number(balanceResult) / 10 ** TOKEN_DECIMALS
+      const data = await response.json()
+      const balanceHex = data.result || "0x0"
+      
+      // Convert from hex to number (wei to APE)
+      const balanceWei = parseInt(balanceHex, 16)
+      const currentBalance = balanceWei / (10 ** TOKEN_DECIMALS)
       const shortfall = Math.max(0, requiredAmount - currentBalance)
 
       return {
@@ -68,24 +78,58 @@ export class PaymentService {
 
 /**
  * Custom hook to fetch the token balance for the active account
+ * Uses direct RPC calls like Cryptoku for better compatibility
  */
 export function useTokenBalance() {
   const account = useActiveAccount()
-  
-  const { data, isLoading } = useReadContract({
-    contract: {
-      address: TOKEN_ADDRESS,
-      chain: curtisChain,
-      client: client,
-    },
-    method: "function balanceOf(address) view returns (uint256)",
-    params: account?.address ? [account.address] : undefined,
-    query: {
-      enabled: !!account?.address && !!TOKEN_ADDRESS,
-    },
-  })
+  const [balance, setBalance] = useState('0.00')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const balance = data !== undefined ? (Number(data) / (10 ** TOKEN_DECIMALS)).toFixed(2) : '0.00'
+  useEffect(() => {
+    if (!account?.address) {
+      setBalance('0.00')
+      return
+    }
+
+    const fetchBalance = async () => {
+      setIsLoading(true)
+      try {
+        // Use direct RPC call like Cryptoku (for native APE balance)
+        const response = await fetch(CURTIS_RPC_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'eth_getBalance',
+            params: [account.address, 'latest'],
+            id: 1,
+          }),
+        })
+
+        const data = await response.json()
+        const balanceHex = data.result || "0x0"
+        
+        // Convert from hex to number (wei to APE)
+        const balanceWei = parseInt(balanceHex, 16)
+        const currentBalance = balanceWei / (10 ** TOKEN_DECIMALS)
+        
+        setBalance(currentBalance.toFixed(2))
+      } catch (error) {
+        console.error('Failed to fetch balance:', error)
+        setBalance('0.00')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchBalance()
+    
+    // Refresh balance every 30 seconds
+    const interval = setInterval(fetchBalance, 30000)
+    return () => clearInterval(interval)
+  }, [account?.address])
 
   return { balance, isLoading }
 }

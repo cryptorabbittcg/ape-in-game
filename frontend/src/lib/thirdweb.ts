@@ -9,14 +9,14 @@ export const client = createThirdwebClient({
   clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID || "placeholder-client-id-replace-me",
 });
 
-// Define CURTIS testnet chain (you'll need to update these values)
+// Define ApeChain Curtis testnet chain (matching Cryptoku working config)
 export const curtisChain = defineChain({
-  id: parseInt(import.meta.env.VITE_CHAIN_ID || "1"), // Default to Ethereum mainnet
-  rpc: import.meta.env.VITE_RPC_URL || "https://mainnet.infura.io/v3/your-project-id",
-  name: import.meta.env.VITE_CHAIN_NAME || "CURTIS Testnet",
+  id: parseInt(import.meta.env.VITE_CHAIN_ID || "33111"), // ApeChain Curtis testnet
+  rpc: import.meta.env.VITE_RPC_URL || "https://curtis.rpc.caldera.xyz/http",
+  name: import.meta.env.VITE_CHAIN_NAME || "ApeChain Curtis Testnet",
   nativeCurrency: {
-    name: "Ether",
-    symbol: "ETH",
+    name: "APE",
+    symbol: "APE", 
     decimals: 18,
   },
 });
