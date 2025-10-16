@@ -2,8 +2,10 @@ import { useActiveAccount } from 'thirdweb/react'
 import { getBalance } from 'thirdweb/extensions/erc20'
 import { client } from '../lib/thirdweb'
 
-// ApeCoin contract address on Ethereum mainnet
-const APECOIN_CONTRACT_ADDRESS = '0x4d224452801ACEd8B2F0aebE155379bb5D594381'
+// Token from env to support CURTIS testnet during testing
+const TOKEN_ADDRESS = import.meta.env.VITE_TOKEN_ADDRESS || ''
+const TOKEN_DECIMALS = Number(import.meta.env.VITE_TOKEN_DECIMALS || 18)
+const TOKEN_SYMBOL = import.meta.env.VITE_TOKEN_SYMBOL || 'CURTIS'
 
 export interface PaymentValidation {
   hasEnoughBalance: boolean
@@ -26,15 +28,15 @@ export class PaymentService {
     try {
       const balanceResult = await getBalance({
         contract: {
-          address: APECOIN_CONTRACT_ADDRESS,
+          address: TOKEN_ADDRESS,
           chain: client.chain,
           client: client,
         },
         address: account.address,
       })
 
-      // Convert from wei to ApeCoin (18 decimals)
-      const currentBalance = Number(balanceResult) / 1e18
+      // Convert units with configured decimals
+      const currentBalance = Number(balanceResult) / 10 ** TOKEN_DECIMALS
       const shortfall = Math.max(0, requiredAmount - currentBalance)
 
       return {
@@ -60,6 +62,6 @@ export class PaymentService {
   }
 
   static formatApeCoin(amount: number): string {
-    return `${amount.toFixed(2)} APE`
+    return `${amount.toFixed(2)} ${TOKEN_SYMBOL}`
   }
 }

@@ -4,7 +4,7 @@ import { client, wallet } from '../lib/thirdweb'
 import { createWallet } from 'thirdweb/wallets'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import { useApeCoinBalance } from '../hooks/useApeCoinBalance'
+import { useTokenBalance } from '../hooks/useApeCoinBalance'
 
 interface UserProfile {
   name: string
@@ -21,7 +21,7 @@ export default function NewHeader() {
   const [showNameModal, setShowNameModal] = useState(false)
   const [playerName, setPlayerName] = useState('')
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const { balance: apeCoinBalance, isLoading: balanceLoading } = useApeCoinBalance()
+  const { balance: tokenBalance, isLoading: balanceLoading, symbol: tokenSymbol } = useTokenBalance()
 
   // Load user profile from localStorage
   useEffect(() => {
@@ -203,7 +203,7 @@ export default function NewHeader() {
                                   <div className="w-12 h-4 bg-slate-700/50 rounded animate-pulse"></div>
                                 ) : (
                                   <span className="text-sm font-bold text-white">
-                                    {parseFloat(apeCoinBalance).toFixed(2)} APE
+                                    {parseFloat(tokenBalance).toFixed(2)} {tokenSymbol}
                                   </span>
                                 )}
                               </div>
