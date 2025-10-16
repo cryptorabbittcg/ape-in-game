@@ -92,6 +92,9 @@ export function useTokenBalance() {
     }
 
     const fetchBalance = async () => {
+      console.log('🔄 Fetching balance for address:', account.address)
+      console.log('🌐 Using RPC URL:', CURTIS_RPC_URL)
+      
       setIsLoading(true)
       try {
         // Use direct RPC call like Cryptoku (for native APE balance)
@@ -109,15 +112,21 @@ export function useTokenBalance() {
         })
 
         const data = await response.json()
+        console.log('📊 RPC Response:', data)
+        
         const balanceHex = data.result || "0x0"
+        console.log('💰 Balance Hex:', balanceHex)
         
         // Convert from hex to number (wei to APE)
         const balanceWei = parseInt(balanceHex, 16)
         const currentBalance = balanceWei / (10 ** TOKEN_DECIMALS)
         
+        console.log('💎 Balance Wei:', balanceWei)
+        console.log('🪙 Balance APE:', currentBalance)
+        
         setBalance(currentBalance.toFixed(2))
       } catch (error) {
-        console.error('Failed to fetch balance:', error)
+        console.error('❌ Failed to fetch balance:', error)
         setBalance('0.00')
       } finally {
         setIsLoading(false)
