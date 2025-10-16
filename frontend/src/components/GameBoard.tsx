@@ -533,20 +533,21 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onMouseEnter={() => setShowEnlargedAvatar(true)}
           onMouseLeave={() => setShowEnlargedAvatar(false)}
+          onClick={() => setShowEnlargedAvatar(false)}
         >
           <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
-            className="bg-slate-800/95 backdrop-blur-xl rounded-2xl border border-purple-500/30 p-6 shadow-2xl max-w-sm w-full"
+            className="bg-slate-800/95 backdrop-blur-xl rounded-2xl border border-purple-500/30 p-6 shadow-2xl max-w-sm w-full cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
               <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-purple-500/50 shadow-xl">
                 <img 
                   src={`/assets/bots/${gameMode}.gif`} 
                   alt={`${gameMode} avatar`} 
-                  className="w-full h-full object-cover" 
+                  className="w-full h-full object-cover"
                   onError={(e) => {
                     console.log(`GIF failed for ${gameMode} enlarged, trying PNG...`);
                     e.currentTarget.src = `/assets/bots/${gameMode}.png`;
@@ -557,12 +558,15 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
                 />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">{opponentName}</h3>
-              <p className="text-slate-300 text-sm">
+              <p className="text-slate-300 text-sm mb-4">
                 {gameMode === 'sandy' && "🐰 Friendly tutorial bot - Perfect for beginners!"}
                 {gameMode === 'aida' && "🧠 Strategic and analytical - Balanced challenge"}
                 {gameMode === 'lana' && "🔧 High-risk, high-reward - Aggressive gameplay"}
                 {gameMode === 'enj1n' && "🔥 Relentless and aggressive - Only for the brave!"}
                 {gameMode === 'nifty' && "🎨 Unpredictable and creative - Unique strategies"}
+              </p>
+              <p className="text-xs text-slate-400">
+                Click anywhere to close
               </p>
             </div>
           </motion.div>
