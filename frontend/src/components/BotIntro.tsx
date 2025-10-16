@@ -170,7 +170,7 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
             {(gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
               <div className="w-full h-full relative">
                 <img 
-                  src={`${window.location.origin}/assets/bots/${gameMode}.png?v=${Date.now()}`} 
+                  src={`/assets/bots/${gameMode}.png`} 
                   alt={`${gameMode} avatar`} 
                   className="w-full h-full object-cover rounded-full absolute inset-0" 
                   onError={(e) => {
@@ -227,7 +227,7 @@ export default function BotIntro({ gameMode, onComplete }: BotIntroProps) {
                   className="flex-shrink-0"
                 >
                   <img 
-                    src={`${window.location.origin}/assets/bots/${gameMode}.png?v=${Date.now()}`} 
+                    src={`/assets/bots/${gameMode}.png`} 
                     alt={`${gameMode} avatar`} 
                     className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
                     onError={(e) => {

@@ -304,7 +304,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
             {/* Bot Avatar in Game Over Screen */}
             {gameMode && (gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
               <img 
-                src={`${window.location.origin}/assets/bots/${gameMode}.png?v=${Date.now()}`} 
+                src={`/assets/bots/${gameMode}.png`} 
                 alt={`${gameMode} avatar`} 
                 className="w-8 h-8 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
                 onError={(e) => {
@@ -342,7 +342,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
           {gameMode && (gameMode === 'sandy' || gameMode === 'aida' || gameMode === 'lana' || gameMode === 'enj1n' || gameMode === 'nifty') ? (
             <div className="flex justify-center mb-2">
               <img 
-                src={`${window.location.origin}/assets/bots/${gameMode}.png?v=${Date.now()}`} 
+                src={`/assets/bots/${gameMode}.png`} 
                 alt={`${gameMode} avatar`} 
                 className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-full border-2 border-purple-500/50 shadow-lg" 
                 onError={(e) => {
