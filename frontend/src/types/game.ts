@@ -68,5 +68,3 @@ export interface WebSocketMessage {
   type: 'game_update' | 'player_joined' | 'game_started' | 'game_ended' | 'error'
   data: any
 }
-
-
