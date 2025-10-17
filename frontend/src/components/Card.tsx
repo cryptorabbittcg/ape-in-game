@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import React, { useEffect, useState } from 'react'
 import { Card as CardType } from '../types/game'
 
 interface CardProps {
@@ -52,6 +53,27 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
     )
   }
 
+  // When the special "Ape In!" card is drawn, randomly choose one of three brand images
+  const [apeInImageOverride, setApeInImageOverride] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (card?.name === 'Ape In!') {
+      const remoteBase = 'https://thecryptorabbithole.io/cards'
+      const candidates = [
+        card.image_url, // existing/default image (local or remote)
+        `${remoteBase}/Ape_In_Historic.jpg`,
+        `${remoteBase}/Ape_in_MAYC.jpg`,
+      ].filter(Boolean) as string[]
+
+      // Choose one at random per card draw
+      const choice = candidates[Math.floor(Math.random() * candidates.length)]
+      setApeInImageOverride(choice)
+    } else {
+      setApeInImageOverride(null)
+    }
+    // Re-evaluate when the shown card changes (by name/value)
+  }, [card?.name, card?.value, card?.image_url])
+
   return (
     <motion.div
       initial={isRevealing ? { rotateY: 180, scale: 0.7 } : { scale: 1 }}
@@ -75,9 +97,9 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
         
         {/* Card Image - proper 355:497 ratio with padding */}
         <div className="h-full w-full overflow-hidden rounded-lg relative p-1.5 bg-slate-900">
-          {card.image_url ? (
+          {card.image_url || apeInImageOverride ? (
             <img
-              src={card.image_url}
+              src={card.name === 'Ape In!' ? (apeInImageOverride || card.image_url) : (card.image_url as string)}
               alt={card.name}
               className="w-full h-full object-contain"
             />
