@@ -53,23 +53,33 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
     )
   }
 
-  // When the special "Ape In!" card is drawn, randomly choose one of three brand images
-  const [apeInImageOverride, setApeInImageOverride] = useState<string | null>(null)
+  // When the special "Ape In!" card is drawn, choose one of three brand images with robust fallback
+  const [apeInCandidates, setApeInCandidates] = useState<string[]>([])
+  const [apeInIdx, setApeInIdx] = useState<number>(0)
 
   useEffect(() => {
     if (card?.name === 'Ape In!') {
       const remoteBase = 'https://thecryptorabbithole.io/cards'
-      const candidates = [
-        card.image_url, // existing/default image (local or remote)
+      const rawCandidates = [
         `${remoteBase}/Ape_In_Historic.jpg`,
         `${remoteBase}/Ape_in_MAYC.jpg`,
+        card.image_url, // keep last so branded ones are preferred
       ].filter(Boolean) as string[]
-
-      // Choose one at random per card draw
-      const choice = candidates[Math.floor(Math.random() * candidates.length)]
-      setApeInImageOverride(choice)
+      // Deduplicate while preserving order
+      const seen = new Set<string>()
+      const unique = rawCandidates.filter((u) => {
+        const key = u.toLowerCase()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      // Randomize starting index for variety, but keep candidate order for fallbacks
+      const startIdx = Math.floor(Math.random() * unique.length)
+      setApeInCandidates(unique)
+      setApeInIdx(startIdx)
     } else {
-      setApeInImageOverride(null)
+      setApeInCandidates([])
+      setApeInIdx(0)
     }
     // Re-evaluate when the shown card changes (by name/value)
   }, [card?.name, card?.value, card?.image_url])
@@ -97,11 +107,32 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
         
         {/* Card Image - proper 355:497 ratio with padding */}
         <div className="h-full w-full overflow-hidden rounded-lg relative p-1.5 bg-slate-900">
-          {card.image_url || apeInImageOverride ? (
+          {card.name === 'Ape In!' ? (
+            apeInCandidates.length > 0 ? (
+              <img
+                src={`${apeInCandidates[apeInIdx]}?v=${Date.now()}`}
+                alt={card.name}
+                className="w-full h-full object-contain"
+                onError={() => {
+                  // Try next candidate; if we've tried all, fall back to last-resort
+                  setApeInIdx((prev) => {
+                    const next = (prev + 1) % Math.max(apeInCandidates.length, 1)
+                    return next
+                  })
+                }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-7xl">🚀</div>
+            )
+          ) : card.image_url ? (
             <img
-              src={card.name === 'Ape In!' ? (apeInImageOverride || card.image_url) : (card.image_url as string)}
+              src={card.image_url}
               alt={card.name}
               className="w-full h-full object-contain"
+              onError={(e) => {
+                // As a safe fallback, show cardback if provided URL fails
+                (e.currentTarget as HTMLImageElement).src = '/assets/cardback.jpg'
+              }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-7xl">
