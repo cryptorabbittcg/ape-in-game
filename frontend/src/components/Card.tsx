@@ -53,36 +53,26 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
     )
   }
 
-  // When the special "Ape In!" card is drawn, choose one of three brand images with robust fallback
-  const [apeInCandidates, setApeInCandidates] = useState<string[]>([])
-  const [apeInIdx, setApeInIdx] = useState<number>(0)
+  // Sequential cycle for Ape In! card images - no randomization conflicts
+  const [apeInCycleIndex, setApeInCycleIndex] = useState<number>(0)
 
   useEffect(() => {
     if (card?.name === 'Ape In!') {
-      const remoteBase = 'https://thecryptorabbithole.io/cards'
-      const rawCandidates = [
-        `${remoteBase}/Ape_In_Historic.jpg`,
-        `${remoteBase}/Ape_in_MAYC.jpg`,
-        card.image_url, // keep last so branded ones are preferred
-      ].filter(Boolean) as string[]
-      // Deduplicate while preserving order
-      const seen = new Set<string>()
-      const unique = rawCandidates.filter((u) => {
-        const key = u.toLowerCase()
-        if (seen.has(key)) return false
-        seen.add(key)
-        return true
-      })
-      // Randomize starting index for variety, but keep candidate order for fallbacks
-      const startIdx = Math.floor(Math.random() * unique.length)
-      setApeInCandidates(unique)
-      setApeInIdx(startIdx)
-    } else {
-      setApeInCandidates([])
-      setApeInIdx(0)
+      // Advance to next image in cycle when Ape In! card is drawn
+      setApeInCycleIndex(prev => (prev + 1) % 3)
     }
-    // Re-evaluate when the shown card changes (by name/value)
-  }, [card?.name, card?.value, card?.image_url])
+  }, [card?.name, card?.value])
+
+  // Get current Ape In! image based on cycle index
+  const getApeInImage = () => {
+    const remoteBase = 'https://thecryptorabbithole.io/cards'
+    const images = [
+      card.image_url || `${remoteBase}/Ape_In.jpg`, // Original/default
+      `${remoteBase}/Ape_In_MAYC.jpg`,              // MAYC variant
+      `${remoteBase}/Ape_In_Historic.jpg`,          // Historic variant
+    ]
+    return images[apeInCycleIndex % images.length]
+  }
 
   return (
     <motion.div
@@ -108,22 +98,19 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
         {/* Card Image - proper 355:497 ratio with padding */}
         <div className="h-full w-full overflow-hidden rounded-lg relative p-1.5 bg-slate-900">
           {card.name === 'Ape In!' ? (
-            apeInCandidates.length > 0 ? (
-              <img
-                src={`${apeInCandidates[apeInIdx]}?v=${Date.now()}`}
-                alt={card.name}
-                className="w-full h-full object-contain"
-                onError={() => {
-                  // Try next candidate; if we've tried all, fall back to last-resort
-                  setApeInIdx((prev) => {
-                    const next = (prev + 1) % Math.max(apeInCandidates.length, 1)
-                    return next
-                  })
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-7xl">🚀</div>
-            )
+            <img
+              src={`${getApeInImage()}?v=${Date.now()}`}
+              alt={card.name}
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                // Fallback to next image in cycle if current fails
+                setApeInCycleIndex(prev => (prev + 1) % 3)
+                // Try again with next image
+                setTimeout(() => {
+                  (e.currentTarget as HTMLImageElement).src = `${getApeInImage()}?v=${Date.now()}`
+                }, 100)
+              }}
+            />
           ) : card.image_url ? (
             <img
               src={card.image_url}
