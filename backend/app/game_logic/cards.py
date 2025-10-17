@@ -81,7 +81,7 @@ CARD_WEIGHTS = {
     "Oracle": 10,
     "Historacle": 4,
     "Bearish": 2,
-    "Special": 300,  # 🧪 TESTING: Increased from 25 to 300 for 75% Ape In! chance
+    "Special": 25,  # Normal Ape In! draw chance
 }
 
 

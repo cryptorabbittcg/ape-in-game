@@ -151,8 +151,14 @@ class GameService:
         )
         state = result.scalar_one()
 
-        # Draw a card
-        card = draw_weighted_card(state.used_bearish_flags)
+        # Check if last card was Ape In! to prevent consecutive Ape In! cards
+        last_card_was_ape_in = False
+        if state.current_card:
+            last_card = Card(**state.current_card)
+            last_card_was_ape_in = last_card.name == "Ape In!"
+
+        # Draw a card (exclude Ape In! if last card was Ape In!)
+        card = draw_weighted_card(state.used_bearish_flags, exclude_ape_in=last_card_was_ape_in)
         
         # Store card in state
         state.current_card = card.model_dump()
