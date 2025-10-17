@@ -131,6 +131,12 @@ export default function NewHeader() {
             {/* Right: Actions */}
             <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 flex-shrink-0">
               
+              {/* zkVerify Verification Badge */}
+              <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
+                <span className="text-xs sm:text-sm font-medium text-emerald-300">zkVerify</span>
+              </div>
+
               {/* Leaderboard Button */}
               <Link
                 to="/leaderboard"

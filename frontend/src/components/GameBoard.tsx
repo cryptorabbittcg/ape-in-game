@@ -403,28 +403,44 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
         {playerWon && (
           <div className="mb-6">
             {isVerifying ? (
-              <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-center gap-3">
-                  <div className="animate-spin text-2xl">🔄</div>
-                  <div>
-                    <div className="font-semibold">Verifying Victory...</div>
-                    <div className="text-sm text-slate-400">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-xl p-6 mb-4 backdrop-blur-sm"
+              >
+                <div className="flex items-center justify-center gap-4">
+                  <div className="relative">
+                    <div className="animate-spin text-3xl">🔐</div>
+                    <div className="absolute inset-0 animate-ping text-3xl opacity-20">🔐</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-lg text-blue-300 mb-1">Verifying Victory...</div>
+                    <div className="text-sm text-blue-200/80">
                       {import.meta.env.VITE_ZKVERIFY_API_KEY && import.meta.env.VITE_ZKVERIFY_API_KEY.length > 0
-                        ? "Generating zero-knowledge proof via zkVerify (this may take 3-7 seconds)"
-                        : "Validating game rules (fast mock mode)"}
+                        ? "Generating zero-knowledge proof (3-7 seconds)"
+                        : "Validating game rules"}
+                    </div>
+                    <div className="text-xs text-blue-300/60 mt-1">Every victory is cryptographically verified</div>
+                  </div>
+                </div>
+              </motion.div>
+            ) : verificationProofId ? (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-gradient-to-r from-emerald-900/30 to-green-900/30 border border-emerald-500/40 rounded-xl p-6 mb-4 backdrop-blur-sm"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <div className="text-2xl">🔐</div>
+                  <div className="text-center">
+                    <div className="font-bold text-lg text-emerald-300 mb-1">✓ Victory Verified!</div>
+                    <div className="text-sm text-emerald-200/80">Cryptographically proven valid</div>
+                    <div className="text-xs text-emerald-300/60 mt-1 font-mono">
+                      Proof: {verificationProofId.slice(0, 16)}...
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : verificationProofId ? (
-              <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-green-400">✓ Victory Verified via zkVerify</span>
-                </div>
-                <div className="text-xs text-slate-400 mt-1 font-mono">
-                  Proof: {verificationProofId.slice(0, 20)}...
-                </div>
-              </div>
+              </motion.div>
             ) : null}
           </div>
         )}

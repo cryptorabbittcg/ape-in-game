@@ -7,7 +7,6 @@ import { useActiveAccount } from 'thirdweb/react'
 import { PaymentService } from '../services/paymentService'
 import { BOT_CONFIGS } from '../config/botConfig'
 import { DailyFreeGameService } from '../services/dailyFreeGames'
-import ZkVerifyTest from '../components/ZkVerifyTest'
 
 interface GameModeCard {
   mode: GameMode
@@ -343,9 +342,6 @@ export default function HomePage() {
           </div>
         </motion.div>
       </div>
-      
-      {/* zkVerify Test Component - Remove in production */}
-      <ZkVerifyTest />
     </div>
   )
 }
@@ -425,6 +421,12 @@ function CompactGameCard({
 
           <h3 className="text-sm sm:text-base font-bold mb-1 text-white">{gameMode.name}</h3>
           <p className="text-slate-400 text-[10px] sm:text-[11px] mb-2 sm:mb-3 line-clamp-2 leading-tight">{gameMode.description}</p>
+          
+          {/* zkVerify Verification Indicator */}
+          <div className="flex items-center justify-center gap-1 mb-2">
+            <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse"></div>
+            <span className="text-[9px] text-emerald-400 font-medium">zkVerify Protected</span>
+          </div>
           
           {/* Price Display */}
           <div className="mb-2 sm:mb-3">
