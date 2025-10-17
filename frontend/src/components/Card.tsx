@@ -65,11 +65,11 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
         console.log('🔄 Ape In! cycle advancing:', prev, '->', next)
         
         // Set the image immediately to avoid multiple calls
-        // Use only the existing Ape_In.jpg image (the other variants don't exist locally)
+        // Use all three Ape In! variants for variety
         const images = [
-          '/assets/cards/Ape_In.jpg',                   // Only existing variant
-          '/assets/cards/Ape_In.jpg',                   // Same image for variety
-          card.image_url || '/assets/cards/Ape_In.jpg', // Fallback to same
+          '/assets/cards/Ape_In_MAYC.jpg',              // MAYC variant
+          '/assets/cards/Ape_In_Historic.jpg',          // Historic variant
+          '/assets/cards/Ape_In.jpg',                   // Original variant
         ]
         const selectedImage = images[next]
         setCurrentApeInImage(selectedImage)
@@ -121,9 +121,9 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
                   // Fallback to next image in cycle if current fails
                   const nextIndex = (apeInCycleIndex + 1) % 3
                   const images = [
+                    '/assets/cards/Ape_In_MAYC.jpg',
+                    '/assets/cards/Ape_In_Historic.jpg',
                     '/assets/cards/Ape_In.jpg',
-                    '/assets/cards/Ape_In.jpg',
-                    card.image_url || '/assets/cards/Ape_In.jpg',
                   ]
                   const nextImage = images[nextIndex]
                   console.log('🔄 Trying fallback image:', nextImage)
