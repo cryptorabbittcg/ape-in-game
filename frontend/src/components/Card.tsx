@@ -65,11 +65,11 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
         console.log('🔄 Ape In! cycle advancing:', prev, '->', next)
         
         // Set the image immediately to avoid multiple calls
-        const remoteBase = 'https://thecryptorabbithole.io/cards'
+        // Use only the existing Ape_In.jpg image (the other variants don't exist locally)
         const images = [
-          `${remoteBase}/Ape_In_MAYC.jpg`,              // MAYC variant (start with this)
-          `${remoteBase}/Ape_In_Historic.jpg`,          // Historic variant
-          card.image_url || `${remoteBase}/Ape_In.jpg`, // Original/default (fallback)
+          '/assets/cards/Ape_In.jpg',                   // Only existing variant
+          '/assets/cards/Ape_In.jpg',                   // Same image for variety
+          card.image_url || '/assets/cards/Ape_In.jpg', // Fallback to same
         ]
         const selectedImage = images[next]
         setCurrentApeInImage(selectedImage)
@@ -120,11 +120,10 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
                   console.log('❌ Ape In! image failed to load:', currentApeInImage)
                   // Fallback to next image in cycle if current fails
                   const nextIndex = (apeInCycleIndex + 1) % 3
-                  const remoteBase = 'https://thecryptorabbithole.io/cards'
                   const images = [
-                    `${remoteBase}/Ape_In_MAYC.jpg`,
-                    `${remoteBase}/Ape_In_Historic.jpg`,
-                    card.image_url || `${remoteBase}/Ape_In.jpg`,
+                    '/assets/cards/Ape_In.jpg',
+                    '/assets/cards/Ape_In.jpg',
+                    card.image_url || '/assets/cards/Ape_In.jpg',
                   ]
                   const nextImage = images[nextIndex]
                   console.log('🔄 Trying fallback image:', nextImage)
