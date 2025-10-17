@@ -2,6 +2,67 @@ import { motion } from 'framer-motion'
 import React, { useEffect, useState } from 'react'
 import { Card as CardType } from '../types/game'
 
+// Robust Ape In! card image component with multiple fallbacks
+function ApeInCardImage({ 
+  currentImage, 
+  cycleIndex, 
+  onImageError 
+}: { 
+  currentImage: string
+  cycleIndex: number
+  onImageError: (nextImage: string, nextIndex: number) => void
+}) {
+  const [imageLoadAttempts, setImageLoadAttempts] = useState(0)
+  const [showPlaceholder, setShowPlaceholder] = useState(false)
+
+  const images = [
+    '/assets/cards/Ape_In_MAYC.jpg',
+    '/assets/cards/Ape_In_Historic.jpg', 
+    '/assets/cards/Ape_In.jpg',
+  ]
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.log('❌ Ape In! image failed to load:', currentImage, 'attempt:', imageLoadAttempts)
+    
+    if (imageLoadAttempts < 2) {
+      // Try next image in cycle
+      const nextIndex = (cycleIndex + 1) % 3
+      const nextImage = images[nextIndex]
+      console.log('🔄 Trying fallback image:', nextImage)
+      setImageLoadAttempts(prev => prev + 1)
+      onImageError(nextImage, nextIndex)
+    } else {
+      // All images failed, show placeholder
+      console.log('🚀 All Ape In! images failed, showing placeholder')
+      setShowPlaceholder(true)
+    }
+  }
+
+  const handleImageLoad = () => {
+    console.log('✅ Ape In! image loaded successfully:', currentImage)
+    setImageLoadAttempts(0)
+    setShowPlaceholder(false)
+  }
+
+  if (showPlaceholder) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-7xl bg-gradient-to-br from-green-600 to-emerald-600">
+        🚀
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={`${currentImage}?v=${Date.now()}&attempt=${imageLoadAttempts}`}
+      alt="Ape In!"
+      className="w-full h-full object-contain"
+      onError={handleImageError}
+      onLoad={handleImageLoad}
+    />
+  )
+}
+
 interface CardProps {
   card: CardType | null
   isRevealing?: boolean
@@ -112,30 +173,14 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
         {/* Card Image - proper 355:497 ratio with padding */}
         <div className="h-full w-full overflow-hidden rounded-lg relative p-1.5 bg-slate-900">
           {card.name === 'Ape In!' ? (
-            currentApeInImage ? (
-              <img
-                src={`${currentApeInImage}?v=${Date.now()}`}
-                alt={card.name}
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  console.log('❌ Ape In! image failed to load:', currentApeInImage)
-                  // Fallback to next image in cycle if current fails
-                  const nextIndex = (apeInCycleIndex + 1) % 3
-                  const images = [
-                    '/assets/cards/Ape_In_MAYC.jpg',
-                    '/assets/cards/Ape_In_Historic.jpg',
-                    '/assets/cards/Ape_In.jpg',
-                  ]
-                  const nextImage = images[nextIndex]
-                  console.log('🔄 Trying fallback image:', nextImage)
-                  setApeInCycleIndex(nextIndex)
-                  setCurrentApeInImage(nextImage)
-                  ;(e.currentTarget as HTMLImageElement).src = `${nextImage}?v=${Date.now()}`
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-7xl">🚀</div>
-            )
+            <ApeInCardImage 
+              currentImage={currentApeInImage}
+              cycleIndex={apeInCycleIndex}
+              onImageError={(nextImage, nextIndex) => {
+                setCurrentApeInImage(nextImage)
+                setApeInCycleIndex(nextIndex)
+              }}
+            />
           ) : card.image_url ? (
             <img
               src={card.image_url}
