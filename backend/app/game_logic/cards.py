@@ -68,7 +68,7 @@ BEARISH_CARDS = [
 ]
 
 SPECIAL_CARDS = [
-    Card(name="Ape In!", type="Special", value=0, image_url=f"{CARD_BASE_URL}/Ape_In.jpg"),
+    Card(name="Ape In!", type="Special", value=0, image_url="/assets/cards/Ape_In.jpg"),  # Use local path for frontend cycling
 ]
 
 # Card weights for drawing
