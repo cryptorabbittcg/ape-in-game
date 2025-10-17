@@ -1,205 +1,93 @@
 import { motion } from 'framer-motion'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Card as CardType } from '../types/game'
 
-// Robust Ape In! card image component with multiple fallbacks
-function ApeInCardImage({ 
-  currentImage, 
-  cycleIndex, 
-  onImageError 
-}: { 
-  currentImage: string
-  cycleIndex: number
-  onImageError: (nextImage: string, nextIndex: number) => void
-}) {
-  const [imageLoadAttempts, setImageLoadAttempts] = useState(0)
-  const [showPlaceholder, setShowPlaceholder] = useState(false)
-
-  const images = [
-    '/assets/cards/Ape_In_MAYC.jpg',
-    '/assets/cards/Ape_In_Historic.jpg', 
-    '/assets/cards/Ape_In.jpg',
-  ]
-
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.log('❌ Ape In! image failed to load:', currentImage, 'attempt:', imageLoadAttempts)
-    
-    if (imageLoadAttempts < 2) {
-      // Try next image in cycle
-      const nextIndex = (cycleIndex + 1) % 3
-      const nextImage = images[nextIndex]
-      console.log('🔄 Trying fallback image:', nextImage)
-      setImageLoadAttempts(prev => prev + 1)
-      onImageError(nextImage, nextIndex)
-    } else {
-      // All images failed, show placeholder
-      console.log('🚀 All Ape In! images failed, showing placeholder')
-      setShowPlaceholder(true)
-    }
-  }
-
-  const handleImageLoad = () => {
-    console.log('✅ Ape In! image loaded successfully:', currentImage)
-    setImageLoadAttempts(0)
-    setShowPlaceholder(false)
-  }
-
-  if (showPlaceholder) {
-    return (
-      <div className="w-full h-full flex items-center justify-center text-7xl bg-gradient-to-br from-green-600 to-emerald-600">
-        🚀
-      </div>
-    )
-  }
-
-  return (
-    <img
-      src={`${currentImage}?v=${Date.now()}&attempt=${imageLoadAttempts}`}
-      alt="Ape In!"
-      className="w-full h-full object-contain"
-      onError={handleImageError}
-      onLoad={handleImageLoad}
-    />
-  )
-}
-
 interface CardProps {
-  card: CardType | null
-  isRevealing?: boolean
-  onClick?: () => void
+  card: CardType
+  isFlipped?: boolean
+  className?: string
 }
 
-const getCardGradient = (type: CardType['type']) => {
-  switch (type) {
-    case 'Cipher':
-      return 'from-blue-500 to-cyan-500'
-    case 'Oracle':
-      return 'from-purple-500 to-pink-500'
-    case 'Historacle':
-      return 'from-yellow-500 to-orange-500'
-    case 'Bearish':
-      return 'from-red-600 to-red-800'
-    case 'Special':
-      return 'from-green-500 to-emerald-600'
-    default:
-      return 'from-slate-600 to-slate-800'
-  }
-}
-
-export default function Card({ card, isRevealing = false, onClick }: CardProps) {
-  // Card ratio: 355:497 ≈ 5:7 ratio
-  // Compact size for better screen fit
-  
-  // Show card back when no card - with same padding as drawn cards
-  if (!card) {
-    return (
-      <motion.div
-        whileHover={{ scale: 1.05, rotateZ: 1 }}
-        whileTap={{ scale: 0.98 }}
-        className="w-56 h-[19.6rem] md:w-60 md:h-[21rem] rounded-xl shadow-2xl overflow-hidden cursor-pointer"
-        onClick={onClick}
-      >
-        {/* Slate border - thinner for compact look */}
-        <div className="bg-gradient-to-br from-slate-600 to-slate-800 h-full p-1.5 shadow-2xl relative hover:from-purple-600 hover:to-purple-800 transition-all duration-300">
-          {/* Inner padding to match card ratio */}
-          <div className="h-full w-full overflow-hidden rounded-lg relative p-1.5 bg-slate-900">
-            <img
-              src="/assets/cardback.jpg"
-              alt="Card Back"
-              className="w-full h-full object-contain"
-            />
-          </div>
-        </div>
-      </motion.div>
-    )
-  }
-
-  // Sequential cycle for Ape In! card images - no randomization conflicts
-  const [apeInCycleIndex, setApeInCycleIndex] = useState<number>(0)
-  const [currentApeInImage, setCurrentApeInImage] = useState<string>('')
-
-  useEffect(() => {
-    if (card?.name === 'Ape In!') {
-      // Advance to next image in cycle when Ape In! card is drawn
-      setApeInCycleIndex(prev => {
-        const next = (prev + 1) % 3
-        console.log('🔄 Ape In! cycle advancing:', prev, '->', next)
-        
-        // Set the image immediately to avoid multiple calls
-        // Use all three Ape In! variants for variety
-        const images = [
-          '/assets/cards/Ape_In_MAYC.jpg',              // MAYC variant
-          '/assets/cards/Ape_In_Historic.jpg',          // Historic variant
-          '/assets/cards/Ape_In.jpg',                   // Original variant
-        ]
-        const selectedImage = images[next]
-        setCurrentApeInImage(selectedImage)
-        console.log('🎴 Ape In! image set (FINAL FIX v2.0):', {
-          index: next,
-          image: selectedImage,
-          cardValue: card?.value,
-          timestamp: Date.now(),
-          buildId: 'FINAL_FIX_v2_0'
-        })
-        
-        return next
-      })
-    } else {
-      setCurrentApeInImage('')
+export default function Card({ card, isFlipped = false, className = '' }: CardProps) {
+  const getCardColor = () => {
+    switch (card.type) {
+      case 'Cipher':
+        return 'bg-gradient-to-br from-blue-500 to-blue-700'
+      case 'Oracle':
+        return 'bg-gradient-to-br from-purple-500 to-purple-700'
+      case 'Historacle':
+        return 'bg-gradient-to-br from-yellow-500 to-yellow-700'
+      case 'Bearish':
+        return 'bg-gradient-to-br from-red-500 to-red-700'
+      case 'Special':
+        return 'bg-gradient-to-br from-green-500 to-green-700'
+      default:
+        return 'bg-gradient-to-br from-gray-500 to-gray-700'
     }
-  }, [card?.name, card?.value, card?.image_url])
+  }
+
+  const getCardIcon = () => {
+    switch (card.type) {
+      case 'Cipher':
+        return '🔐'
+      case 'Oracle':
+        return '🔮'
+      case 'Historacle':
+        return '📊'
+      case 'Bearish':
+        return '🐻'
+      case 'Special':
+        return '🚀'
+      default:
+        return '❓'
+    }
+  }
 
   return (
     <motion.div
-      initial={isRevealing ? { rotateY: 180, scale: 0.7 } : { scale: 1 }}
-      animate={isRevealing ? { rotateY: 0, scale: 1 } : { scale: 1 }}
-      transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
-      whileHover={{ scale: 1.03, y: -5 }}
-      className={`w-56 h-[19.6rem] md:w-60 md:h-[21rem] rounded-xl shadow-2xl overflow-hidden ${
-        onClick ? 'cursor-pointer' : ''
-      }`}
-      onClick={onClick}
+      className={`relative w-24 h-36 rounded-lg shadow-lg overflow-hidden ${className}`}
+      initial={{ rotateY: 0 }}
+      animate={{ rotateY: isFlipped ? 180 : 0 }}
+      transition={{ duration: 0.6 }}
+      style={{ transformStyle: 'preserve-3d' }}
     >
-      {/* Thinner gradient border for cleaner look */}
-      <div className={`bg-gradient-to-br ${getCardGradient(card.type)} h-full p-1.5 shadow-2xl relative`}>
-        {/* Glow effect for special cards */}
-        {card.type === 'Special' && (
-          <div className="absolute inset-0 bg-gradient-to-br from-green-400/30 to-emerald-400/30 rounded-xl animate-pulse" />
-        )}
-        {card.type === 'Bearish' && (
-          <div className="absolute inset-0 bg-gradient-to-br from-red-400/30 to-orange-400/30 rounded-xl animate-pulse" />
-        )}
-        
-        {/* Card Image - proper 355:497 ratio with padding */}
-        <div className="h-full w-full overflow-hidden rounded-lg relative p-1.5 bg-slate-900">
-          {card.name === 'Ape In!' ? (
-            <ApeInCardImage 
-              currentImage={currentApeInImage}
-              cycleIndex={apeInCycleIndex}
-              onImageError={(nextImage, nextIndex) => {
-                setCurrentApeInImage(nextImage)
-                setApeInCycleIndex(nextIndex)
-              }}
-            />
-          ) : card.image_url ? (
-            <img
-              src={card.image_url}
-              alt={card.name}
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                // As a safe fallback, show cardback if provided URL fails
-                (e.currentTarget as HTMLImageElement).src = '/assets/cardback.jpg'
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-7xl">
-              {card.type === 'Bearish' ? '🐻' : card.type === 'Special' ? '🚀' : '🎴'}
-            </div>
-          )}
+      {isFlipped ? (
+        // Card back
+        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-indigo-600 to-purple-800 flex items-center justify-center">
+          <div className="text-white text-4xl">🎴</div>
         </div>
-      </div>
+      ) : (
+        // Card front
+        <div className={`absolute inset-0 w-full h-full ${getCardColor()} flex flex-col items-center justify-center p-2`}>
+          {/* Card Image */}
+          <div className="w-full h-20 mb-1 rounded overflow-hidden">
+            <img
+              src={card.imageUrl}
+              alt={card.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to icon if image fails
+                const target = e.target as HTMLImageElement
+                target.style.display = 'none'
+                const parent = target.parentElement
+                if (parent) {
+                  parent.innerHTML = `<div class="w-full h-full flex items-center justify-center text-2xl">${getCardIcon()}</div>`
+                }
+              }}
+            />
+          </div>
+          
+          {/* Card Info */}
+          <div className="text-center text-white">
+            <div className="text-xs font-bold truncate">{card.name}</div>
+            {card.type === 'Bearish' ? (
+              <div className="text-xs opacity-90">{card.penalty}</div>
+            ) : (
+              <div className="text-xs opacity-90">{card.value} sats</div>
+            )}
+          </div>
+        </div>
+      )}
     </motion.div>
   )
 }
-
-
