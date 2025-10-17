@@ -59,7 +59,11 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
   useEffect(() => {
     if (card?.name === 'Ape In!') {
       // Advance to next image in cycle when Ape In! card is drawn
-      setApeInCycleIndex(prev => (prev + 1) % 3)
+      setApeInCycleIndex(prev => {
+        const next = (prev + 1) % 3
+        console.log('🔄 Ape In! cycle advancing:', prev, '->', next)
+        return next
+      })
     }
   }, [card?.name, card?.value])
 
@@ -71,7 +75,13 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
       `${remoteBase}/Ape_In_MAYC.jpg`,              // MAYC variant
       `${remoteBase}/Ape_In_Historic.jpg`,          // Historic variant
     ]
-    return images[apeInCycleIndex % images.length]
+    const selectedImage = images[apeInCycleIndex % images.length]
+    console.log('🎴 Ape In! image selected:', {
+      index: apeInCycleIndex,
+      image: selectedImage,
+      cardValue: card?.value
+    })
+    return selectedImage
   }
 
   return (
@@ -104,11 +114,17 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
               className="w-full h-full object-contain"
               onError={(e) => {
                 // Fallback to next image in cycle if current fails
-                setApeInCycleIndex(prev => (prev + 1) % 3)
-                // Try again with next image
-                setTimeout(() => {
-                  (e.currentTarget as HTMLImageElement).src = `${getApeInImage()}?v=${Date.now()}`
-                }, 100)
+                const nextIndex = (apeInCycleIndex + 1) % 3
+                setApeInCycleIndex(nextIndex)
+                // Try again with next image immediately
+                const remoteBase = 'https://thecryptorabbithole.io/cards'
+                const images = [
+                  card.image_url || `${remoteBase}/Ape_In.jpg`,
+                  `${remoteBase}/Ape_In_MAYC.jpg`,
+                  `${remoteBase}/Ape_In_Historic.jpg`,
+                ]
+                const nextImage = images[nextIndex]
+                ;(e.currentTarget as HTMLImageElement).src = `${nextImage}?v=${Date.now()}`
               }}
             />
           ) : card.image_url ? (

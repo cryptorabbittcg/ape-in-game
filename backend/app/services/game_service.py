@@ -429,15 +429,35 @@ class GameService:
 
             # Sandy-specific tutorial logic (simple and predictable)
             if ai_type == "sandy" and ai_player.turn_score >= 21:
-                # Sandy is a tutorial bot - simple 10% chance to continue at 21
-                should_continue = (random.random() < 0.10)
-                if should_continue:
-                    actions.append({
-                        "type": "decision",
-                        "message": "Sandy decides to push her luck! (10% chance)"
-                    })
+                # Check if player is significantly ahead (>50 sats)
+                if behind_by_now > 50:
+                    # 61.8% chance to continue when player is far ahead (golden ratio)
+                    should_continue = (random.random() < 0.618)
+                    if should_continue:
+                        actions.append({
+                            "type": "decision",
+                            "message": f"Sandy takes a big risk to catch up! (61.8% chance, player ahead by {behind_by_now} sats)"
+                        })
+                    else:
+                        actions.append({
+                            "type": "decision",
+                            "message": f"Sandy plays it safe despite being behind by {behind_by_now} sats"
+                        })
+                        break
                 else:
-                    break
+                    # Normal tutorial logic - 10% chance to continue at 21
+                    should_continue = (random.random() < 0.10)
+                    if should_continue:
+                        actions.append({
+                            "type": "decision",
+                            "message": "Sandy decides to push her luck! (10% chance)"
+                        })
+                    else:
+                        actions.append({
+                            "type": "decision",
+                            "message": "Sandy plays it safe at 21 sats"
+                        })
+                        break
             # Aida-specific decision logic
             elif ai_type == "aida":
                 behind_by = behind_by_now
