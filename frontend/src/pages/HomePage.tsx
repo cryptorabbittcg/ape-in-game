@@ -7,6 +7,7 @@ import { useActiveAccount } from 'thirdweb/react'
 import { PaymentService } from '../services/paymentService'
 import { BOT_CONFIGS } from '../config/botConfig'
 import { DailyFreeGameService } from '../services/dailyFreeGames'
+import ZkVerifyTest from '../components/ZkVerifyTest'
 
 interface GameModeCard {
   mode: GameMode
@@ -342,6 +343,9 @@ export default function HomePage() {
           </div>
         </motion.div>
       </div>
+      
+      {/* zkVerify Test Component - Remove in production */}
+      <ZkVerifyTest />
     </div>
   )
 }

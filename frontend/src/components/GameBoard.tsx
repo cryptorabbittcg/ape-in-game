@@ -2,9 +2,10 @@ import { motion } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import Card from './Card'
 import Dice from './Dice'
-import React, { useState } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { gameAPI } from '../services/api'
 import { GameMode } from '../types/game'
+import { verifyApeInGameWithZkVerify, mockVerifyApeInGame, createGameStateFromGame, type ApeInGameState, type GameMove } from '../lib/zkverify'
 
 interface GameBoardProps {
   gameId: string
@@ -41,6 +42,13 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
   const [isBotPlaying, setIsBotPlaying] = useState(false)
   const [showRoundPopup, setShowRoundPopup] = useState(false)
   const [currentRound, setCurrentRound] = useState(1)
+  
+  // zkVerify verification state
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [verificationProofId, setVerificationProofId] = useState<string | null>(null)
+  const [gameMoves, setGameMoves] = useState<GameMove[]>([])
+  const [cardsDrawn, setCardsDrawn] = useState<number[]>([])
+  const [diceRolls, setDiceRolls] = useState<number[]>([])
 
   // Refresh game state from backend
   const refreshGameState = async () => {
@@ -69,6 +77,16 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
 
     try {
       const card = await gameAPI.drawCard(gameId)
+      
+      // Track move for zkVerify
+      const move: GameMove = {
+        type: 'draw_card',
+        value: card.value,
+        timestamp: Date.now(),
+        round: roundCount
+      }
+      setGameMoves(prev => [...prev, move])
+      setCardsDrawn(prev => [...prev, card.value])
       
       // Refresh game state to sync
       await refreshGameState()
@@ -103,6 +121,16 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
       const result = await gameAPI.rollDice(gameId)
       console.log('Roll result:', result) // Debug logging
       setLastRoll(result.value)
+      
+      // Track dice roll for zkVerify
+      const move: GameMove = {
+        type: 'roll_dice',
+        value: result.value,
+        timestamp: Date.now(),
+        round: roundCount
+      }
+      setGameMoves(prev => [...prev, move])
+      setDiceRolls(prev => [...prev, result.value])
 
       setTimeout(async () => {
         setIsRolling(false)
@@ -274,6 +302,14 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
   const handleForfeit = async () => {
     if (window.confirm('Are you sure you want to forfeit?')) {
       try {
+        // Track forfeit move for zkVerify
+        const move: GameMove = {
+          type: 'forfeit',
+          timestamp: Date.now(),
+          round: roundCount
+        }
+        setGameMoves(prev => [...prev, move])
+        
         await gameAPI.forfeitGame(gameId)
         setFloatingMessage({text: 'Game forfeited.'})
         setTimeout(() => {
@@ -284,6 +320,69 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
       }
     }
   }
+
+  // zkVerify verification handler
+  const handleZkVerifyValidation = useCallback(async () => {
+    if (isVerifying) return
+    
+    setIsVerifying(true)
+    
+    try {
+      // Check if zkVerify is enabled - default to mock mode if no API key
+      const hasApiKey = import.meta.env.VITE_ZKVERIFY_API_KEY && 
+                        import.meta.env.VITE_ZKVERIFY_API_KEY.length > 0
+      const useZkVerify = import.meta.env.VITE_USE_ZKVERIFY !== 'false' && hasApiKey
+
+      // Create game state for verification
+      const gameState = createGameStateFromGame(
+        gameId,
+        playerName,
+        gameMode || 'sandy',
+        useGameStore.getState().winningScore || 150, // Default winning score
+        playerScore,
+        roundCount,
+        cardsDrawn,
+        diceRolls,
+        gameMoves,
+        '0x0000000000000000000000000000000000000000' // TODO: Get actual wallet address
+      )
+
+      let verificationResult
+      
+      if (useZkVerify) {
+        // Use real zkVerify verification
+        console.log('Using zkVerify API for verification...')
+        verificationResult = await verifyApeInGameWithZkVerify(gameState)
+      } else {
+        // Use mock verification for development (fast, local)
+        console.log('Using mock verification (no API key set)...')
+        verificationResult = mockVerifyApeInGame(gameState)
+      }
+
+      if (verificationResult.isValid) {
+        // Store proof ID for display
+        setVerificationProofId(verificationResult.proofId || null)
+        console.log('✅ Game verified!', verificationResult.proofId)
+      } else {
+        // Verification failed - show error
+        setFloatingMessage({text: verificationResult.message || 'Victory verification failed'})
+        console.error('❌ zkVerify verification failed:', verificationResult.error)
+      }
+    } catch (error) {
+      console.error('Verification error:', error)
+      setFloatingMessage({text: 'Verification error - please try again'})
+    } finally {
+      setIsVerifying(false)
+    }
+  }, [gameId, playerName, gameMode, playerScore, roundCount, cardsDrawn, diceRolls, gameMoves, isVerifying])
+
+  // Check for victory condition and trigger verification
+  useEffect(() => {
+    if (gameStatus === 'finished' && winner === playerName && !isVerifying && !verificationProofId) {
+      // Player won - trigger zkVerify validation
+      handleZkVerifyValidation()
+    }
+  }, [gameStatus, winner, playerName, isVerifying, verificationProofId, handleZkVerifyValidation])
 
   if (gameStatus === 'finished') {
     const playerWon = winner === playerName
@@ -298,6 +397,36 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
         </h2>
         {!playerWon && (
           <p className="text-xl text-slate-300 mb-6">Better luck next game!</p>
+        )}
+        
+        {/* zkVerify Verification Status */}
+        {playerWon && (
+          <div className="mb-6">
+            {isVerifying ? (
+              <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-center gap-3">
+                  <div className="animate-spin text-2xl">🔄</div>
+                  <div>
+                    <div className="font-semibold">Verifying Victory...</div>
+                    <div className="text-sm text-slate-400">
+                      {import.meta.env.VITE_ZKVERIFY_API_KEY && import.meta.env.VITE_ZKVERIFY_API_KEY.length > 0
+                        ? "Generating zero-knowledge proof via zkVerify (this may take 3-7 seconds)"
+                        : "Validating game rules (fast mock mode)"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : verificationProofId ? (
+              <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-green-400">✓ Victory Verified via zkVerify</span>
+                </div>
+                <div className="text-xs text-slate-400 mt-1 font-mono">
+                  Proof: {verificationProofId.slice(0, 20)}...
+                </div>
+              </div>
+            ) : null}
+          </div>
         )}
         <div className="text-2xl mb-8">
           <div>Your Score: <span className="score-display">{playerScore}</span></div>
