@@ -73,10 +73,11 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
         ]
         const selectedImage = images[next]
         setCurrentApeInImage(selectedImage)
-        console.log('🎴 Ape In! image set:', {
+        console.log('🎴 Ape In! image set (NEW CODE):', {
           index: next,
           image: selectedImage,
-          cardValue: card?.value
+          cardValue: card?.value,
+          timestamp: Date.now()
         })
         
         return next
