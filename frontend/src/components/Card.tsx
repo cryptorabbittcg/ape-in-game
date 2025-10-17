@@ -55,6 +55,7 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
 
   // Sequential cycle for Ape In! card images - no randomization conflicts
   const [apeInCycleIndex, setApeInCycleIndex] = useState<number>(0)
+  const [currentApeInImage, setCurrentApeInImage] = useState<string>('')
 
   useEffect(() => {
     if (card?.name === 'Ape In!') {
@@ -62,27 +63,28 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
       setApeInCycleIndex(prev => {
         const next = (prev + 1) % 3
         console.log('🔄 Ape In! cycle advancing:', prev, '->', next)
+        
+        // Set the image immediately to avoid multiple calls
+        const remoteBase = 'https://thecryptorabbithole.io/cards'
+        const images = [
+          `${remoteBase}/Ape_In_MAYC.jpg`,              // MAYC variant (start with this)
+          `${remoteBase}/Ape_In_Historic.jpg`,          // Historic variant
+          card.image_url || `${remoteBase}/Ape_In.jpg`, // Original/default (fallback)
+        ]
+        const selectedImage = images[next]
+        setCurrentApeInImage(selectedImage)
+        console.log('🎴 Ape In! image set:', {
+          index: next,
+          image: selectedImage,
+          cardValue: card?.value
+        })
+        
         return next
       })
+    } else {
+      setCurrentApeInImage('')
     }
-  }, [card?.name, card?.value])
-
-  // Get current Ape In! image based on cycle index
-  const getApeInImage = () => {
-    const remoteBase = 'https://thecryptorabbithole.io/cards'
-    const images = [
-      card.image_url || `${remoteBase}/Ape_In.jpg`, // Original/default
-      `${remoteBase}/Ape_In_MAYC.jpg`,              // MAYC variant
-      `${remoteBase}/Ape_In_Historic.jpg`,          // Historic variant
-    ]
-    const selectedImage = images[apeInCycleIndex % images.length]
-    console.log('🎴 Ape In! image selected:', {
-      index: apeInCycleIndex,
-      image: selectedImage,
-      cardValue: card?.value
-    })
-    return selectedImage
-  }
+  }, [card?.name, card?.value, card?.image_url])
 
   return (
     <motion.div
@@ -108,25 +110,31 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
         {/* Card Image - proper 355:497 ratio with padding */}
         <div className="h-full w-full overflow-hidden rounded-lg relative p-1.5 bg-slate-900">
           {card.name === 'Ape In!' ? (
-            <img
-              src={`${getApeInImage()}?v=${Date.now()}`}
-              alt={card.name}
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                // Fallback to next image in cycle if current fails
-                const nextIndex = (apeInCycleIndex + 1) % 3
-                setApeInCycleIndex(nextIndex)
-                // Try again with next image immediately
-                const remoteBase = 'https://thecryptorabbithole.io/cards'
-                const images = [
-                  card.image_url || `${remoteBase}/Ape_In.jpg`,
-                  `${remoteBase}/Ape_In_MAYC.jpg`,
-                  `${remoteBase}/Ape_In_Historic.jpg`,
-                ]
-                const nextImage = images[nextIndex]
-                ;(e.currentTarget as HTMLImageElement).src = `${nextImage}?v=${Date.now()}`
-              }}
-            />
+            currentApeInImage ? (
+              <img
+                src={`${currentApeInImage}?v=${Date.now()}`}
+                alt={card.name}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  console.log('❌ Ape In! image failed to load:', currentApeInImage)
+                  // Fallback to next image in cycle if current fails
+                  const nextIndex = (apeInCycleIndex + 1) % 3
+                  const remoteBase = 'https://thecryptorabbithole.io/cards'
+                  const images = [
+                    `${remoteBase}/Ape_In_MAYC.jpg`,
+                    `${remoteBase}/Ape_In_Historic.jpg`,
+                    card.image_url || `${remoteBase}/Ape_In.jpg`,
+                  ]
+                  const nextImage = images[nextIndex]
+                  console.log('🔄 Trying fallback image:', nextImage)
+                  setApeInCycleIndex(nextIndex)
+                  setCurrentApeInImage(nextImage)
+                  ;(e.currentTarget as HTMLImageElement).src = `${nextImage}?v=${Date.now()}`
+                }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-7xl">🚀</div>
+            )
           ) : card.image_url ? (
             <img
               src={card.image_url}
