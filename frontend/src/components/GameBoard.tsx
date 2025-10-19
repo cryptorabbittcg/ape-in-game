@@ -566,6 +566,17 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
               />
             </div>
 
+            {/* Dice Explanation Panel */}
+            <div className="bg-slate-800/80 backdrop-blur-sm rounded-lg p-3 mb-3 border border-slate-600/50">
+              <div className="text-center">
+                <div className="text-xs font-semibold text-slate-300 mb-1">🎲 Dice Rules</div>
+                <div className="text-xs text-slate-400 leading-relaxed">
+                  <span className="text-green-400 font-medium">2-6 = Safe</span> • Add card value to turn score<br/>
+                  <span className="text-red-400 font-medium">1 = Bust!</span> • Lose turn score, end turn
+                </div>
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex flex-col gap-1.5 sm:gap-2 w-full sm:w-auto sm:min-w-[160px]">
             <button
@@ -724,6 +735,15 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
                 {gameMode === 'enj1n' && "🔥 Relentless and aggressive - Only for the brave!"}
                 {gameMode === 'nifty' && "🎨 Unpredictable and creative - Unique strategies"}
               </p>
+              <div className="text-xs text-slate-400 space-y-2">
+                <div className="border-t border-slate-600 pt-2">
+                  <div className="font-semibold text-slate-300 mb-1">🎮 Game Rules:</div>
+                  <div>• Draw card → Roll dice → Stack sats</div>
+                  <div>• <span className="text-green-400">Ape In!</span> = Double next card value</div>
+                  <div>• <span className="text-red-400">Roll 1</span> = Bust (lose turn score)</div>
+                  <div>• First to {useGameStore.getState().winningScore || 150} sats wins!</div>
+                </div>
+              </div>
               <p className="text-xs text-slate-400">
                 Click anywhere to close
               </p>
