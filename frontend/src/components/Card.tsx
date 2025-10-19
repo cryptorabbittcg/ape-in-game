@@ -12,10 +12,21 @@ export default function Card({ card, isFlipped = false, className = '' }: CardPr
   // Handle null card case - show deck/cardback
   if (!card) {
     return (
-      <div className={`w-24 h-36 rounded-lg border-2 border-indigo-600 bg-gradient-to-br from-indigo-600 to-purple-800 flex flex-col items-center justify-center ${className}`}>
-        <div className="text-white text-4xl mb-2">🎴</div>
-        <div className="text-white text-xs font-bold">APE IN!</div>
-        <div className="text-white text-xs opacity-75">DECK</div>
+      <div className={`w-24 h-36 rounded-lg border-2 border-indigo-600 bg-gradient-to-br from-indigo-600 to-purple-800 flex items-center justify-center ${className}`}>
+        <img 
+          src="/assets/cards/Ape_In_Cardback.jpg" 
+          alt="Deck"
+          className="w-full h-full object-cover rounded"
+          onError={(e) => {
+            // Fallback to icon if image fails
+            const target = e.target as HTMLImageElement
+            target.style.display = 'none'
+            const parent = target.parentElement
+            if (parent) {
+              parent.innerHTML = '<div class="w-full h-full flex flex-col items-center justify-center text-white"><div class="text-4xl mb-2">🎴</div><div class="text-xs font-bold">APE IN!</div><div class="text-xs opacity-75">DECK</div></div>'
+            }
+          }}
+        />
       </div>
     )
   }
