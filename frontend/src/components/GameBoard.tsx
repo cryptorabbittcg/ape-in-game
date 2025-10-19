@@ -523,6 +523,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
               <Card
                 card={isBotPlaying && botTurnData ? botTurnData.card : currentCard}
                 isRevealing={isBotPlaying ? true : isDrawing}
+                onClick={!isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying ? undefined : handleDrawCard}
               />
             </div>
             {!currentCard && !isDrawing && !isBotPlaying && (
