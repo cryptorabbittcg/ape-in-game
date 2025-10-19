@@ -92,15 +92,14 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
       await refreshGameState()
 
       if (card.name === 'Ape In!') {
-        // Ape In! card - show message, clear card, allow immediate next draw
+        // Ape In! card - show message, keep card visible until next draw
         setFloatingMessage({text: '🚀 APE IN ACTIVATED! Next card value DOUBLED!'})
         useGameStore.getState().activateApeIn()
         
-        // Clear the Ape In card after 1.5 seconds to allow next draw
+        // Clear the floating message after 2 seconds but keep the Ape In! card visible
         setTimeout(() => {
-          setCurrentCard(null)
           setFloatingMessage(null)
-        }, 1500)
+        }, 2000)
       }
 
       setIsDrawing(false)
@@ -144,16 +143,22 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
             sats: result.turnScore
           })
           
-          // Wait for message to display, THEN clear card
+          // Wait for message to display, THEN clear card (but keep Ape In! cards visible)
           setTimeout(async () => {
             setFloatingMessage(null)
-            setCurrentCard(null)
+            // Only clear card if it's not an Ape In! card - Ape In! cards stay until next draw
+            if (!currentCard || currentCard.name !== "Ape In!") {
+              setCurrentCard(null)
+            }
             await refreshGameState()
           }, 2000)
         } else {
           // Player busted - show message then replay bot turn
           setFloatingMessage({text: result.message || 'Busted! Turn ended.'})
-          setCurrentCard(null)
+          // Only clear card if it's not an Ape In! card - Ape In! cards stay until next draw
+          if (!currentCard || currentCard.name !== "Ape In!") {
+            setCurrentCard(null)
+          }
           
           setTimeout(async () => {
             setFloatingMessage(null)
@@ -198,11 +203,11 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
         setFloatingMessage({text: `${opponentName} draws APE IN! 🚀`})
         await new Promise(resolve => setTimeout(resolve, 2000))
         
-        // Clear and show "Next card doubled" message
+        // Show "Next card doubled" message but keep Ape In! card visible
         setFloatingMessage({text: `Next card value doubled!`})
         await new Promise(resolve => setTimeout(resolve, 1500))
         setFloatingMessage(null)
-        setBotTurnData(prev => prev ? {...prev, card: null} : null)
+        // Don't clear the Ape In! card - it stays visible until next card is drawn
         await new Promise(resolve => setTimeout(resolve, 500))
         
       } else if (action.type === 'draw') {
