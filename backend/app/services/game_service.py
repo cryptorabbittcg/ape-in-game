@@ -288,8 +288,6 @@ class GameService:
         if player.score >= game.winning_score:
             game.status = "finished"
             game.winner_id = player.id
-            if not player.is_ai:
-                await self._update_leaderboard(player, won=True)
 
         # Increment round ONLY when AI player completes their turn (bot's score is finalized)
         # This marks the end of a complete round (player turn + bot turn)
@@ -307,6 +305,14 @@ class GameService:
             game.winner_id = winner.id if winner else None
 
         await self.db.commit()
+
+        # Update leaderboard after main transaction is committed (non-critical)
+        if not player.is_ai and game.status == "finished":
+            try:
+                await self._update_leaderboard(player, won=True)
+            except Exception as e:
+                print(f"Warning: Failed to update leaderboard: {e}")
+                # Continue with game flow even if leaderboard update fails
 
         # If AI opponent and human player just stacked, play AI turn
         if not skip_ai_turn and player.is_ai is False and game.status == "playing":
