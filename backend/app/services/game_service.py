@@ -12,6 +12,7 @@ from app.game_logic import (
 )
 from app.config import settings
 from app.services.rewards_service import RewardsService
+from app.services.leaderboard_service import LeaderboardService
 
 
 class GameService:
@@ -20,6 +21,7 @@ class GameService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.rewards_service = RewardsService(db)
+        self.leaderboard_service = LeaderboardService(db)
 
     async def create_game(
         self,
@@ -309,9 +311,15 @@ class GameService:
         # Update leaderboard after main transaction is committed (non-critical)
         if not player.is_ai and game.status == "finished":
             try:
-                await self._update_leaderboard(player, won=True)
+                result = await self.leaderboard_service.update_player_stats(player, won=True, game_score=player.score)
+                if result.get("success"):
+                    await self.db.commit()  # Commit the leaderboard update
+                    print(f"✅ Leaderboard updated successfully for {player.name}")
+                else:
+                    print(f"❌ Leaderboard update failed: {result.get('error')}")
             except Exception as e:
-                print(f"Warning: Failed to update leaderboard: {e}")
+                print(f"❌ Warning: Failed to update leaderboard: {e}")
+                await self.db.rollback()  # Rollback leaderboard changes if they fail
                 # Continue with game flow even if leaderboard update fails
 
         # If AI opponent and human player just stacked, play AI turn
@@ -564,34 +572,3 @@ class GameService:
         target_scores = bot_config.get("target_scores", [21])
         return random.choice(target_scores)
 
-    async def _update_leaderboard(self, player: Player, won: bool):
-        """Update leaderboard entry"""
-        if not player.wallet_address:
-            return
-
-        result = await self.db.execute(
-            select(LeaderboardEntry).where(
-                LeaderboardEntry.wallet_address == player.wallet_address
-            )
-        )
-        entry = result.scalar_one_or_none()
-
-        if not entry:
-            entry = LeaderboardEntry(
-                player_name=player.name,
-                wallet_address=player.wallet_address
-            )
-            self.db.add(entry)
-
-        entry.total_games += 1
-        if won:
-            entry.total_wins += 1
-        else:
-            entry.total_losses += 1
-
-        if player.score > entry.high_score:
-            entry.high_score = player.score
-
-        entry.total_score += player.score
-
-        # Note: Don't commit here - let the calling method handle the commit

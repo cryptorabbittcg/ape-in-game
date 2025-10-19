@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
 from app.models import LeaderboardEntry
+from app.services.leaderboard_service import LeaderboardService
 
 router = APIRouter()
 
@@ -12,26 +13,11 @@ async def get_leaderboard(
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get leaderboard entries"""
+    """Get leaderboard entries with enhanced data"""
     try:
-        result = await db.execute(
-            select(LeaderboardEntry)
-            .order_by(LeaderboardEntry.total_wins.desc(), LeaderboardEntry.high_score.desc())
-            .limit(limit)
-        )
-        entries = result.scalars().all()
-        
-        return [
-            {
-                "rank": idx + 1,
-                "playerName": entry.player_name,
-                "walletAddress": entry.wallet_address,
-                "totalWins": entry.total_wins,
-                "highScore": entry.high_score,
-                "gamesPlayed": entry.total_games,
-            }
-            for idx, entry in enumerate(entries)
-        ]
+        service = LeaderboardService(db)
+        leaderboard = await service.get_top_players(limit)
+        return leaderboard
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -41,34 +27,44 @@ async def get_player_stats(
     wallet_address: str,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get player statistics"""
+    """Get specific player's stats"""
     try:
-        result = await db.execute(
-            select(LeaderboardEntry).where(
-                LeaderboardEntry.wallet_address == wallet_address
-            )
-        )
-        entry = result.scalar_one_or_none()
-        
-        if not entry:
+        service = LeaderboardService(db)
+        stats = await service.get_player_stats(wallet_address)
+        if not stats:
             raise HTTPException(status_code=404, detail="Player not found")
-        
-        return {
-            "playerName": entry.player_name,
-            "walletAddress": entry.wallet_address,
-            "totalWins": entry.total_wins,
-            "totalLosses": entry.total_losses,
-            "totalGames": entry.total_games,
-            "highScore": entry.high_score,
-            "averageScore": entry.total_score // entry.total_games if entry.total_games > 0 else 0,
-        }
+        return stats
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/summary")
+async def get_leaderboard_summary(
+    db: AsyncSession = Depends(get_db)
+):
+    """Get leaderboard summary statistics"""
+    try:
+        service = LeaderboardService(db)
+        summary = await service.get_leaderboard_summary()
+        return summary
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/zkverify")
+async def get_zkverify_data(
+    limit: int = Query(100, ge=1, le=1000),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get leaderboard data formatted for zkVerify integration"""
+    try:
+        service = LeaderboardService(db)
+        zkverify_data = await service.generate_zkverify_data(limit)
+        return zkverify_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 
