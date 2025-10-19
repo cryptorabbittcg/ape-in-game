@@ -62,39 +62,7 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
     )
   }
 
-  // Sequential cycle for Ape In! card images - no randomization conflicts
-  const [apeInCycleIndex, setApeInCycleIndex] = useState<number>(0)
-  const [currentApeInImage, setCurrentApeInImage] = useState<string>('')
-
-  useEffect(() => {
-    if (card?.name === 'Ape In!') {
-      // Advance to next image in cycle when Ape In! card is drawn
-      setApeInCycleIndex(prev => {
-        const next = (prev + 1) % 3
-        console.log('🔄 Ape In! cycle advancing:', prev, '->', next)
-        
-        // Set the image immediately to avoid multiple calls
-        // Use all three Ape In! variants for variety
-        const images = [
-          '/assets/cards/Ape_In_MAYC.jpg',              // MAYC variant
-          '/assets/cards/Ape_In_Historic.jpg',          // Historic variant
-          '/assets/cards/Ape_In.jpg',                   // Original variant
-        ]
-        const selectedImage = images[next]
-        setCurrentApeInImage(selectedImage)
-        console.log('🎴 Ape In! image set (NEW CODE):', {
-          index: next,
-          image: selectedImage,
-          cardValue: card?.value,
-          timestamp: Date.now()
-        })
-        
-        return next
-      })
-    } else {
-      setCurrentApeInImage('')
-    }
-  }, [card?.name, card?.value, card?.image_url])
+  // Use the backend's image_url directly instead of frontend cycling
 
   return (
     <motion.div
@@ -119,37 +87,13 @@ export default function Card({ card, isRevealing = false, onClick }: CardProps) 
         
         {/* Card Image - proper 355:497 ratio with padding */}
         <div className="h-full w-full overflow-hidden rounded-lg relative p-1.5 bg-slate-900">
-          {card.name === 'Ape In!' ? (
-            currentApeInImage ? (
-              <img
-                src={`${currentApeInImage}?v=${Date.now()}`}
-                alt={card.name}
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  console.log('❌ Ape In! image failed to load:', currentApeInImage)
-                  // Fallback to next image in cycle if current fails
-                  const nextIndex = (apeInCycleIndex + 1) % 3
-                  const images = [
-                    '/assets/cards/Ape_In_MAYC.jpg',
-                    '/assets/cards/Ape_In_Historic.jpg',
-                    '/assets/cards/Ape_In.jpg',
-                  ]
-                  const nextImage = images[nextIndex]
-                  console.log('🔄 Trying fallback image:', nextImage)
-                  setApeInCycleIndex(nextIndex)
-                  setCurrentApeInImage(nextImage)
-                  ;(e.currentTarget as HTMLImageElement).src = `${nextImage}?v=${Date.now()}`
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-7xl">🚀</div>
-            )
-          ) : card.image_url ? (
+          {card.image_url ? (
             <img
               src={card.image_url}
               alt={card.name}
               className="w-full h-full object-contain"
               onError={(e) => {
+                console.log('❌ Card image failed to load:', card.image_url)
                 // As a safe fallback, show cardback if provided URL fails
                 (e.currentTarget as HTMLImageElement).src = '/assets/cards/Ape_In_Cardback.jpg'
               }}
