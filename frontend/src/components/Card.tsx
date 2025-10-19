@@ -84,7 +84,7 @@ export default function Card({ card, isFlipped = false, className = '' }: CardPr
           {/* Card Image */}
           <div className="w-full h-20 mb-1 rounded overflow-hidden">
             <img
-              src={card.imageUrl}
+              src={card.image_url}
               alt={card.name}
               className="w-full h-full object-cover"
               onError={(e) => {
