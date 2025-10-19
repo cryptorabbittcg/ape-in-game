@@ -3,12 +3,21 @@ import React from 'react'
 import { Card as CardType } from '../types/game'
 
 interface CardProps {
-  card: CardType
+  card: CardType | null
   isFlipped?: boolean
   className?: string
 }
 
 export default function Card({ card, isFlipped = false, className = '' }: CardProps) {
+  // Handle null card case
+  if (!card) {
+    return (
+      <div className={`w-24 h-36 rounded-lg border-2 border-gray-300 bg-gradient-to-br from-gray-200 to-gray-400 flex items-center justify-center ${className}`}>
+        <div className="text-gray-500 text-xs">No Card</div>
+      </div>
+    )
+  }
+
   const getCardColor = () => {
     switch (card.type) {
       case 'Cipher':
