@@ -12,7 +12,7 @@ export default function Card({ card, isFlipped = false, className = '' }: CardPr
   // Handle null card case - show deck/cardback
   if (!card) {
     return (
-      <div className={`w-24 h-36 rounded-lg border-2 border-indigo-600 bg-gradient-to-br from-indigo-600 to-purple-800 flex items-center justify-center ${className}`}>
+      <div className={`w-32 h-48 rounded-lg border-2 border-indigo-600 bg-gradient-to-br from-indigo-600 to-purple-800 flex items-center justify-center ${className}`}>
         <img 
           src="/assets/cards/Ape_In_Cardback.jpg" 
           alt="Deck"
@@ -67,7 +67,7 @@ export default function Card({ card, isFlipped = false, className = '' }: CardPr
 
   return (
     <motion.div
-      className={`relative w-24 h-36 rounded-lg shadow-lg overflow-hidden ${className}`}
+      className={`relative w-32 h-48 rounded-lg shadow-lg overflow-hidden ${className}`}
       initial={{ rotateY: 0 }}
       animate={{ rotateY: isFlipped ? 180 : 0 }}
       transition={{ duration: 0.6 }}
@@ -79,35 +79,22 @@ export default function Card({ card, isFlipped = false, className = '' }: CardPr
           <div className="text-white text-4xl">🎴</div>
         </div>
       ) : (
-        // Card front
-        <div className={`absolute inset-0 w-full h-full ${getCardColor()} flex flex-col items-center justify-center p-2`}>
-          {/* Card Image */}
-          <div className="w-full h-20 mb-1 rounded overflow-hidden">
-            <img
-              src={card.image_url}
-              alt={card.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                // Fallback to icon if image fails
-                const target = e.target as HTMLImageElement
-                target.style.display = 'none'
-                const parent = target.parentElement
-                if (parent) {
-                  parent.innerHTML = `<div class="w-full h-full flex items-center justify-center text-2xl">${getCardIcon()}</div>`
-                }
-              }}
-            />
-          </div>
-          
-          {/* Card Info */}
-          <div className="text-center text-white">
-            <div className="text-xs font-bold truncate">{card.name}</div>
-            {card.type === 'Bearish' ? (
-              <div className="text-xs opacity-90">{card.penalty}</div>
-            ) : (
-              <div className="text-xs opacity-90">{card.value} sats</div>
-            )}
-          </div>
+        // Card front - Full image display
+        <div className="absolute inset-0 w-full h-full rounded overflow-hidden">
+          <img
+            src={card.image_url}
+            alt={card.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback to colored background with icon if image fails
+              const target = e.target as HTMLImageElement
+              target.style.display = 'none'
+              const parent = target.parentElement
+              if (parent) {
+                parent.innerHTML = `<div class="w-full h-full ${getCardColor()} flex flex-col items-center justify-center p-2"><div class="text-white text-4xl mb-2">${getCardIcon()}</div><div class="text-white text-xs font-bold text-center">${card.name}</div><div class="text-white text-lg font-bold">${card.value}</div></div>`
+              }
+            }}
+          />
         </div>
       )}
     </motion.div>
