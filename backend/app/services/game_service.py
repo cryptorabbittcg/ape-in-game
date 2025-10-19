@@ -160,7 +160,7 @@ class GameService:
         # Draw a card (exclude Ape In! if last card was Ape In!)
         card = draw_weighted_card(state.used_bearish_flags, exclude_ape_in=last_card_was_ape_in)
         
-        # Store card in state
+        # Store card in state (this replaces any existing card)
         state.current_card = card.model_dump()
         
         # Activate Ape In effect if Ape In card is drawn
@@ -381,6 +381,8 @@ class GameService:
                     "card": card.model_dump(),
                     "message": "Ape In! activated"
                 })
+                # Don't clear the card immediately - let it stay visible
+                # The card will be cleared when the next card is drawn
                 continue  # AI continues to draw another card
             
             # Log the draw action
