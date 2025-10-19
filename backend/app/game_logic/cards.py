@@ -69,9 +69,9 @@ BEARISH_CARDS = [
 ]
 
 SPECIAL_CARDS = [
-    Card(name="Ape In!", type="Special", value=0, image_url="https://thecryptorabbithole.io/cards/Ape_In.jpg"),
-    Card(name="Ape In!", type="Special", value=0, image_url="https://thecryptorabbithole.io/cards/Ape_In_MAYC.jpg"),
-    Card(name="Ape In!", type="Special", value=0, image_url="https://thecryptorabbithole.io/cards/Ape_In_Historic.jpg"),
+    Card(name="Ape In!", type="Special", value=0, image_url=f"{CARD_BASE_URL}/Ape_In.jpg"),
+    Card(name="Ape In!", type="Special", value=0, image_url=f"{CARD_BASE_URL}/Ape_In_MAYC.jpg"),
+    Card(name="Ape In!", type="Special", value=0, image_url=f"{CARD_BASE_URL}/Ape_In_Historic.jpg"),
 ]
 
 # Card weights for drawing
