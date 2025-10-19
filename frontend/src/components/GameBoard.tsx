@@ -560,6 +560,8 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
                   }
                   return shouldRoll;
                 })()}
+                onClick={!isPlayerTurn || !currentCard || isRolling || isBotPlaying ? undefined : handleRollDice}
+                disabled={!isPlayerTurn || !currentCard || isRolling || isBotPlaying}
               />
             </div>
 
