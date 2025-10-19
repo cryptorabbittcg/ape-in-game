@@ -66,6 +66,10 @@ BEARISH_CARDS = [
     Card(name="Bear Reset", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Reset.jpg", penalty="Reset"),
     Card(name="Bear Half", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Half.jpg", penalty="Half"),
     Card(name="Bear -10", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Minus_10.jpg", penalty="Minus10"),
+    # Additional Bearish cards for harder games
+    Card(name="Bear Crash", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Crash.jpg", penalty="Minus10"),
+    Card(name="Bear Dip", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Dip.jpg", penalty="Minus10"),
+    Card(name="Bear Drop", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Drop.jpg", penalty="Minus10"),
 ]
 
 SPECIAL_CARDS = [
@@ -88,7 +92,7 @@ CARD_WEIGHTS = {
 }
 
 
-def draw_weighted_card(used_bearish_flags: List[str] = None, exclude_ape_in: bool = False) -> Card:
+def draw_weighted_card(used_bearish_flags: List[str] = None, exclude_ape_in: bool = False, game_mode: str = "sandy") -> Card:
     """Draw a weighted card from the deck"""
     if used_bearish_flags is None:
         used_bearish_flags = []
@@ -127,10 +131,11 @@ def draw_weighted_card(used_bearish_flags: List[str] = None, exclude_ape_in: boo
         all_cards.append(card)
         weights.append(CARD_WEIGHTS["Historacle"])
     
-    # Add available bearish cards
+    # Add available bearish cards with different weights for harder games
+    bearish_weight = 8 if game_mode in ["aida", "lana", "enj1n", "nifty"] else CARD_WEIGHTS["Bearish"]
     for card in available_bearish:
         all_cards.append(card)
-        weights.append(CARD_WEIGHTS["Bearish"])
+        weights.append(bearish_weight)
     
     # Add special cards (unless excluded)
     if not exclude_ape_in:

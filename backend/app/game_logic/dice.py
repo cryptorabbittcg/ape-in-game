@@ -6,10 +6,10 @@ from typing import Dict
 DICE_PROFILES: Dict[str, Dict[int, float]] = {
     "balanced": {1: 0.7, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0},  # Player advantage: ~12% chance of 1
     "sandy": {1: 0.7, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0},  # Tutorial mode: Same as player
-    "aida": {1: 0.8, 2: 1.2, 3: 1.1, 4: 1.1, 5: 1.2, 6: 1.2},
-    "lana": {1: 0.9, 2: 1.0, 3: 1.0, 4: 1.1, 5: 1.4, 6: 1.6},
-    "enj1n": {1: 0.6, 2: 1.1, 3: 1.2, 4: 1.3, 5: 1.4, 6: 1.4},
-    "nifty": {1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0},
+    "aida": {1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0},  # Fair dice: equal weighting
+    "lana": {1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0},  # Fair dice: equal weighting
+    "enj1n": {1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0},  # Fair dice: equal weighting
+    "nifty": {1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0},  # Fair dice: equal weighting
     # Aggressive variants (slightly bias toward higher outcomes, small bust increase where appropriate)
     "aida_aggressive": {1: 0.85, 2: 1.0, 3: 1.1, 4: 1.2, 5: 1.3, 6: 1.4},
     "lana_aggressive": {1: 1.0, 2: 0.9, 3: 1.0, 4: 1.2, 5: 1.6, 6: 1.8},

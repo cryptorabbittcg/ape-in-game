@@ -158,6 +158,12 @@ class GameService:
         )
         state = result.scalar_one()
 
+        # Get game mode for card weighting
+        result = await self.db.execute(
+            select(Game).where(Game.id == game_id)
+        )
+        game = result.scalar_one()
+
         # Check if last card was Ape In! to prevent consecutive Ape In! cards
         last_card_was_ape_in = False
         if state.current_card:
@@ -165,7 +171,7 @@ class GameService:
             last_card_was_ape_in = last_card.name == "Ape In!"
 
         # Draw a card (exclude Ape In! if last card was Ape In!)
-        card = draw_weighted_card(state.used_bearish_flags, exclude_ape_in=last_card_was_ape_in)
+        card = draw_weighted_card(state.used_bearish_flags, exclude_ape_in=last_card_was_ape_in, game_mode=game.mode)
         
         # Store card in state (this replaces any existing card)
         state.current_card = card.model_dump()
