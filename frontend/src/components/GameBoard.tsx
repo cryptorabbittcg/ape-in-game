@@ -111,7 +111,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
   }
 
   const handleRollDice = async () => {
-    if (!isPlayerTurn || !currentCard || isRolling) return
+    if (!isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling) return
 
     setIsRolling(true)
     setFloatingMessage(null)
@@ -560,8 +560,8 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
                   }
                   return shouldRoll;
                 })()}
-                onClick={!isPlayerTurn || !currentCard || isRolling || isBotPlaying ? undefined : handleRollDice}
-                disabled={!isPlayerTurn || !currentCard || isRolling || isBotPlaying}
+                onClick={!isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling || isBotPlaying ? undefined : handleRollDice}
+                disabled={!isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling || isBotPlaying}
               />
             </div>
 
@@ -583,9 +583,9 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
 
             <button
               onClick={handleRollDice}
-              disabled={!isPlayerTurn || !currentCard || isRolling || isBotPlaying}
+              disabled={!isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling || isBotPlaying}
               className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
-                !isPlayerTurn || !currentCard || isRolling || isBotPlaying
+                !isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling || isBotPlaying
                   ? 'bg-slate-600 opacity-50 cursor-not-allowed'
                   : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 animate-pulse'
               }`}
