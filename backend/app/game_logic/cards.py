@@ -1,4 +1,5 @@
 import random
+import os
 from typing import Dict, List
 from pydantic import BaseModel
 
@@ -11,8 +12,8 @@ class Card(BaseModel):
     penalty: str | None = None
 
 
-# Base URL for card images - served from Vercel frontend
-CARD_BASE_URL = "https://ape-in-game.vercel.app/assets/cards"
+# Base URL for card images - served from frontend
+CARD_BASE_URL = os.getenv("CARD_BASE_URL", "http://localhost:3000/assets/cards")
 
 # Define all cards
 CIPHER_CARDS = [
