@@ -26,6 +26,7 @@ const initialState: GameState = {
   lastRoll: null,
   roundCount: 0,
   maxRounds: 10,
+  unlimitedRounds: false,
   winningScore: 150,
   isPlayerTurn: true,
   gameStatus: 'waiting',

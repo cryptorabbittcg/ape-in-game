@@ -65,6 +65,7 @@ export interface GameState {
   lastRoll: number | null
   roundCount: number
   maxRounds: number
+  unlimitedRounds: boolean
   winningScore: number
   isPlayerTurn: boolean
   gameStatus: 'waiting' | 'playing' | 'finished'
@@ -148,6 +149,7 @@ export const createGameState = (state: {
   lastRoll: number | null
   roundCount: number
   maxRounds: number
+  unlimitedRounds: boolean
   winningScore: number
   isPlayerTurn: boolean
   gameStatus: 'waiting' | 'playing' | 'finished'
@@ -193,6 +195,7 @@ export const GameState = {
     lastRoll: null,
     roundCount: 0,
     maxRounds: 0,
+    unlimitedRounds: false,
     winningScore: 0,
     isPlayerTurn: false,
     gameStatus: 'waiting' as const,

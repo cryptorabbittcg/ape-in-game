@@ -127,6 +127,10 @@ class GameService:
             winner_player = next((p for p in players if p.id == game.winner_id), None)
             winner_name = winner_player.name if winner_player else None
 
+        # Check if this game mode has unlimited rounds
+        bot_config = settings.BOT_CONFIGS.get(game.mode, {})
+        no_round_limit = bot_config.get("no_round_limit", False)
+        
         return {
             "gameId": game.id,
             "mode": game.mode,
@@ -139,6 +143,7 @@ class GameService:
             "lastRoll": state.last_roll if state else None,
             "roundCount": game.current_round,
             "maxRounds": game.max_rounds,
+            "unlimitedRounds": no_round_limit,
             "winningScore": game.winning_score,
             "isPlayerTurn": state.current_player_id == human_player.id if human_player and state else False,
             "gameStatus": game.status,
@@ -296,8 +301,11 @@ class GameService:
         if player.is_ai and game.status != "finished":
             game.current_round += 1
 
-        # Check max rounds
-        if game.current_round > game.max_rounds and game.status != "finished":
+        # Check max rounds (only for games with round limits)
+        bot_config = settings.BOT_CONFIGS.get(game.mode, {})
+        no_round_limit = bot_config.get("no_round_limit", False)
+        
+        if not no_round_limit and game.current_round > game.max_rounds and game.status != "finished":
             game.status = "finished"
             # Determine winner
             result = await self.db.execute(

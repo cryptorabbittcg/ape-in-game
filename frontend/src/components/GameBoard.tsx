@@ -27,6 +27,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
     apeInActive,
     roundCount,
     maxRounds,
+    unlimitedRounds,
     setCurrentCard,
     setLastRoll,
     updateScore,
@@ -678,7 +679,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
               ROUND {roundCount}
             </div>
             <div className="text-sm sm:text-lg opacity-90">
-              of {maxRounds}
+              {unlimitedRounds ? '∞' : `of ${maxRounds}`}
             </div>
           </div>
         </motion.div>
