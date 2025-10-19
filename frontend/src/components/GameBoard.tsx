@@ -6,6 +6,7 @@ import React, { useState, useCallback, useEffect } from 'react'
 import { gameAPI } from '../services/api'
 import { GameMode } from '../types/game'
 import { verifyApeInGameWithZkVerify, mockVerifyApeInGame, createGameStateFromGame, type ApeInGameState, type GameMove } from '../lib/zkverify'
+import { useActiveAccount } from 'thirdweb/react'
 
 interface GameBoardProps {
   gameId: string
@@ -15,6 +16,9 @@ interface GameBoardProps {
 }
 
 export default function GameBoard({ gameId, playerName, opponentName, gameMode }: GameBoardProps) {
+  const account = useActiveAccount()
+  const [playerProfile, setPlayerProfile] = useState<{pfp?: string, avatar?: string} | null>(null)
+  
   const {
     playerScore,
     opponentScore,
@@ -34,6 +38,21 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
     toggleTurn,
     setGameState,
   } = useGameStore()
+
+  // Load player profile for PFP display
+  useEffect(() => {
+    if (account?.address) {
+      const savedProfile = localStorage.getItem(`profile_${account.address}`)
+      if (savedProfile) {
+        try {
+          const profile = JSON.parse(savedProfile)
+          setPlayerProfile(profile)
+        } catch (error) {
+          console.error('Failed to parse player profile:', error)
+        }
+      }
+    }
+  }, [account?.address])
 
   const [isDrawing, setIsDrawing] = useState(false)
   const [isRolling, setIsRolling] = useState(false)
@@ -481,6 +500,22 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
       {/* Compact Score Display */}
       <div className="grid grid-cols-2 gap-3">
         <div className="game-board text-center py-3">
+          {/* Player Avatar */}
+          <div className="flex justify-center mb-2">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-2 border-purple-500/50 shadow-lg flex items-center justify-center overflow-hidden">
+              {playerProfile?.pfp ? (
+                <img 
+                  src={playerProfile.pfp} 
+                  alt="Player profile" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-sm sm:text-lg">
+                  {playerProfile?.avatar || '👤'}
+                </span>
+              )}
+            </div>
+          </div>
           <h3 className="text-base font-semibold mb-1 text-slate-300">{playerName}</h3>
           <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">{playerScore}</div>
           <div className="text-xs text-slate-400 mt-1">

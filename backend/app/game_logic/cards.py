@@ -66,16 +66,11 @@ BEARISH_CARDS = [
     Card(name="Bear Reset", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Reset.jpg", penalty="Reset"),
     Card(name="Bear Half", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Half.jpg", penalty="Half"),
     Card(name="Bear -10", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Minus_10.jpg", penalty="Minus10"),
-    # Additional Bearish cards for harder games
-    Card(name="Bear Crash", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Crash.jpg", penalty="Minus10"),
-    Card(name="Bear Dip", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Dip.jpg", penalty="Minus10"),
-    Card(name="Bear Drop", type="Bearish", value=0, image_url=f"{CARD_BASE_URL}/Bear_Drop.jpg", penalty="Minus10"),
 ]
 
 SPECIAL_CARDS = [
     Card(name="Ape In!", type="Special", value=0, image_url=f"{CARD_BASE_URL}/Ape_In.jpg"),
     Card(name="Ape In!", type="Special", value=0, image_url=f"{CARD_BASE_URL}/Ape_In_MAYC.jpg"),
-    Card(name="Ape In!", type="Special", value=0, image_url=f"{CARD_BASE_URL}/Ape_In_Historic.jpg"),
 ]
 
 # Card weights for drawing
@@ -88,7 +83,7 @@ CARD_WEIGHTS = {
     "Oracle": 10,
     "Historacle": 4,
     "Bearish": 2,
-    "Special": 25,  # Normal Ape In! draw chance
+    "Special": 15,  # Normal Ape In! draw chance
 }
 
 
@@ -132,8 +127,33 @@ def draw_weighted_card(used_bearish_flags: List[str] = None, exclude_ape_in: boo
         weights.append(CARD_WEIGHTS["Historacle"])
     
     # Add available bearish cards with different weights for harder games
-    bearish_weight = 8 if game_mode in ["aida", "lana", "enj1n", "nifty"] else CARD_WEIGHTS["Bearish"]
-    for card in available_bearish:
+    bearish_weight = 4 if game_mode in ["aida", "lana", "enj1n", "nifty"] else CARD_WEIGHTS["Bearish"]
+    
+    # Create bearish card pool based on game mode
+    bearish_cards_to_add = []
+    
+    # Add Bear -10 cards (4 copies for harder games, 1 for Sandy)
+    bear_minus10_count = 4 if game_mode in ["aida", "lana", "enj1n", "nifty"] else 1
+    for _ in range(bear_minus10_count):
+        bear_minus10_card = next((c for c in BEARISH_CARDS if c.penalty == "Minus10"), None)
+        if bear_minus10_card and bear_minus10_card.penalty not in used_bearish_flags:
+            bearish_cards_to_add.append(bear_minus10_card)
+    
+    # Add Bear Half cards (3 copies for En-J1n and Nifty, 1 for others)
+    bear_half_count = 3 if game_mode in ["enj1n", "nifty"] else 1
+    for _ in range(bear_half_count):
+        bear_half_card = next((c for c in BEARISH_CARDS if c.penalty == "Half"), None)
+        if bear_half_card and bear_half_card.penalty not in used_bearish_flags:
+            bearish_cards_to_add.append(bear_half_card)
+    
+    # Add Bear Reset card (1 copy for all games except Aida)
+    if game_mode != "aida":
+        bear_reset_card = next((c for c in BEARISH_CARDS if c.penalty == "Reset"), None)
+        if bear_reset_card and bear_reset_card.penalty not in used_bearish_flags:
+            bearish_cards_to_add.append(bear_reset_card)
+    
+    # Add all bearish cards to the draw pool
+    for card in bearish_cards_to_add:
         all_cards.append(card)
         weights.append(bearish_weight)
     

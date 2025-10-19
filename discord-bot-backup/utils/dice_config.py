@@ -26,37 +26,37 @@ SANDY_ROLL_WEIGHTS = {
     6: 1
 }
 
-# === Aida — Slightly reduced bust rate, strategic and fair ===
+# === Aida — Equal weighting (fair dice) ===
 AIDA_ROLL_WEIGHTS = {
-    1: 0.8,
-    2: 1.2,
-    3: 1.1,
-    4: 1.1,
-    5: 1.2,
-    6: 1.2
+    1: 1,
+    2: 1,
+    3: 1,
+    4: 1,
+    5: 1,
+    6: 1
 }
 
-# === Lana — Slightly risky but rewarding ===
+# === Lana — Equal weighting (fair dice) ===
 LANA_ROLL_WEIGHTS = {
-    1: 0.9,
-    2: 1.0,
-    3: 1.0,
-    4: 1.1,
-    5: 1.4,
-    6: 1.6
+    1: 1,
+    2: 1,
+    3: 1,
+    4: 1,
+    5: 1,
+    6: 1
 }
 
-# === En-J1n — Highly aggressive, low bust chance ===
+# === En-J1n — Equal weighting (fair dice) ===
 ENJ1N_ROLL_WEIGHTS = {
-    1: 0.6,
-    2: 1.1,
-    3: 1.2,
-    4: 1.3,
-    5: 1.4,
-    6: 1.4
+    1: 1,
+    2: 1,
+    3: 1,
+    4: 1,
+    5: 1,
+    6: 1
 }
 
-# === Nifty — You can define this later ===
+# === Nifty — Equal weighting (fair dice) ===
 NIFTY_ROLL_WEIGHTS = {
     1: 1,
     2: 1,

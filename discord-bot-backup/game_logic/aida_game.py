@@ -78,7 +78,7 @@ class AidaGame:
         """
         Rolls a weighted die for aida.
         """
-        roll = random.choices([1, 2, 3, 4, 5, 6], weights=[8, 18.4, 18.4, 18.4, 18.4, 18.4])[0]
+        roll = random.choices([1, 2, 3, 4, 5, 6], weights=[16.67, 16.67, 16.67, 16.67, 16.67, 16.67])[0]
         return roll
 
     def draw_weighted_card(self):
@@ -125,14 +125,18 @@ class AidaGame:
 
         bearish_cards = []
         # ❌ Aida does NOT get the Reset card
+        # Add 4 Bear -10 cards for Aida
+        if "Minus10" not in self.used_bearish_flags:
+            for _ in range(4):
+                bearish_cards.append(Card("Minus10", "Bearish", 0, "Bear_Minus_10.jpg", "Minus10"))
+        # Add 1 Bear Half card for Aida
         if "Half" not in self.used_bearish_flags:
             bearish_cards.append(Card("Half", "Bearish", 0, "Bear_Half.jpg", "Half"))
-        if "Minus10" not in self.used_bearish_flags:
-            bearish_cards.append(Card("Minus10", "Bearish", 0, "Bear_Minus_10.jpg", "Minus10"))
 
-        # Add the "Ape In!" card
+        # Add the "Ape In!" cards (50/50 chance between Ape_In and Ape_In_MAYC)
         special_cards = [
-            Card("Ape In!", "Special", 0, "Ape_In.jpg")
+            Card("Ape In!", "Special", 0, "Ape_In.jpg"),
+            Card("Ape In!", "Special", 0, "Ape_In_MAYC.jpg")
         ]
 
         # Exclude "Ape In!" if the last card was "Ape In!"
@@ -144,8 +148,8 @@ class AidaGame:
             [6]*4 + [8]*4 + [9]*4 + [15]*4 + [15]*4 +   # Cipher cards
             [10]*len(oracle_cards) +                  # Oracle cards
             [4]*len(historacle_cards) +               # Historacle cards
-            [2]*len(bearish_cards) +                  # Bearish cards
-            [25]*len(special_cards)                   # Special cards (e.g., "Ape In!")
+            [4]*len(bearish_cards) +                  # Bearish cards (increased weight)
+            [15]*len(special_cards)                   # Special cards (e.g., "Ape In!")
         )
 
         return random.choices(all_cards, weights=weights, k=1)[0]

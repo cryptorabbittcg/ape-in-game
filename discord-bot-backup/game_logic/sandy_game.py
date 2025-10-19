@@ -131,9 +131,10 @@ class SandyGame:
         if "Minus10" not in self.used_bearish_flags:
             bearish_cards.append(Card("Minus10", "Bearish", 0, "Bear_Minus_10.jpg", "Minus10"))
 
-        # Add the "Ape In!" card
+        # Add the "Ape In!" cards (50/50 chance between Ape_In and Ape_In_MAYC)
         special_cards = [
-            Card("Ape In!", "Special", 0, "Ape_In.jpg")
+            Card("Ape In!", "Special", 0, "Ape_In.jpg"),
+            Card("Ape In!", "Special", 0, "Ape_In_MAYC.jpg")
         ]
 
         # Exclude "Ape In!" if the last card was "Ape In!"
@@ -146,7 +147,7 @@ class SandyGame:
             [10]*len(oracle_cards) +                  # Oracle cards
             [4]*len(historacle_cards) +               # Historacle cards
             [2]*len(bearish_cards) +                  # Bearish cards
-            [25]*len(special_cards)                   # Special cards (e.g., "Ape In!")
+            [15]*len(special_cards)                   # Special cards (e.g., "Ape In!")
         )
 
         return random.choices(all_cards, weights=weights, k=1)[0]
