@@ -516,50 +516,54 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
 
       {/* Compact Game Area */}
       <div className="game-board">
-        {/* Card Section - Full width on top */}
-        <div className="flex flex-col items-center space-y-2 mb-4">
-          <div className="transform-gpu">
-            <Card
-              card={isBotPlaying && botTurnData ? botTurnData.card : currentCard}
-              isRevealing={isBotPlaying ? true : isDrawing}
-            />
-          </div>
-          {isBotPlaying && (
-            <div className="text-sm text-emerald-400 font-semibold animate-pulse">
-              {opponentName}'s Turn
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 py-4">
+          {/* Card Section - Shows player OR bot card */}
+          <div className="flex flex-col items-center space-y-2 w-full md:w-auto">
+            <div className="transform-gpu">
+              <Card
+                card={isBotPlaying && botTurnData ? botTurnData.card : currentCard}
+                isRevealing={isBotPlaying ? true : isDrawing}
+              />
             </div>
-          )}
-        </div>
-
-        {/* Mobile: 2-column layout (Dice left, Buttons right) | Desktop: Horizontal layout */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-4 sm:gap-6">
-          {/* Dice Section - Left column on mobile */}
-          <div className="flex flex-col items-center space-y-2 w-full sm:w-auto">
-            <div className="h-6 text-sm text-slate-400">
-              {isRolling || (botTurnData?.isRolling ?? false) ? 'Rolling...' : 'Dice'}
-            </div>
-            
-            <Dice 
-              value={isBotPlaying && botTurnData ? botTurnData.roll : lastRoll} 
-              isRolling={(() => {
-                const shouldRoll = isRolling || (botTurnData?.isRolling ?? false);
-                if (isBotPlaying) {
-                  console.log('🎲 Dice Debug:', {
-                    isBotPlaying,
-                    isRolling,
-                    botTurnDataIsRolling: botTurnData?.isRolling,
-                    shouldRoll,
-                    botRoll: botTurnData?.roll,
-                    lastRoll
-                  });
-                }
-                return shouldRoll;
-              })()}
-            />
+            {!currentCard && !isDrawing && !isBotPlaying && (
+              <div className="text-xs text-slate-500 animate-pulse">👆 Click to draw</div>
+            )}
+            {isBotPlaying && (
+              <div className="text-sm text-emerald-400 font-semibold animate-pulse">
+                {opponentName}'s Turn
+              </div>
+            )}
           </div>
 
-          {/* Action Buttons - Right column on mobile */}
-          <div className="flex flex-col gap-1.5 sm:gap-2 w-full sm:w-auto sm:min-w-[160px]">
+          {/* Dice and Buttons Section - Right side on desktop */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 w-full md:w-auto">
+            {/* Dice Section */}
+            <div className="flex flex-col items-center space-y-2 w-full sm:w-auto">
+              <div className="h-6 text-sm text-slate-400">
+                {isRolling || (botTurnData?.isRolling ?? false) ? 'Rolling...' : 'Dice'}
+              </div>
+              
+              <Dice 
+                value={isBotPlaying && botTurnData ? botTurnData.roll : lastRoll} 
+                isRolling={(() => {
+                  const shouldRoll = isRolling || (botTurnData?.isRolling ?? false);
+                  if (isBotPlaying) {
+                    console.log('🎲 Dice Debug:', {
+                      isBotPlaying,
+                      isRolling,
+                      botTurnDataIsRolling: botTurnData?.isRolling,
+                      shouldRoll,
+                      botRoll: botTurnData?.roll,
+                      lastRoll
+                    });
+                  }
+                  return shouldRoll;
+                })()}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-1.5 sm:gap-2 w-full sm:w-auto sm:min-w-[160px]">
             <button
               onClick={handleDrawCard}
               disabled={!isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying}
@@ -598,12 +602,13 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
               💰 Stack {playerTurnScore > 0 ? `(${playerTurnScore})` : ''}
             </button>
 
-            <button
-              onClick={handleForfeit}
-              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all"
-            >
-              🏳️ Forfeit
-            </button>
+              <button
+                onClick={handleForfeit}
+                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all"
+              >
+                🏳️ Forfeit
+              </button>
+            </div>
           </div>
         </div>
 
