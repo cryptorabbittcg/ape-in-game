@@ -568,6 +568,16 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-1.5 sm:gap-2 w-full sm:w-auto sm:min-w-[160px]">
+            {/* Dice Explanation Panel */}
+            <div className="bg-slate-800/80 backdrop-blur-sm rounded-lg p-3 mb-2 border border-slate-600/50">
+              <div className="text-center">
+                <div className="text-xs font-semibold text-slate-300 mb-1">🎲 Dice Rules</div>
+                <div className="text-xs text-slate-400 leading-relaxed">
+                  <span className="text-green-400 font-medium">2-6 = Safe</span> • Add card value to turn score<br/>
+                  <span className="text-red-400 font-medium">1 = Bust!</span> • Lose turn score, end turn
+                </div>
+              </div>
+            </div>
             <button
               onClick={handleDrawCard}
               disabled={!isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying}
