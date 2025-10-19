@@ -281,7 +281,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
   }
 
   const handleStackSats = async () => {
-    if (!isPlayerTurn || playerTurnScore === 0 || (currentCard && currentCard.type === 'Special')) return
+    if (!isPlayerTurn || playerTurnScore === 0 || currentCard !== null) return
 
     try {
       setFloatingMessage({text: 'Banking sats...'})
@@ -595,9 +595,9 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
 
             <button
               onClick={handleStackSats}
-              disabled={!isPlayerTurn || playerTurnScore === 0 || (currentCard && currentCard.type === 'Special') || isBotPlaying}
+              disabled={!isPlayerTurn || playerTurnScore === 0 || currentCard !== null || isBotPlaying}
               className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
-                !isPlayerTurn || playerTurnScore === 0 || (currentCard && currentCard.type === 'Special') || isBotPlaying
+                !isPlayerTurn || playerTurnScore === 0 || currentCard !== null || isBotPlaying
                   ? 'bg-slate-600 opacity-50 cursor-not-allowed'
                   : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 animate-pulse'
               }`}
