@@ -14,13 +14,28 @@ const api = axios.create({
 export const gameAPI = {
   // Create a new game
   createGame: async (mode: GameMode, playerName: string, walletAddress?: string, isDailyFree?: boolean) => {
-    const response = await api.post<GameState>('/api/game/create', {
-      mode,
-      playerName,
-      walletAddress,
-      isDailyFree: isDailyFree || false,
-    })
-    return response.data
+    console.log('🚀 API: Creating game with data:', { mode, playerName, walletAddress, isDailyFree })
+    console.log('🌐 API: Using base URL:', API_BASE_URL)
+    
+    try {
+      const response = await api.post<GameState>('/api/game/create', {
+        mode,
+        playerName,
+        walletAddress,
+        isDailyFree: isDailyFree || false,
+      })
+      console.log('✅ API: Game created successfully:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('❌ API: Game creation failed:', error)
+      console.error('❌ API: Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers
+      })
+      throw error
+    }
   },
 
   // Join an existing game (for PvP/multiplayer)
