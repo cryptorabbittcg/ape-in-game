@@ -2,64 +2,64 @@ import { useState, useEffect } from 'react'
 import { useActiveAccount } from 'thirdweb/react'
 import { GameMode } from '../types/game'
 
-interface IntroCompletion {
-  [gameMode: string]: boolean
+interface IntroTracking {
+  [walletAddress: string]: {
+    [gameMode: string]: boolean
+  }
 }
+
+const LOCAL_STORAGE_KEY = 'ape_in_intro_tracking'
 
 export function useIntroTracking() {
   const account = useActiveAccount()
-  const [introCompletion, setIntroCompletion] = useState<IntroCompletion>({})
+  const walletAddress = account?.address || 'guest'
 
-  // Load intro completion from localStorage
+  const [introTracking, setIntroTracking] = useState<IntroTracking>(() => {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
+    return stored ? JSON.parse(stored) : {}
+  })
+
   useEffect(() => {
-    if (account?.address) {
-      const saved = localStorage.getItem(`intro_completion_${account.address}`)
-      if (saved) {
-        try {
-          setIntroCompletion(JSON.parse(saved))
-        } catch (error) {
-          console.error('Failed to parse intro completion:', error)
-        }
-      }
-    }
-  }, [account?.address])
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(introTracking))
+  }, [introTracking])
 
   // Check if intro has been completed for a specific game mode
   const hasCompletedIntro = (gameMode: GameMode): boolean => {
-    const completed = introCompletion[gameMode] === true
+    const completed = introTracking[walletAddress]?.[gameMode] === true
     console.log(`🎬 Intro tracking for ${gameMode}:`, completed)
-    console.log('📊 Current intro completion state:', introCompletion)
+    console.log('📊 Current intro tracking state:', introTracking)
+    console.log('👤 Wallet address:', walletAddress)
     return completed
   }
 
   // Mark intro as completed for a specific game mode
   const markIntroCompleted = (gameMode: GameMode) => {
-    if (account?.address) {
-      const updated = {
-        ...introCompletion,
+    setIntroTracking(prev => ({
+      ...prev,
+      [walletAddress]: {
+        ...(prev[walletAddress] || {}),
         [gameMode]: true
       }
-      setIntroCompletion(updated)
-      localStorage.setItem(`intro_completion_${account.address}`, JSON.stringify(updated))
-    }
+    }))
   }
 
   // Reset intro completion (for testing or user preference)
   const resetIntroCompletion = () => {
-    if (account?.address) {
-      setIntroCompletion({})
-      localStorage.removeItem(`intro_completion_${account.address}`)
-    }
+    setIntroTracking(prev => ({
+      ...prev,
+      [walletAddress]: {}
+    }))
   }
 
   // Reset intro completion for a specific game mode
   const resetIntroForMode = (gameMode: GameMode) => {
-    if (account?.address) {
-      const updated = { ...introCompletion }
-      delete updated[gameMode]
-      setIntroCompletion(updated)
-      localStorage.setItem(`intro_completion_${account.address}`, JSON.stringify(updated))
-    }
+    setIntroTracking(prev => ({
+      ...prev,
+      [walletAddress]: {
+        ...(prev[walletAddress] || {}),
+        [gameMode]: false
+      }
+    }))
   }
 
   return {
@@ -67,6 +67,6 @@ export function useIntroTracking() {
     markIntroCompleted,
     resetIntroCompletion,
     resetIntroForMode,
-    introCompletion
+    introTracking
   }
 }
