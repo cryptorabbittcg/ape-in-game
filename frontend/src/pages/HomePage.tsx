@@ -411,7 +411,25 @@ function CompactGameCard({
           )}
           
           <div className="flex items-center justify-between mb-1 sm:mb-2">
-            <span className="text-2xl sm:text-3xl">{gameMode.icon}</span>
+            {/* Bot Avatar Image or Icon */}
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-purple-500/30 shadow-lg flex items-center justify-center">
+              {['sandy', 'aida', 'lana', 'enj1n', 'nifty'].includes(gameMode.mode) ? (
+                <img 
+                  src={`/assets/bots/${gameMode.mode}.gif`} 
+                  alt={`${gameMode.name} avatar`} 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    console.log(`GIF failed for ${gameMode.mode} HomePage, trying PNG...`);
+                    e.currentTarget.src = `/assets/bots/${gameMode.mode}.png`;
+                  }}
+                  onLoad={(e) => {
+                    console.log(`Successfully loaded GIF HomePage avatar for ${gameMode.mode}`);
+                  }}
+                />
+              ) : (
+                <span className="text-lg sm:text-xl">{gameMode.icon}</span>
+              )}
+            </div>
             {gameMode.difficulty && (
               <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase px-1 sm:px-1.5 py-0.5 rounded bg-slate-700/50">
                 {gameMode.difficulty}
