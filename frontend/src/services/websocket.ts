@@ -8,7 +8,7 @@ class WebSocketService {
   private listeners: Map<string, Set<(data: any) => void>> = new Map()
 
   connect(gameId: string) {
-    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
+    const wsUrl = import.meta.env.VITE_WS_URL || 'wss://ape-in-game-backend.onrender.com'
     this.ws = new WebSocket(`${wsUrl}/ws/${gameId}`)
 
     this.ws.onopen = () => {
