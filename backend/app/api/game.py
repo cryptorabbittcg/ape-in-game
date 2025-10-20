@@ -26,6 +26,7 @@ async def create_game(
     db: AsyncSession = Depends(get_db)
 ):
     """Create a new game"""
+    print(f"🎮 Creating game: {request.mode} for player {request.playerName}")
     service = GameService(db)
     try:
         game_data = await service.create_game(
@@ -34,8 +35,13 @@ async def create_game(
             wallet_address=request.walletAddress,
             is_daily_free=request.isDailyFree
         )
+        print(f"✅ Game created successfully: {game_data.get('gameId', 'unknown')}")
         return game_data
     except Exception as e:
+        print(f"❌ Game creation failed: {e}")
+        print(f"❌ Error type: {type(e)}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

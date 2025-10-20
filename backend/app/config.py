@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "dev-secret-key-change-in-production"
     CORS_ORIGINS: str = "*"
     
+    class Config:
+        env_file = ".env"
+    
     # Game settings
     MAX_SCORE: int = 150
     MAX_ROUNDS: int = 10
@@ -78,9 +81,5 @@ class Settings(BaseSettings):
             "personality": "Clever and unpredictable"
         }
     }
-    
-    class Config:
-        env_file = ".env"
-
 
 settings = Settings()
