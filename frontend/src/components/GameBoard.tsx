@@ -13,9 +13,10 @@ interface GameBoardProps {
   playerName: string
   opponentName: string
   gameMode?: GameMode
+  onPlayIntro?: () => void
 }
 
-export default function GameBoard({ gameId, playerName, opponentName, gameMode }: GameBoardProps) {
+export default function GameBoard({ gameId, playerName, opponentName, gameMode, onPlayIntro }: GameBoardProps) {
   const account = useActiveAccount()
   const [playerProfile, setPlayerProfile] = useState<{pfp?: string, avatar?: string} | null>(null)
   
@@ -523,6 +524,18 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode }
           </div>
         </div>
         <div className="game-board text-center py-3">
+          {/* Play Intro Link */}
+          {onPlayIntro && (
+            <div className="mb-2">
+              <button
+                onClick={onPlayIntro}
+                className="text-xs text-purple-400 hover:text-purple-300 transition-colors underline hover:no-underline"
+              >
+                🎬 Play Intro
+              </button>
+            </div>
+          )}
+          
           {/* Bot Avatar */}
           <div className="flex justify-center mb-2">
             <img 

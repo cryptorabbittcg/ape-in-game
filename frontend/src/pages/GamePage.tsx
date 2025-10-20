@@ -6,7 +6,8 @@ import { gameAPI } from '../services/api'
 import { wsService } from '../services/websocket'
 import { useGameStore } from '../store/gameStore'
 import GameBoard from '../components/GameBoard'
-import BotIntro from '../components/BotIntro'
+import SmartBotIntro from '../components/SmartBotIntro'
+import { useIntroTracking } from '../hooks/useIntroTracking'
 import { GameMode } from '../types/game'
 import { BOT_CONFIGS } from '../config/botConfig'
 import { DailyFreeGameService } from '../services/dailyFreeGames'
@@ -31,7 +32,9 @@ export default function GamePage() {
   const [playerName, setPlayerName] = useState('')
   const [gameId, setGameId] = useState('')
   const [showIntro, setShowIntro] = useState(true)
+  const [showManualIntro, setShowManualIntro] = useState(false)
   const { setGameState, gameStatus } = useGameStore()
+  const { hasCompletedIntro, markIntroCompleted } = useIntroTracking()
 
   useEffect(() => {
     if (!mode) {
@@ -72,6 +75,10 @@ export default function GamePage() {
           })
         }
 
+        // Initialize intro state based on completion tracking
+        const shouldShowIntro = !hasCompletedIntro(mode)
+        setShowIntro(shouldShowIntro)
+
         setIsLoading(false)
       } catch (error) {
         console.error('Failed to initialize game:', error)
@@ -85,10 +92,21 @@ export default function GamePage() {
     return () => {
       wsService.disconnect()
     }
-  }, [mode, address, navigate, setGameState])
+  }, [mode, address, navigate, setGameState, hasCompletedIntro])
 
   const handleIntroComplete = (skip: boolean) => {
+    if (!skip) {
+      markIntroCompleted(mode)
+    }
     setShowIntro(false)
+  }
+
+  const handleManualIntro = () => {
+    setShowManualIntro(true)
+  }
+
+  const handleManualIntroComplete = (skip: boolean) => {
+    setShowManualIntro(false)
   }
 
   if (isLoading) {
@@ -109,7 +127,12 @@ export default function GamePage() {
     <div className="container mx-auto px-4 py-2 md:py-4">
       {/* Bot Introduction */}
       {showIntro && mode && (
-        <BotIntro gameMode={mode} onComplete={handleIntroComplete} />
+        <SmartBotIntro gameMode={mode} onComplete={handleIntroComplete} autoPlay={true} />
+      )}
+
+      {/* Manual Bot Introduction */}
+      {showManualIntro && mode && (
+        <SmartBotIntro gameMode={mode} onComplete={handleManualIntroComplete} autoPlay={false} />
       )}
 
       {/* Game Content */}
@@ -128,7 +151,7 @@ export default function GamePage() {
             </p>
           </motion.div>
 
-          <GameBoard gameId={gameId} playerName={playerName} opponentName={opponentName} gameMode={mode} />
+          <GameBoard gameId={gameId} playerName={playerName} opponentName={opponentName} gameMode={mode} onPlayIntro={handleManualIntro} />
         </>
       )}
     </div>
