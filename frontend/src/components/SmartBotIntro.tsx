@@ -125,20 +125,26 @@ export default function SmartBotIntro({ gameMode, onComplete, autoPlay = false }
   const botEmoji = BOT_EMOJIS[gameMode] || BOT_EMOJIS.sandy
 
   useEffect(() => {
+    console.log('🎬 SmartBotIntro effect:', { currentMessageIndex, introMessagesLength: introMessages.length, autoPlay })
+    
     if (currentMessageIndex < introMessages.length) {
       setIsTyping(true)
       const timer = setTimeout(() => {
         setIsTyping(false)
         if (currentMessageIndex === introMessages.length - 1) {
           setShowButtons(true)
+          console.log('🎬 Intro complete, showing buttons')
           // Auto-complete if autoPlay is enabled
           if (autoPlay) {
+            console.log('🎬 AutoPlay enabled, will auto-start in 3 seconds')
             setTimeout(() => {
+              console.log('🎬 Auto-starting game')
               onComplete(false)
             }, 3000) // Auto-start after 3 seconds
           }
         } else {
           setTimeout(() => {
+            console.log('🎬 Moving to next message')
             setCurrentMessageIndex(prev => prev + 1)
           }, 1000)
         }
@@ -149,10 +155,12 @@ export default function SmartBotIntro({ gameMode, onComplete, autoPlay = false }
   }, [currentMessageIndex, introMessages.length, autoPlay, onComplete])
 
   const handleStartGame = () => {
+    console.log('🎬 Start game button clicked')
     onComplete(false)
   }
 
   const handleSkipIntro = () => {
+    console.log('🎬 Skip intro button clicked')
     onComplete(true)
   }
 

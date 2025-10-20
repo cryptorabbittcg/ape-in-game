@@ -44,6 +44,9 @@ export default function GamePage() {
 
     const initGame = async () => {
       try {
+        console.log('🎮 Initializing game for mode:', mode)
+        console.log('👤 Address:', address)
+        
         // Get player name from stored profile or create default
         let name = 'Player'
         if (address) {
@@ -57,18 +60,23 @@ export default function GamePage() {
         } else {
           name = prompt('Enter your name:') || 'Player'
         }
+        console.log('📝 Player name:', name)
         setPlayerName(name)
 
         // Check if this is a daily free game
         const isDailyFree = address && DailyFreeGameService.isEligibleForDailyFree(address, mode)
+        console.log('💰 Is daily free:', isDailyFree)
         
         // Create game
+        console.log('🚀 Creating game...')
         const game = await gameAPI.createGame(mode, name, address, isDailyFree)
+        console.log('✅ Game created:', game.gameId)
         setGameId(game.gameId)
         setGameState(game)
 
         // Connect WebSocket for real-time updates
         if (mode === 'pvp' || mode === 'multiplayer') {
+          console.log('🔌 Connecting WebSocket...')
           wsService.connect(game.gameId)
           wsService.on('game_update', (data) => {
             setGameState(data)
@@ -77,11 +85,14 @@ export default function GamePage() {
 
         // Initialize intro state based on completion tracking
         const shouldShowIntro = !hasCompletedIntro(mode)
+        console.log('🎬 Should show intro:', shouldShowIntro)
+        console.log('📊 Has completed intro:', hasCompletedIntro(mode))
         setShowIntro(shouldShowIntro)
 
+        console.log('✅ Game initialization complete')
         setIsLoading(false)
       } catch (error) {
-        console.error('Failed to initialize game:', error)
+        console.error('❌ Failed to initialize game:', error)
         alert('Failed to start game. Please try again.')
         navigate('/')
       }

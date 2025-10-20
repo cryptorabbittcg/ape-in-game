@@ -26,7 +26,10 @@ export function useIntroTracking() {
 
   // Check if intro has been completed for a specific game mode
   const hasCompletedIntro = (gameMode: GameMode): boolean => {
-    return introCompletion[gameMode] === true
+    const completed = introCompletion[gameMode] === true
+    console.log(`🎬 Intro tracking for ${gameMode}:`, completed)
+    console.log('📊 Current intro completion state:', introCompletion)
+    return completed
   }
 
   // Mark intro as completed for a specific game mode
