@@ -16,16 +16,17 @@ class Card(BaseModel):
 from app.config import settings
 import os
 
-# Determine the correct base URL based on environment
+# FORCE PRODUCTION URL - Render deployment fix - Tue Oct 21 15:00:00 ACDT 2025
 # Check if we're running locally first (most specific)
 if os.getenv("LOCAL") == "true":
     CARD_BASE_URL = "http://localhost:3000/assets/cards"
     print(f"🔧 Using LOCAL development card URL: {CARD_BASE_URL}")
 else:
-    # Default to production for all other cases (including Render deployment)
+    # FORCE PRODUCTION - Render is not detecting environment correctly
     CARD_BASE_URL = "https://ape-in-game.vercel.app/assets/cards"
-    print(f"🔧 Using production card URL: {CARD_BASE_URL}")
+    print(f"🔧 FORCING production card URL: {CARD_BASE_URL}")
     print(f"🔧 Environment detection: LOCAL={os.getenv('LOCAL')}, RENDER={os.getenv('RENDER')}, ENVIRONMENT={settings.ENVIRONMENT}, PORT={os.getenv('PORT')}")
+    print(f"🔧 FORCE DEPLOY TIMESTAMP: Tue Oct 21 15:00:00 ACDT 2025")
 
 # Define all cards
 CIPHER_CARDS = [
