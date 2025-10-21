@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 from pydantic import BaseModel
 from typing import Optional
 from app.database import get_db
@@ -32,7 +33,7 @@ async def create_game(
     
     # Test database connection
     try:
-        result = await db.execute("SELECT 1")
+        result = await db.execute(text("SELECT 1"))
         print(f"✅ Database connection test passed: {result}")
     except Exception as db_error:
         print(f"❌ Database connection test failed: {db_error}")

@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
+from sqlalchemy import text
 from app.config import settings
 
 # Create async engine
@@ -42,7 +43,7 @@ async def init_db():
         
         # Test connection first
         async with engine.begin() as conn:
-            result = await conn.execute("SELECT 1")
+            result = await conn.execute(text("SELECT 1"))
             print(f"✅ Database connection test passed: {result}")
             
             # Create tables
