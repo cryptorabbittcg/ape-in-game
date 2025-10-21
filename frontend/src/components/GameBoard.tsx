@@ -675,6 +675,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
             </div>
           </div>
         </div>
+
       </div>
 
       {/* Floating Ape In Status Overlay */}
