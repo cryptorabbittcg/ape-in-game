@@ -16,10 +16,18 @@ class Card(BaseModel):
 from app.config import settings
 import os
 
-# Use relative paths for ALL environments - this works everywhere!
-# The frontend will resolve these relative paths correctly regardless of port or domain
-CARD_BASE_URL = "/assets/cards"
-print(f"🔧 Using relative path for all card images: {CARD_BASE_URL}")
+# Determine the correct base URL based on environment
+# Check if we're running on Render (production)
+if os.getenv("RENDER") == "true" or settings.ENVIRONMENT == "production":
+    CARD_BASE_URL = "https://ape-in-game.vercel.app/assets/cards"
+    print(f"🔧 Using production card URL: {CARD_BASE_URL}")
+# Check if we're running locally
+elif os.getenv("LOCAL") == "true" or settings.ENVIRONMENT == "development":
+    CARD_BASE_URL = "http://localhost:3000/assets/cards"
+    print(f"🔧 Using development card URL: {CARD_BASE_URL}")
+else:
+    # Default to relative path (will be resolved by frontend)
+    CARD_BASE_URL = "/assets/cards"
 
 # Define all cards
 CIPHER_CARDS = [
