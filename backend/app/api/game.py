@@ -27,6 +27,17 @@ async def create_game(
 ):
     """Create a new game"""
     print(f"🎮 Creating game: {request.mode} for player {request.playerName}")
+    print(f"🎮 Request data: {request.dict()}")
+    print(f"🎮 Database session: {db}")
+    
+    # Test database connection
+    try:
+        result = await db.execute("SELECT 1")
+        print(f"✅ Database connection test passed: {result}")
+    except Exception as db_error:
+        print(f"❌ Database connection test failed: {db_error}")
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {db_error}")
+    
     service = GameService(db)
     try:
         game_data = await service.create_game(

@@ -37,11 +37,22 @@ async def init_db():
     """Initialize database tables"""
     try:
         print(f"🔗 Connecting to database: {settings.DATABASE_URL}")
+        print(f"🔗 Database URL type: {type(settings.DATABASE_URL)}")
+        
+        # Test connection first
         async with engine.begin() as conn:
+            result = await conn.execute("SELECT 1")
+            print(f"✅ Database connection test passed: {result}")
+            
+            # Create tables
             await conn.run_sync(Base.metadata.create_all)
-        print("✅ Database tables created successfully!")
+            print("✅ Database tables created successfully!")
+            
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
+        print(f"❌ Error type: {type(e)}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
         raise
 
 
