@@ -87,6 +87,7 @@ export default function GamePage() {
         const shouldShowIntro = !hasCompletedIntro(mode)
         console.log('🎬 Should show intro:', shouldShowIntro)
         console.log('📊 Has completed intro:', hasCompletedIntro(mode))
+        console.log('🎮 Game creation successful, setting showIntro to:', shouldShowIntro)
         setShowIntro(shouldShowIntro)
 
         console.log('✅ Game initialization complete')

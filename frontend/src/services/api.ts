@@ -58,12 +58,15 @@ export const gameAPI = {
     console.log('🌐 API: Using base URL:', API_BASE_URL)
     
     try {
-      const response = await api.post<GameState>('/api/game/create', {
+      const requestData = {
         mode,
         playerName,
-        walletAddress,
+        ...(walletAddress && { walletAddress }),
         isDailyFree: isDailyFree || false,
-      })
+      }
+      console.log('📤 API: Sending request data:', requestData)
+      
+      const response = await api.post<GameState>('/api/game/create', requestData)
       console.log('✅ API: Game created successfully:', response.data)
       return response.data
     } catch (error) {
