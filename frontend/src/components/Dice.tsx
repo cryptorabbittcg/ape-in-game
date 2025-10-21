@@ -58,11 +58,11 @@ export default function Dice({ value, isRolling, onRollComplete, onClick, disabl
       }
       transition={{ duration: 1, ease: 'easeInOut' }}
       onClick={onClick && !disabled ? onClick : undefined}
-      className={`relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white rounded-2xl shadow-2xl flex items-center justify-center ${
+      className={`relative w-24 h-24 bg-white rounded-2xl shadow-2xl flex items-center justify-center ${
         onClick && !disabled ? 'cursor-pointer hover:shadow-purple-500/50' : ''
       } ${disabled ? 'opacity-50' : ''}`}
     >
-      <div className="grid grid-cols-3 gap-1 sm:gap-2 p-2 sm:p-4">
+      <div className="grid grid-cols-3 gap-2 p-4">
         {diceDots[displayValue]?.map(([row, col], index) => (
           <div
             key={index}
@@ -75,7 +75,7 @@ export default function Dice({ value, isRolling, onRollComplete, onClick, disabl
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="w-2 h-2 sm:w-3 sm:h-3 bg-slate-900 rounded-full"
+              className="w-3 h-3 bg-slate-900 rounded-full"
             />
           </div>
         ))}
