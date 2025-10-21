@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useActiveAccount } from 'thirdweb/react'
 import { motion } from 'framer-motion'
-import { gameAPI } from '../services/api'
+import { gameAPI, testAPI } from '../services/api'
 import { wsService } from '../services/websocket'
 import { useGameStore } from '../store/gameStore'
 import GameBoard from '../components/GameBoard'
@@ -42,10 +42,20 @@ export default function GamePage() {
       return
     }
 
-    const initGame = async () => {
-      try {
-        console.log('🎮 Initializing game for mode:', mode)
-        console.log('👤 Address:', address)
+            const initGame = async () => {
+              try {
+                console.log('🎮 Initializing game for mode:', mode)
+                console.log('👤 Address:', address)
+                
+                // Test backend connectivity first
+                console.log('🏥 Testing backend connectivity...')
+                try {
+                  await testAPI.healthCheck()
+                  console.log('✅ Backend health check passed')
+                } catch (healthError) {
+                  console.error('❌ Backend health check failed:', healthError)
+                  throw new Error('Backend is not accessible')
+                }
         
         // Get player name from stored profile or create default
         let name = 'Player'

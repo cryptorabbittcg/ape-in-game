@@ -58,6 +58,20 @@ api.interceptors.response.use(
   }
 )
 
+// Test API health
+export const testAPI = {
+  healthCheck: async () => {
+    try {
+      const response = await api.get('/health')
+      console.log('🏥 Health check response:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('❌ Health check failed:', error)
+      throw error
+    }
+  }
+}
+
 // Game API
 export const gameAPI = {
   // Create a new game
