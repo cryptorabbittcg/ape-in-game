@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from pydantic import BaseModel
 from typing import Optional
+import asyncio
+import time
 from app.database import get_db
 from app.services import GameService
 
@@ -40,21 +42,36 @@ async def create_game(
         raise HTTPException(status_code=500, detail=f"Database connection failed: {db_error}")
     
     service = GameService(db)
-    try:
-        game_data = await service.create_game(
-            mode=request.mode,
-            player_name=request.playerName,
-            wallet_address=request.walletAddress,
-            is_daily_free=request.isDailyFree
-        )
-        print(f"✅ Game created successfully: {game_data.get('gameId', 'unknown')}")
-        return game_data
-    except Exception as e:
-        print(f"❌ Game creation failed: {e}")
-        print(f"❌ Error type: {type(e)}")
-        import traceback
-        print(f"❌ Traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=str(e))
+    
+    # Retry logic for database lock issues
+    max_retries = 3
+    retry_delay = 0.1  # 100ms
+    
+    for attempt in range(max_retries):
+        try:
+            game_data = await service.create_game(
+                mode=request.mode,
+                player_name=request.playerName,
+                wallet_address=request.walletAddress,
+                is_daily_free=request.isDailyFree
+            )
+            print(f"✅ Game created successfully: {game_data.get('gameId', 'unknown')}")
+            return game_data
+        except Exception as e:
+            error_str = str(e)
+            print(f"❌ Game creation attempt {attempt + 1} failed: {error_str}")
+            
+            # Check if it's a database lock error
+            if "database is locked" in error_str.lower() and attempt < max_retries - 1:
+                print(f"🔄 Database locked, retrying in {retry_delay}s...")
+                await asyncio.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+                continue
+            else:
+                print(f"❌ Error type: {type(e)}")
+                import traceback
+                print(f"❌ Traceback: {traceback.format_exc()}")
+                raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{game_id}")

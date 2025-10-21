@@ -3,18 +3,26 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy import text
 from app.config import settings
 
-# Create async engine
+# Create async engine with SQLite concurrency fixes
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=True,
-    future=True
+    future=True,
+    # SQLite concurrency fixes for Render
+    connect_args={
+        "check_same_thread": False,
+        "timeout": 30,  # 30 second timeout for database operations
+    } if "sqlite" in settings.DATABASE_URL else {}
 )
 
-# Create async session maker
+# Create async session maker with better concurrency handling
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,
-    expire_on_commit=False
+    expire_on_commit=False,
+    # Better session management for concurrent access
+    autoflush=False,
+    autocommit=False
 )
 
 # Base class for models
