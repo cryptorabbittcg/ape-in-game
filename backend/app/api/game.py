@@ -117,6 +117,32 @@ async def draw_card(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/{game_id}/draw")
+async def draw_card(
+    game_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Draw a card for the player"""
+    service = GameService(db)
+    try:
+        # Get the player for this game
+        from sqlalchemy import select
+        result = await db.execute(
+            select(Player).where(Player.game_id == game_id, Player.is_ai == False)
+        )
+        player = result.scalar_one_or_none()
+        
+        if not player:
+            raise HTTPException(status_code=404, detail="Player not found")
+        
+        # Draw a card
+        card = await service.draw_card(game_id, player.id)
+        return card.model_dump()
+    except Exception as e:
+        print(f"❌ Draw card failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/{game_id}/roll")
 async def roll_dice(
     game_id: str,
