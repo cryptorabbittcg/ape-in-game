@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379"
     SECRET_KEY: str = "dev-secret-key-change-in-production"
     CORS_ORIGINS: str = "*"
+    ENVIRONMENT: str = "development"  # Will be overridden by environment variable
     
     class Config:
         env_file = ".env"
