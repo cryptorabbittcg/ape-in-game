@@ -1,4 +1,4 @@
-# Backend deployment trigger - Tue Oct 21 01:15:00 AM ACDT 2025 - Force Render rebuild
+# URGENT: Render deployment trigger - Tue Oct 21 01:20:00 AM ACDT 2025 - CRITICAL: Force Render to use latest GitHub code
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
