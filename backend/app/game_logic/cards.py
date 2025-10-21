@@ -17,10 +17,14 @@ from app.config import settings
 import os
 
 # Determine the correct base URL based on environment
-# Check if we're running on Render (production)
-if os.getenv("RENDER") == "true" or settings.ENVIRONMENT == "production":
+# Check if we're running on Render (production) - multiple detection methods
+if (os.getenv("RENDER") == "true" or 
+    settings.ENVIRONMENT == "production" or 
+    os.getenv("ENVIRONMENT") == "production" or
+    "onrender.com" in os.getenv("RENDER_EXTERNAL_URL", "")):
     CARD_BASE_URL = "https://ape-in-game.vercel.app/assets/cards"
     print(f"🔧 Using production card URL: {CARD_BASE_URL}")
+    print(f"🔧 Environment detection: RENDER={os.getenv('RENDER')}, ENVIRONMENT={settings.ENVIRONMENT}, RENDER_EXTERNAL_URL={os.getenv('RENDER_EXTERNAL_URL', 'Not set')}")
 # Check if we're running locally
 elif os.getenv("LOCAL") == "true" or settings.ENVIRONMENT == "development":
     CARD_BASE_URL = "http://localhost:3000/assets/cards"
@@ -28,6 +32,8 @@ elif os.getenv("LOCAL") == "true" or settings.ENVIRONMENT == "development":
 else:
     # Default to relative path (will be resolved by frontend)
     CARD_BASE_URL = "/assets/cards"
+    print(f"🔧 Using fallback relative path: {CARD_BASE_URL}")
+    print(f"🔧 Environment detection: RENDER={os.getenv('RENDER')}, ENVIRONMENT={settings.ENVIRONMENT}, RENDER_EXTERNAL_URL={os.getenv('RENDER_EXTERNAL_URL', 'Not set')}")
 
 # Define all cards
 CIPHER_CARDS = [
