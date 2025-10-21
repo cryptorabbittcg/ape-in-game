@@ -3,6 +3,14 @@ import { Card, GameState, LeaderboardEntry, GameMode } from '../types/game'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://ape-in-game-backend.onrender.com'
 
+// Debug environment variables
+console.log('🔧 Environment Variables:', {
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  NODE_ENV: import.meta.env.NODE_ENV,
+  MODE: import.meta.env.MODE,
+  API_BASE_URL: API_BASE_URL
+})
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
