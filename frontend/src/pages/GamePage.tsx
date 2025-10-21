@@ -42,20 +42,18 @@ export default function GamePage() {
       return
     }
 
-            const initGame = async () => {
+    // Prevent multiple initializations
+    if (isLoading === false) {
+      return
+    }
+
+    const initGame = async () => {
               try {
                 console.log('🎮 Initializing game for mode:', mode)
                 console.log('👤 Address:', address)
                 
-                // Test backend connectivity first
-                console.log('🏥 Testing backend connectivity...')
-                try {
-                  await testAPI.healthCheck()
-                  console.log('✅ Backend health check passed')
-                } catch (healthError) {
-                  console.error('❌ Backend health check failed:', healthError)
-                  throw new Error('Backend is not accessible')
-                }
+                // Skip health check - game creation will test backend connectivity
+                console.log('🚀 Proceeding directly to game creation...')
         
         // Get player name from stored profile or create default
         let name = 'Player'

@@ -21,7 +21,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'X-Cache-Bust': CACHE_BUST_TIMESTAMP,
   },
-  timeout: 30000, // 30 second timeout
+  timeout: 10000, // 10 second timeout
 })
 
 // Add request interceptor for debugging
