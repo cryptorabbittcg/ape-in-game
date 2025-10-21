@@ -21,24 +21,11 @@ import os
 if os.getenv("LOCAL") == "true":
     CARD_BASE_URL = "http://localhost:3000/assets/cards"
     print(f"🔧 Using LOCAL development card URL: {CARD_BASE_URL}")
-# Check if we're running on Render (production) - multiple detection methods
-elif (os.getenv("RENDER") == "true" or 
-      settings.ENVIRONMENT == "production" or 
-      os.getenv("ENVIRONMENT") == "production" or
-      "onrender.com" in os.getenv("RENDER_EXTERNAL_URL", "") or
-      os.getenv("PORT") is not None):  # Render always sets PORT
+else:
+    # Default to production for all other cases (including Render deployment)
     CARD_BASE_URL = "https://ape-in-game.vercel.app/assets/cards"
     print(f"🔧 Using production card URL: {CARD_BASE_URL}")
-    print(f"🔧 Environment detection: RENDER={os.getenv('RENDER')}, ENVIRONMENT={settings.ENVIRONMENT}, PORT={os.getenv('PORT')}")
-# Check if we're in development mode
-elif settings.ENVIRONMENT == "development":
-    CARD_BASE_URL = "http://localhost:3000/assets/cards"
-    print(f"🔧 Using development card URL: {CARD_BASE_URL}")
-else:
-    # Default to production for safety (since we're deploying to production)
-    CARD_BASE_URL = "https://ape-in-game.vercel.app/assets/cards"
-    print(f"🔧 Using default production card URL: {CARD_BASE_URL}")
-    print(f"🔧 Environment detection: RENDER={os.getenv('RENDER')}, ENVIRONMENT={settings.ENVIRONMENT}, PORT={os.getenv('PORT')}")
+    print(f"🔧 Environment detection: LOCAL={os.getenv('LOCAL')}, RENDER={os.getenv('RENDER')}, ENVIRONMENT={settings.ENVIRONMENT}, PORT={os.getenv('PORT')}")
 
 # Define all cards
 CIPHER_CARDS = [
