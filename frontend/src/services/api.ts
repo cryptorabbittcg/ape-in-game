@@ -8,7 +8,47 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout
 })
+
+// Add request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log('🌐 API Request:', {
+      url: config.url,
+      method: config.method,
+      headers: config.headers,
+      data: config.data
+    })
+    return config
+  },
+  (error) => {
+    console.error('❌ API Request Error:', error)
+    return Promise.reject(error)
+  }
+)
+
+// Add response interceptor for debugging
+api.interceptors.response.use(
+  (response) => {
+    console.log('✅ API Response:', {
+      status: response.status,
+      data: response.data,
+      headers: response.headers
+    })
+    return response
+  },
+  (error) => {
+    console.error('❌ API Response Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      headers: error.response?.headers,
+      config: error.config
+    })
+    return Promise.reject(error)
+  }
+)
 
 // Game API
 export const gameAPI = {
