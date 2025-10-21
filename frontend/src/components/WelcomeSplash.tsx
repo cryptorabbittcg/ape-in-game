@@ -90,23 +90,109 @@ export default function WelcomeSplash({ onStart }: WelcomeSplashProps) {
           </p>
         </motion.div>
 
-        {/* Ape In Card */}
+        {/* 3-Card Fan Animation */}
         <motion.div
-          initial={{ scale: 0, rotate: -5, opacity: 0 }}
-          animate={showCard ? { scale: 1, rotate: 0, opacity: 1 } : {}}
-          transition={{ duration: 0.7, delay: 0.2, type: "spring", stiffness: 150 }}
-          className="mb-10"
+          initial={{ opacity: 0 }}
+          animate={showCard ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-10 relative"
         >
-          <div className="relative inline-block">
-            <motion.img
-              src="/assets/cards/Ape_In.jpg"
-              alt="Ape In Card"
-              className="w-32 sm:w-40 md:w-48 lg:w-56 h-auto rounded-xl shadow-2xl border-2 border-purple-500/40"
-              whileHover={{ scale: 1.03, rotate: 2 }}
-              transition={{ duration: 0.2 }}
-            />
-            {/* Subtle glow */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-xl blur-lg -z-10" />
+          {/* Card Container */}
+          <div className="relative flex justify-center items-center h-80 w-96">
+            
+            {/* Ape_In_Historic - Left Card */}
+            <motion.div
+              initial={{ x: -200, y: 0, rotate: -15, scale: 0, opacity: 0 }}
+              animate={showCard ? { 
+                x: -60, 
+                y: 10, 
+                rotate: -25, 
+                scale: 0.9, 
+                opacity: 1 
+              } : {}}
+              transition={{ 
+                duration: 1.2, 
+                delay: 0.4, 
+                type: "spring", 
+                stiffness: 100 
+              }}
+              className="absolute z-10"
+            >
+              <div className="relative">
+                <motion.img
+                  src="/assets/cards/Ape_In_Historic.jpg"
+                  alt="Ape In Historic Card"
+                  className="w-32 sm:w-40 md:w-44 lg:w-48 h-auto rounded-xl shadow-2xl border-2 border-amber-500/40"
+                  whileHover={{ scale: 1.05, rotate: -20 }}
+                  transition={{ duration: 0.2 }}
+                />
+                {/* Amber glow for historic */}
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-400/15 to-orange-400/15 rounded-xl blur-lg -z-10" />
+              </div>
+            </motion.div>
+
+            {/* Ape_In - Center Card */}
+            <motion.div
+              initial={{ x: 0, y: 0, rotate: 0, scale: 0, opacity: 0 }}
+              animate={showCard ? { 
+                x: 0, 
+                y: 0, 
+                rotate: 0, 
+                scale: 1, 
+                opacity: 1 
+              } : {}}
+              transition={{ 
+                duration: 1.0, 
+                delay: 0.2, 
+                type: "spring", 
+                stiffness: 150 
+              }}
+              className="absolute z-20"
+            >
+              <div className="relative">
+                <motion.img
+                  src="/assets/cards/Ape_In.jpg"
+                  alt="Ape In Card"
+                  className="w-36 sm:w-44 md:w-52 lg:w-56 h-auto rounded-xl shadow-2xl border-2 border-purple-500/40"
+                  whileHover={{ scale: 1.03, rotate: 2 }}
+                  transition={{ duration: 0.2 }}
+                />
+                {/* Purple glow for main card */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-xl blur-lg -z-10" />
+              </div>
+            </motion.div>
+
+            {/* Ape_In_MAYC - Right Card */}
+            <motion.div
+              initial={{ x: 200, y: 0, rotate: 15, scale: 0, opacity: 0 }}
+              animate={showCard ? { 
+                x: 60, 
+                y: 10, 
+                rotate: 25, 
+                scale: 0.9, 
+                opacity: 1 
+              } : {}}
+              transition={{ 
+                duration: 1.2, 
+                delay: 0.6, 
+                type: "spring", 
+                stiffness: 100 
+              }}
+              className="absolute z-10"
+            >
+              <div className="relative">
+                <motion.img
+                  src="/assets/cards/Ape_In_MAYC.jpg"
+                  alt="Ape In MAYC Card"
+                  className="w-32 sm:w-40 md:w-44 lg:w-48 h-auto rounded-xl shadow-2xl border-2 border-green-500/40"
+                  whileHover={{ scale: 1.05, rotate: 20 }}
+                  transition={{ duration: 0.2 }}
+                />
+                {/* Green glow for MAYC */}
+                <div className="absolute inset-0 bg-gradient-to-r from-green-400/15 to-emerald-400/15 rounded-xl blur-lg -z-10" />
+              </div>
+            </motion.div>
+
           </div>
         </motion.div>
 
