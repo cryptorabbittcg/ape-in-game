@@ -11,9 +11,6 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
     
-    class Config:
-        env_file = ".env"
-    
     # Game settings
     MAX_SCORE: int = 150
     MAX_ROUNDS: int = 10
