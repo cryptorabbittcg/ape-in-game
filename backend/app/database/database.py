@@ -38,6 +38,7 @@ async def init_db():
     try:
         print(f"🔗 Connecting to database: {settings.DATABASE_URL}")
         print(f"🔗 Database URL type: {type(settings.DATABASE_URL)}")
+        print(f"🔗 Using SQLite for production due to asyncpg Python 3.13 compatibility issues")
         
         # Test connection first
         async with engine.begin() as conn:

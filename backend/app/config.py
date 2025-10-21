@@ -3,7 +3,7 @@ from typing import Dict
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "sqlite+aiosqlite:///./ape_in_game.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./ape_in_game.db"  # Using SQLite for production due to asyncpg compatibility issues
     REDIS_URL: str = "redis://localhost:6379"
     SECRET_KEY: str = "dev-secret-key-change-in-production"
     CORS_ORIGINS: str = "*"
