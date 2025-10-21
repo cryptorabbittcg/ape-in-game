@@ -14,15 +14,21 @@ class Card(BaseModel):
 
 # Base URL for card images - served from frontend
 from app.config import settings
+import os
 
 # Determine the correct base URL based on environment
-if settings.ENVIRONMENT == "production":
+# Check if we're running on Render (production)
+if os.getenv("RENDER") == "true" or settings.ENVIRONMENT == "production":
     CARD_BASE_URL = "https://ape-in-game.vercel.app/assets/cards"
-elif settings.ENVIRONMENT == "development":
+    print(f"🔧 Using production card URL: {CARD_BASE_URL}")
+# Check if we're running locally
+elif os.getenv("LOCAL") == "true" or settings.ENVIRONMENT == "development":
     CARD_BASE_URL = "http://localhost:3001/assets/cards"
+    print(f"🔧 Using development card URL: {CARD_BASE_URL}")
 else:
     # Default to relative path (will be resolved by frontend)
     CARD_BASE_URL = "/assets/cards"
+    print(f"🔧 Using default card URL: {CARD_BASE_URL}")
 
 # Define all cards
 CIPHER_CARDS = [
