@@ -23,7 +23,7 @@ if os.getenv("RENDER") == "true" or settings.ENVIRONMENT == "production":
     print(f"🔧 Using production card URL: {CARD_BASE_URL}")
 # Check if we're running locally
 elif os.getenv("LOCAL") == "true" or settings.ENVIRONMENT == "development":
-    CARD_BASE_URL = "http://localhost:3001/assets/cards"
+    CARD_BASE_URL = "http://localhost:3002/assets/cards"
     print(f"🔧 Using development card URL: {CARD_BASE_URL}")
 else:
     # Default to relative path (will be resolved by frontend)
