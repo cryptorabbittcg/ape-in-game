@@ -567,9 +567,10 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
 
       {/* Compact Game Area */}
       <div className="game-board">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 py-4">
+        {/* Mobile Layout: Card left, dice/rules/buttons right */}
+        <div className="flex flex-row md:flex-row items-start justify-center gap-3 md:gap-6 py-4">
           {/* Card Section - Shows player OR bot card */}
-          <div className="flex flex-col items-center space-y-2 w-full md:w-auto">
+          <div className="flex flex-col items-center space-y-2 flex-shrink-0 md:w-auto">
             <div className="transform-gpu">
               <Card
                 card={isBotPlaying && botTurnData ? botTurnData.card : currentCard}
@@ -587,51 +588,54 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
             )}
           </div>
 
-          {/* Dice and Buttons Section - Right side on desktop */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 w-full md:w-auto">
-            {/* Dice Section */}
-            <div className="flex flex-col items-center space-y-2 w-full sm:w-auto">
-              <div className="h-6 text-sm text-slate-400">
-                {isRolling || (botTurnData?.isRolling ?? false) ? 'Rolling...' : 'Dice'}
-              </div>
-              
-              <Dice 
-                value={isBotPlaying && botTurnData ? botTurnData.roll : lastRoll} 
-                isRolling={(() => {
-                  const shouldRoll = isRolling || (botTurnData?.isRolling ?? false);
-                  if (isBotPlaying) {
-                    console.log('🎲 Dice Debug:', {
-                      isBotPlaying,
-                      isRolling,
-                      botTurnDataIsRolling: botTurnData?.isRolling,
-                      shouldRoll,
-                      botRoll: botTurnData?.roll,
-                      lastRoll
-                    });
-                  }
-                  return shouldRoll;
-                })()}
-                onClick={!isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling || isBotPlaying ? undefined : handleRollDice}
-                disabled={!isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling || isBotPlaying}
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-1.5 sm:gap-2 w-full sm:w-auto sm:min-w-[160px]">
-            {/* Dice Explanation Panel */}
-            <div className="bg-slate-800/80 backdrop-blur-sm rounded-lg p-3 mb-2 border border-slate-600/50">
-              <div className="text-center">
-                <div className="text-xs font-semibold text-slate-300 mb-1">🎲 Dice Rules</div>
-                <div className="text-xs text-slate-400 leading-relaxed">
-                  <span className="text-green-400 font-medium">2-6 = Safe</span> • Add card value to turn score<br/>
-                  <span className="text-red-400 font-medium">1 = Bust!</span> • Lose turn score, end turn
+          {/* Mobile: Right side layout - Rules, Dice, Buttons */}
+          <div className="flex flex-col items-start justify-start gap-2 flex-1 md:flex-row md:items-center md:justify-center md:gap-6">
+            {/* Mobile Layout: Rules at top, Dice in middle, Buttons at bottom */}
+            <div className="flex flex-col items-start gap-2 w-full md:items-center md:gap-3">
+              {/* Dice Rules Panel - Top on mobile */}
+              <div className="bg-slate-800/80 backdrop-blur-sm rounded-lg p-2 w-full md:w-auto border border-slate-600/50">
+                <div className="text-center">
+                  <div className="text-xs font-semibold text-slate-300 mb-1">🎲 Dice Rules</div>
+                  <div className="text-xs text-slate-400 leading-relaxed">
+                    <span className="text-green-400 font-medium">2-6 = Safe</span> • Add card value to turn score<br/>
+                    <span className="text-red-400 font-medium">1 = Bust!</span> • Lose turn score, end turn
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* Dice Section - Middle on mobile */}
+              <div className="flex flex-col items-center space-y-1 w-full md:w-auto">
+                <div className="h-4 text-xs text-slate-400">
+                  {isRolling || (botTurnData?.isRolling ?? false) ? 'Rolling...' : 'Dice'}
+                </div>
+                
+                <Dice 
+                  value={isBotPlaying && botTurnData ? botTurnData.roll : lastRoll} 
+                  isRolling={(() => {
+                    const shouldRoll = isRolling || (botTurnData?.isRolling ?? false);
+                    if (isBotPlaying) {
+                      console.log('🎲 Dice Debug:', {
+                        isBotPlaying,
+                        isRolling,
+                        botTurnDataIsRolling: botTurnData?.isRolling,
+                        shouldRoll,
+                        botRoll: botTurnData?.roll,
+                        lastRoll
+                      });
+                    }
+                    return shouldRoll;
+                  })()}
+                  onClick={!isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling || isBotPlaying ? undefined : handleRollDice}
+                  disabled={!isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling || isBotPlaying}
+                />
+              </div>
+
+              {/* Action Buttons - Bottom on mobile */}
+              <div className="flex flex-col gap-1 w-full md:w-auto md:min-w-[160px]">
             <button
               onClick={handleDrawCard}
               disabled={!isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
+              className={`w-full px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
                 !isPlayerTurn || (!!currentCard && currentCard.type !== 'Special') || isDrawing || isBotPlaying
                   ? 'bg-slate-600 opacity-50 cursor-not-allowed'
                   : apeInActive
@@ -645,7 +649,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
             <button
               onClick={handleRollDice}
               disabled={!isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling || isBotPlaying}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
+              className={`w-full px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
                 !isPlayerTurn || !currentCard || currentCard.type === 'Special' || isRolling || isBotPlaying
                   ? 'bg-slate-600 opacity-50 cursor-not-allowed'
                   : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 animate-pulse'
@@ -657,7 +661,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
             <button
               onClick={handleStackSats}
               disabled={!isPlayerTurn || playerTurnScore === 0 || currentCard !== null || isBotPlaying}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
+              className={`w-full px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all ${
                 !isPlayerTurn || playerTurnScore === 0 || currentCard !== null || isBotPlaying
                   ? 'bg-slate-600 opacity-50 cursor-not-allowed'
                   : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 animate-pulse'
@@ -668,7 +672,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
 
               <button
                 onClick={handleForfeit}
-                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all"
+                className="w-full px-2 sm:px-4 py-1.5 sm:py-2.5 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-xs sm:text-sm shadow-lg transition-all"
               >
                 🏳️ Forfeit
               </button>
