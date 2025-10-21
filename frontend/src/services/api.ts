@@ -12,7 +12,7 @@ console.log('🔧 Environment Variables:', {
 })
 
 // Cache bust timestamp
-const CACHE_BUST_TIMESTAMP = '2025-10-21-01-45-00'
+const CACHE_BUST_TIMESTAMP = '2025-10-21-13-10-00'
 console.log('🔄 Cache bust timestamp:', CACHE_BUST_TIMESTAMP)
 
 const api = axios.create({
