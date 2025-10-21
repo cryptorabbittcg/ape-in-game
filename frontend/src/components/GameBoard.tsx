@@ -7,6 +7,7 @@ import { gameAPI } from '../services/api'
 import { GameMode } from '../types/game'
 import { verifyApeInGameWithZkVerify, mockVerifyApeInGame, createGameStateFromGame, type ApeInGameState, type GameMove } from '../lib/zkverify'
 import { useActiveAccount } from 'thirdweb/react'
+import { useNavigate } from 'react-router-dom'
 
 interface GameBoardProps {
   gameId: string
@@ -18,6 +19,7 @@ interface GameBoardProps {
 
 export default function GameBoard({ gameId, playerName, opponentName, gameMode, onPlayIntro }: GameBoardProps) {
   const account = useActiveAccount()
+  const navigate = useNavigate()
   const [playerProfile, setPlayerProfile] = useState<{pfp?: string, avatar?: string} | null>(null)
   
   const {
@@ -489,7 +491,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
             <span>{opponentName} Score: <span className="score-display">{opponentScore}</span></span>
           </div>
         </div>
-        <button onClick={() => window.location.href = '/'} className="btn-primary text-lg">
+        <button onClick={() => navigate('/')} className="btn-primary text-lg">
           Play Again
         </button>
       </motion.div>

@@ -13,9 +13,17 @@ function App() {
   const navigate = useNavigate()
   const [showSplash, setShowSplash] = useState(true)
 
-  // Show splash every time for that polished BAYC-style experience
-  // No localStorage check - always show on new tab/window
-  // No auto-navigation - wait for user click
+  // Show splash only on first visit (when URL is first entered)
+  useEffect(() => {
+    // Check if user has visited before in this session
+    const hasVisited = sessionStorage.getItem('hasVisited')
+    if (hasVisited) {
+      setShowSplash(false)
+    } else {
+      // Mark as visited for this session
+      sessionStorage.setItem('hasVisited', 'true')
+    }
+  }, [])
 
   const handleSplashComplete = () => {
     setShowSplash(false)
@@ -23,7 +31,7 @@ function App() {
     navigate('/')
   }
 
-  // Always show splash on new tab/window (BAYC.com style)
+  // Only show splash on first visit to the URL
   if (showSplash) {
     return <WelcomeSplash onStart={handleSplashComplete} />
   }
