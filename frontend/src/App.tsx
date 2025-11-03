@@ -23,6 +23,9 @@ function App() {
       // Mark as visited for this session
       sessionStorage.setItem('hasVisited', 'true')
     }
+    
+    // TEMPORARY: Force splash screen for testing (remove this line later)
+    setShowSplash(true)
   }, [])
 
   const handleSplashComplete = () => {
