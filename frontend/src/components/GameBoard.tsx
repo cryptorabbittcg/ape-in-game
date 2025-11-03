@@ -8,6 +8,7 @@ import { GameMode } from '../types/game'
 import { verifyApeInGameWithZkVerify, mockVerifyApeInGame, createGameStateFromGame, type ApeInGameState, type GameMove } from '../lib/zkverify'
 import { useActiveAccount } from 'thirdweb/react'
 import { useNavigate } from 'react-router-dom'
+import { syncPointsToHub, calculateGamePoints, getGameAchievements } from '../lib/arcade-session'
 
 interface GameBoardProps {
   gameId: string
@@ -72,6 +73,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
   const [gameMoves, setGameMoves] = useState<GameMove[]>([])
   const [cardsDrawn, setCardsDrawn] = useState<number[]>([])
   const [diceRolls, setDiceRolls] = useState<number[]>([])
+  const [pointsSynced, setPointsSynced] = useState(false)
 
   // Refresh game state from backend
   const refreshGameState = async () => {
@@ -411,6 +413,40 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
       handleZkVerifyValidation()
     }
   }, [gameStatus, winner, playerName, isVerifying, verificationProofId, handleZkVerifyValidation])
+
+  // Sync points to arcade hub when player wins
+  useEffect(() => {
+    if (gameStatus === 'finished' && winner === playerName && !pointsSynced && gameMode) {
+      // Calculate points based on game mode
+      const winningScore = useGameStore.getState().winningScore || 150
+      const perfectScore = playerScore === winningScore
+      
+      // Check if this is first win (simplified - could check localStorage for win history)
+      const isFirstWin = !localStorage.getItem(`hasWon_${account?.address || 'guest'}`)
+      
+      const points = calculateGamePoints(gameMode, true, playerScore, winningScore)
+      const tickets = 1 // Always 1 ticket per win
+      const achievements = getGameAchievements(gameMode, true, isFirstWin, perfectScore)
+      
+      // Sync to hub
+      syncPointsToHub({
+        gameId: 'ape-in',
+        points,
+        tickets,
+        achievements
+      })
+      
+      // Mark as synced to avoid double-syncing
+      setPointsSynced(true)
+      
+      // Mark that user has won (for first win achievement)
+      if (account?.address) {
+        localStorage.setItem(`hasWon_${account.address}`, 'true')
+      }
+      
+      console.log('💰 Synced points to arcade hub:', { points, tickets, achievements })
+    }
+  }, [gameStatus, winner, playerName, pointsSynced, gameMode, playerScore, account])
 
   if (gameStatus === 'finished') {
     const playerWon = winner === playerName

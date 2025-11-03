@@ -5,6 +5,7 @@ import { createWallet } from 'thirdweb/wallets'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { useTokenBalance } from '../services/paymentService'
+import { getArcadeSession } from '../lib/arcade-session'
 
 interface UserProfile {
   name: string
@@ -28,8 +29,25 @@ export default function NewHeader() {
   const accountMenuRef = useRef<HTMLDivElement>(null)
   const { balance: tokenBalance, isLoading: balanceLoading } = useTokenBalance()
 
-  // Load user profile from localStorage
+  // Load user profile from arcade session or localStorage
   useEffect(() => {
+    // Check for arcade session first
+    const arcadeSession = getArcadeSession()
+    
+    if (arcadeSession) {
+      // Use arcade session data
+      const profile: UserProfile = {
+        name: arcadeSession.username,
+        avatar: generateRandomAvatar(), // Could use session avatar if available
+        walletAddress: arcadeSession.address || account?.address || '',
+      }
+      setUserProfile(profile)
+      setPlayerName(arcadeSession.username)
+      // Don't show name modal for arcade users (name comes from hub)
+      return
+    }
+    
+    // Fall back to local profile for standalone mode
     if (account) {
       const savedProfile = localStorage.getItem(`profile_${account.address}`)
       if (savedProfile) {
@@ -44,7 +62,11 @@ export default function NewHeader() {
           walletAddress: account.address
         }
         setUserProfile(profile)
-        setShowNameModal(true)
+        // Only show name modal in standalone mode
+        const allowStandalone = import.meta.env.VITE_ALLOW_STANDALONE === 'true'
+        if (allowStandalone) {
+          setShowNameModal(true)
+        }
       }
     }
   }, [account])
@@ -168,6 +190,9 @@ export default function NewHeader() {
   }
 
   const isHomePage = location.pathname === '/'
+  
+  // Get arcade session for stats display
+  const arcadeSession = getArcadeSession()
 
   return (
     <>
@@ -309,6 +334,32 @@ export default function NewHeader() {
                               </div>
                             </div>
                           </div>
+                          
+                          {/* Arcade Stats (if session exists) */}
+                          {arcadeSession && (
+                            <>
+                              <div className="mt-2 p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">⭐</span>
+                                    <span className="text-sm font-semibold text-purple-400">Points</span>
+                                  </div>
+                                  <span className="text-sm font-bold text-white">
+                                    {arcadeSession.points.toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">🎫</span>
+                                    <span className="text-sm font-semibold text-pink-400">Tickets</span>
+                                  </div>
+                                  <span className="text-sm font-bold text-white">
+                                    {arcadeSession.tickets}
+                                  </span>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         {/* Menu Items */}
