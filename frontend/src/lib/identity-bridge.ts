@@ -79,9 +79,16 @@ export function setupIdentityListener(
   onError?: (error: string) => void
 ): () => void {
   const messageHandler = (event: MessageEvent<ArcadeMessage>) => {
+    // Log all messages for debugging (even if rejected)
+    console.log('📨 Message event received:', {
+      origin: event.origin,
+      type: event.data?.type,
+      isValidOrigin: isValidOrigin(event.origin)
+    })
+
     // Validate origin
     if (!isValidOrigin(event.origin)) {
-      console.warn('⚠️ Rejected message from unauthorized origin:', event.origin)
+      console.warn('⚠️ Rejected message from unauthorized origin:', event.origin, 'Allowed origins:', ALLOWED_ORIGINS)
       return
     }
 
@@ -89,10 +96,11 @@ export function setupIdentityListener(
 
     // Validate message structure
     if (!message || typeof message !== 'object' || !message.type) {
+      console.warn('⚠️ Invalid message structure:', message)
       return
     }
 
-    console.log('📥 Received message from parent:', message.type)
+    console.log('📥 Received valid message from parent:', message.type, 'Origin:', event.origin)
 
     // Handle identity response
     if (message.type === 'ARCADE_IDENTITY' && message.data) {

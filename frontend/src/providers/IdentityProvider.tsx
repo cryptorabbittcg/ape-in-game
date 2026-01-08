@@ -4,7 +4,7 @@
  * Replaces ThirdwebProvider
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import {
   isEmbedded,
   requestIdentity,
@@ -31,9 +31,19 @@ export function IdentityProvider({ children }: IdentityProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [embedded] = useState(() => isEmbedded())
+  
+  // Use ref to track if identity has been received (avoids stale closures)
+  const identityReceivedRef = useRef(false)
 
   const handleIdentity = useCallback((receivedIdentity: ArcadeIdentity) => {
+    // Prevent duplicate identity handling
+    if (identityReceivedRef.current) {
+      console.log('⚠️ Identity already received, ignoring duplicate')
+      return
+    }
+    
     console.log('✅ Setting identity:', receivedIdentity)
+    identityReceivedRef.current = true
     setIdentity(receivedIdentity)
     setIsReady(true)
     setIsLoading(false)
@@ -51,26 +61,40 @@ export function IdentityProvider({ children }: IdentityProviderProps) {
       // Embedded mode: wait for identity from parent
       console.log('🔍 Embedded mode detected, requesting identity...')
       
+      // Reset identity received flag
+      identityReceivedRef.current = false
+      
       // Setup listener first
       const cleanup = setupIdentityListener(handleIdentity, handleError)
       
-      // Request identity from parent
-      // Delay slightly to ensure parent is ready
-      const requestTimer = setTimeout(() => {
+      // Request identity from parent with retry mechanism
+      let retryCount = 0
+      const maxRetries = 20 // Retry for up to 10 seconds (20 * 500ms)
+      
+      const requestIdentityWithRetry = () => {
+        if (identityReceivedRef.current) {
+          // Identity already received, stop retrying
+          return
+        }
+        
         requestIdentity()
+        retryCount++
+        
+        if (retryCount < maxRetries) {
+          // Retry every 500ms
+          setTimeout(requestIdentityWithRetry, 500)
+        } else {
+          console.warn('⏰ Identity request retries exhausted - still waiting for parent')
+        }
+      }
+      
+      // Start requesting after a short delay
+      const initialTimer = setTimeout(() => {
+        requestIdentityWithRetry()
       }, 100)
 
-      // Timeout after 10 seconds if no identity received
-      const timeoutTimer = setTimeout(() => {
-        if (!isReady && !identity) {
-          console.warn('⏰ Identity request timeout - still waiting for parent')
-          // Don't set error, just keep waiting (parent might load later)
-        }
-      }, 10000)
-
       return () => {
-        clearTimeout(requestTimer)
-        clearTimeout(timeoutTimer)
+        clearTimeout(initialTimer)
         cleanup()
       }
     } else {
@@ -80,6 +104,7 @@ export function IdentityProvider({ children }: IdentityProviderProps) {
       if (allowStandalone) {
         console.log('🔧 Standalone mode with dev fallback enabled')
         const devIdentity = getDevFallbackIdentity()
+        identityReceivedRef.current = true
         setIdentity(devIdentity)
         setIsReady(true)
         setIsLoading(false)
@@ -89,7 +114,7 @@ export function IdentityProvider({ children }: IdentityProviderProps) {
         setIsLoading(false)
       }
     }
-  }, [embedded, handleIdentity, handleError, isReady, identity])
+  }, [embedded, handleIdentity, handleError]) // Removed isReady and identity from deps
 
   const contextValue: IdentityContextType = {
     identity,
