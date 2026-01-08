@@ -108,6 +108,42 @@ export class PaymentService {
       }
     }
   }
+
+  /**
+   * Get pricing display info for a game mode
+   * Returns whether it's free, free plays remaining, or cost
+   */
+  static getPricingDisplay(gameMode: string, walletAddress: string | null, freePlaysRemaining: number): {
+    isFree: boolean
+    displayText: string
+    cost: number
+  } {
+    // Sandy is always free
+    if (gameMode === 'sandy') {
+      return {
+        isFree: true,
+        displayText: 'FREE',
+        cost: 0
+      }
+    }
+
+    // Check if user has free plays remaining
+    if (walletAddress && freePlaysRemaining > 0) {
+      return {
+        isFree: true,
+        displayText: `Free plays remaining: ${freePlaysRemaining}/5`,
+        cost: 0
+      }
+    }
+
+    // Otherwise, show cost
+    const cost = this.getGamePrice(gameMode)
+    return {
+      isFree: false,
+      displayText: `Cost: ${cost} APE`,
+      cost
+    }
+  }
 }
 
 /**

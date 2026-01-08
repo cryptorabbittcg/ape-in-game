@@ -1,74 +1,138 @@
 import { GameMode } from '../types/game'
 
-// Australian Central Daylight Time (ACDT) - Adelaide, South Australia
-// ACDT is UTC+10:30
-const ACDT_OFFSET = 10.5 * 60 * 60 * 1000 // 10.5 hours in milliseconds
+// Modes that have daily free plays: Aida, Lana, En-J1n, Nifty (5 per day per mode)
+const FREE_PLAY_MODES: GameMode[] = ['aida', 'lana', 'enj1n', 'nifty']
+const FREE_PLAYS_PER_DAY = 5
 
-export interface DailyFreeGame {
+export interface DailyFreePlay {
   gameMode: GameMode
   walletAddress: string
-  dateUsed: string // YYYY-MM-DD format in ACDT
+  dateUsed: string // YYYY-MM-DD format (local midnight)
   timestamp: number
 }
 
 export class DailyFreeGameService {
-  private static getACDTDate(): string {
+  /**
+   * Get today's date string (YYYY-MM-DD) at local midnight
+   */
+  private static getTodayDate(): string {
     const now = new Date()
-    const acdtTime = new Date(now.getTime() + ACDT_OFFSET)
-    return acdtTime.toISOString().split('T')[0] // YYYY-MM-DD format
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    return today.toISOString().split('T')[0] // YYYY-MM-DD format
   }
 
+  /**
+   * Get storage key for a wallet address
+   */
   private static getStorageKey(walletAddress: string): string {
-    return `dailyFreeGames_${walletAddress.toLowerCase()}`
+    return `dailyFreePlays_${walletAddress.toLowerCase()}`
   }
 
-  static hasUsedDailyFreeGame(walletAddress: string, gameMode: GameMode): boolean {
-    if (!walletAddress) return false
+  /**
+   * Get all free plays used today for a mode
+   */
+  private static getTodayFreePlays(walletAddress: string, gameMode: GameMode): DailyFreePlay[] {
+    if (!walletAddress) return []
     
     const storageKey = this.getStorageKey(walletAddress)
     const stored = localStorage.getItem(storageKey)
     
-    if (!stored) return false
+    if (!stored) return []
     
     try {
-      const dailyGames: DailyFreeGame[] = JSON.parse(stored)
-      const today = this.getACDTDate()
+      const allPlays: DailyFreePlay[] = JSON.parse(stored)
+      const today = this.getTodayDate()
       
-      return dailyGames.some(game => 
-        game.gameMode === gameMode && 
-        game.dateUsed === today
+      // Filter to today's plays for this mode
+      return allPlays.filter(play => 
+        play.gameMode === gameMode && 
+        play.dateUsed === today
       )
     } catch (error) {
-      console.error('Error parsing daily free games:', error)
-      return false
+      console.error('Error parsing daily free plays:', error)
+      return []
     }
   }
 
-  static useDailyFreeGame(walletAddress: string, gameMode: GameMode): void {
+  /**
+   * Clean up old entries (before today)
+   */
+  private static cleanupOldEntries(walletAddress: string): void {
     if (!walletAddress) return
     
     const storageKey = this.getStorageKey(walletAddress)
-    const today = this.getACDTDate()
+    const stored = localStorage.getItem(storageKey)
+    
+    if (!stored) return
+    
+    try {
+      const allPlays: DailyFreePlay[] = JSON.parse(stored)
+      const today = this.getTodayDate()
+      
+      // Keep only today's plays
+      const todayPlays = allPlays.filter(play => play.dateUsed === today)
+      
+      localStorage.setItem(storageKey, JSON.stringify(todayPlays))
+    } catch (error) {
+      console.error('Error cleaning up daily free plays:', error)
+    }
+  }
+
+  /**
+   * Check if user has free plays remaining for a mode
+   */
+  static getFreePlaysRemaining(walletAddress: string, gameMode: GameMode): number {
+    if (!walletAddress || !FREE_PLAY_MODES.includes(gameMode)) return 0
+    
+    this.cleanupOldEntries(walletAddress)
+    const todayPlays = this.getTodayFreePlays(walletAddress, gameMode)
+    return Math.max(0, FREE_PLAYS_PER_DAY - todayPlays.length)
+  }
+
+  /**
+   * Check if user is eligible for a free play
+   */
+  static isEligibleForDailyFree(walletAddress: string, gameMode: GameMode): boolean {
+    if (!walletAddress) return false
+    
+    // Sandy is always free (tutorial)
+    if (gameMode === 'sandy') return true
+    
+    // Only Aida, Lana, En-J1n, Nifty have free plays
+    if (!FREE_PLAY_MODES.includes(gameMode)) return false
+    
+    return this.getFreePlaysRemaining(walletAddress, gameMode) > 0
+  }
+
+  /**
+   * Use a free play for a mode
+   */
+  static useDailyFreeGame(walletAddress: string, gameMode: GameMode): void {
+    if (!walletAddress || !FREE_PLAY_MODES.includes(gameMode)) return
+    
+    const storageKey = this.getStorageKey(walletAddress)
+    const today = this.getTodayDate()
     const now = Date.now()
     
-    let dailyGames: DailyFreeGame[] = []
+    // Clean up old entries first
+    this.cleanupOldEntries(walletAddress)
     
-    // Get existing games
+    // Get existing plays
+    let allPlays: DailyFreePlay[] = []
     const stored = localStorage.getItem(storageKey)
     if (stored) {
       try {
-        dailyGames = JSON.parse(stored)
+        allPlays = JSON.parse(stored)
+        // Keep only today's plays
+        allPlays = allPlays.filter(play => play.dateUsed === today)
       } catch (error) {
-        console.error('Error parsing existing daily free games:', error)
-        dailyGames = []
+        console.error('Error parsing existing daily free plays:', error)
+        allPlays = []
       }
     }
     
-    // Remove old entries (older than today)
-    dailyGames = dailyGames.filter(game => game.dateUsed === today)
-    
-    // Add new entry
-    dailyGames.push({
+    // Add new play
+    allPlays.push({
       gameMode,
       walletAddress: walletAddress.toLowerCase(),
       dateUsed: today,
@@ -76,31 +140,25 @@ export class DailyFreeGameService {
     })
     
     // Save back to localStorage
-    localStorage.setItem(storageKey, JSON.stringify(dailyGames))
-  }
-
-  static getDailyFreeGamesRemaining(walletAddress: string): { aida: boolean, enj1n: boolean } {
-    if (!walletAddress) return { aida: false, enj1n: false }
+    localStorage.setItem(storageKey, JSON.stringify(allPlays))
     
-    return {
-      aida: !this.hasUsedDailyFreeGame(walletAddress, 'aida'),
-      enj1n: !this.hasUsedDailyFreeGame(walletAddress, 'enj1n')
-    }
+    console.log(`✅ Used free play for ${gameMode}. Remaining: ${this.getFreePlaysRemaining(walletAddress, gameMode)}`)
   }
 
+  /**
+   * Get next reset time (midnight local time)
+   */
   static getNextResetTime(): Date {
     const now = new Date()
-    const acdtTime = new Date(now.getTime() + ACDT_OFFSET)
-    
-    // Get tomorrow at midnight ACDT
-    const tomorrow = new Date(acdtTime)
+    const tomorrow = new Date(now)
     tomorrow.setDate(tomorrow.getDate() + 1)
     tomorrow.setHours(0, 0, 0, 0)
-    
-    // Convert back to local time
-    return new Date(tomorrow.getTime() - ACDT_OFFSET)
+    return tomorrow
   }
 
+  /**
+   * Format time until reset
+   */
   static formatTimeUntilReset(): string {
     const resetTime = this.getNextResetTime()
     const now = new Date()
@@ -116,12 +174,5 @@ export class DailyFreeGameService {
     } else {
       return `${minutes}m`
     }
-  }
-
-  static isEligibleForDailyFree(walletAddress: string, gameMode: GameMode): boolean {
-    // Only Aida and En-J1n have daily free games
-    if (gameMode !== 'aida' && gameMode !== 'enj1n') return false
-    
-    return !this.hasUsedDailyFreeGame(walletAddress, gameMode)
   }
 }

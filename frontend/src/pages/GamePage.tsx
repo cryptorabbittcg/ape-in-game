@@ -10,7 +10,7 @@ import SmartBotIntro from '../components/SmartBotIntro'
 import { useIntroTracking } from '../hooks/useIntroTracking'
 import { GameMode } from '../types/game'
 import { BOT_CONFIGS } from '../config/botConfig'
-import { DailyFreeGameService } from '../services/dailyFreeGames'
+import { PlayBalanceService } from '../services/playBalanceService'
 import { requestPlayToken, shouldRequestPlayToken } from '../services/playTokenService'
 import { isRankedMode } from '../config/gameModes'
 
@@ -116,9 +116,9 @@ export default function GamePage() {
           console.log('ℹ️ Skipping play token request (unranked mode or not required)')
         }
 
-        // Check if this is a daily free game
-        const isDailyFree = address && DailyFreeGameService.isEligibleForDailyFree(address, mode)
-        console.log('💰 Is daily free:', isDailyFree)
+        // Check if using a free play
+        const isDailyFree = address && PlayBalanceService.hasFreePlays(address) && mode !== 'sandy'
+        console.log('💰 Using free play:', isDailyFree)
         
         // Create game
         console.log('🚀 Creating game...')

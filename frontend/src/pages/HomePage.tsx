@@ -6,7 +6,7 @@ import ParticleBackground from '../components/ParticleBackground'
 import { useIdentity } from '../hooks/useIdentity'
 import { PaymentService } from '../services/paymentService'
 import { BOT_CONFIGS } from '../config/botConfig'
-import { DailyFreeGameService } from '../services/dailyFreeGames'
+import { PlayBalanceService } from '../services/playBalanceService'
 
 interface GameModeCard {
   mode: GameMode
@@ -124,21 +124,22 @@ export default function HomePage() {
         return
       }
 
-    // Check if this is a daily free game
-    const isDailyFreeEligible = identity.address && DailyFreeGameService.isEligibleForDailyFree(identity.address, mode)
+    // Check if user has free plays available
+    const hasFreePlays = identity.address && PlayBalanceService.hasFreePlays(identity.address)
     
-    // Validate and execute payment for paid games (skip if using daily free)
-    if (mode !== 'sandy' && !isDailyFreeEligible && identity.address) {
-      const requiredAmount = PaymentService.getGamePrice(mode)
+    // Validate and execute payment for paid games (skip if using free play)
+    if (mode !== 'sandy' && !hasFreePlays && identity.address) {
+      // Need to purchase a play
+      const requiredAmount = PlayBalanceService.getPlayPrice()
       const validation = await PaymentService.validatePayment(identity.address, requiredAmount)
       
       if (!validation.hasEnoughBalance) {
-        setPaymentError(`Insufficient ApeCoin balance. You need ${PaymentService.formatApeCoin(validation.requiredAmount)} but only have ${PaymentService.formatApeCoin(validation.currentBalance)}`)
+        setPaymentError(`Insufficient ApeCoin balance. You need ${PaymentService.formatApeCoin(validation.requiredAmount)} to purchase a play, but only have ${PaymentService.formatApeCoin(validation.currentBalance)}`)
         return
       }
 
       // Execute the actual payment
-      console.log('💸 Executing payment for game mode:', mode)
+      console.log('💸 Purchasing play for game mode:', mode)
       const paymentResult = await PaymentService.executePayment(identity.address, requiredAmount)
       
       if (!paymentResult.success) {
@@ -147,11 +148,14 @@ export default function HomePage() {
       }
       
       console.log('✅ Payment successful! Transaction hash:', paymentResult.transactionHash)
+      
+      // Add purchased play to balance
+      PlayBalanceService.purchasePlays(identity.address, 1)
     }
 
-    // Mark daily free game as used if applicable
-    if (isDailyFreeEligible && identity.address) {
-      DailyFreeGameService.useDailyFreeGame(identity.address, mode)
+    // Use a free play if available
+    if (hasFreePlays && identity.address) {
+      PlayBalanceService.useFreePlay(identity.address, mode)
     }
 
       navigate(`/game/${mode}`)
@@ -373,10 +377,16 @@ function CompactGameCard({
   // Determine display price
   const getDisplayPrice = () => {
     if (gameMode.mode === 'sandy') return { price: 0, text: 'FREE', isFree: true }
-    if (isDailyFreeEligible && botConfig.hasDailyFree) {
-      return { price: 0, text: 'Free Daily Play', isFree: true, isDailyFree: true }
+    
+    const freePlaysRemaining = identity.address 
+      ? PlayBalanceService.getFreePlaysRemaining(identity.address)
+      : 0
+    
+    if (freePlaysRemaining > 0) {
+      return { price: 0, text: `Free plays: ${freePlaysRemaining}`, isFree: true, isDailyFree: true }
     }
-    return { price: gameMode.price, text: `🪙 ${gameMode.price} APE`, isFree: false }
+    
+    return { price: 0.1, text: 'Cost: 0.1 APE', isFree: false }
   }
   
   const displayPrice = getDisplayPrice()

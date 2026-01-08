@@ -8,10 +8,11 @@ import { GameMode } from '../types/game'
 import { verifyApeInGameWithZkVerify, mockVerifyApeInGame, createGameStateFromGame, type ApeInGameState, type GameMove } from '../lib/zkverify'
 import { useIdentity } from '../hooks/useIdentity'
 import { useNavigate } from 'react-router-dom'
-import { syncPointsToHub, calculateGamePoints, getGameAchievements } from '../lib/arcade-session'
 import { submitResult } from '../services/resultSubmissionService'
 import { isRankedMode } from '../config/gameModes'
 import type { GameResult } from '../types/result'
+import { calculatePoints, sendPointsToArcade } from '../services/pointsService'
+import { PlayBalanceService } from '../services/playBalanceService'
 
 interface GameBoardProps {
   gameId: string
@@ -512,6 +513,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
 
           // Calculate game duration
           const durationMs = Date.now() - gameStartTime
+          const timeSeconds = Math.floor(durationMs / 1000)
 
           // Determine opponent (bot id for single-player modes)
           const opponent = gameMode === 'pvp' 
@@ -519,6 +521,16 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
             : gameMode === 'multiplayer' || gameMode === 'tournament'
             ? gameMode
             : gameMode // Bot id: aida, lana, nifty, enj1n, sandy
+
+          // Determine game subtype
+          const gameSubtype: 'single_player' | 'pvp' | 'multiplayer' = gameMode === 'pvp' 
+            ? 'pvp' 
+            : gameMode === 'multiplayer' || gameMode === 'tournament'
+            ? 'multiplayer'
+            : 'single_player'
+
+          // Map game mode for submission (enj1n -> en-j1n)
+          const gameModeForSubmission = gameMode === 'enj1n' ? 'en-j1n' : gameMode
 
           // Get client version from package.json via Vite env or fallback
           const clientVersion = import.meta.env.VITE_APP_VERSION || '1.0.0'
@@ -531,11 +543,16 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
             result,
             runId,
             playToken,
+            game_type: 'ape_in' as const,
+            game_mode: gameModeForSubmission as 'sandy' | 'aida' | 'lana' | 'en-j1n' | 'nifty',
+            game_subtype: gameSubtype,
             meta: {
               durationMs,
               rawScore: playerScore,
               opponent,
               clientVersion,
+              timeSeconds,
+              roundsRemaining: Math.max(0, maxRounds - roundCount),
             },
           }
 
@@ -579,50 +596,54 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
     hasForfeited,
   ])
 
-  // Sync points to arcade hub when player wins (ONLY for UNRANKED modes like Sandy)
-  // RANKED modes use the backend submission pipeline instead - DO NOT sync points for ranked
+  // Calculate and send points to arcade hub when game ends (for all modes except Sandy)
+  // Also record game completion for play balance rewards
   useEffect(() => {
-    if (gameStatus === 'finished' && winner === playerName && !pointsSynced && gameMode) {
-      // Check if mode is ranked - if ranked, skip points syncing (backend handles it)
-      const isRanked = isRankedMode(gameMode)
+    if (gameStatus === 'finished' && gameMode && identity.address) {
+      // Record game completion (for reward tracking)
+      const rewardResult = PlayBalanceService.recordGameCompleted(identity.address, gameMode)
       
-      if (isRanked) {
-        // Ranked modes: Do NOT sync points - backend handles scoring via result submission
-        console.log('ℹ️ Skipping points sync for ranked mode (backend handles scoring):', gameMode)
-        setPointsSynced(true) // Mark as synced to prevent retry
-        return
+      if (rewardResult.receivedReward) {
+        console.log(`🎉 Reward! Received 5 free plays. New balance: ${rewardResult.newBalance}`)
+        // Could show a notification here
       }
-      
-      // Only sync points for UNRANKED modes (e.g., Sandy tutorial)
-      const winningScore = useGameStore.getState().winningScore || 150
-      const perfectScore = playerScore === winningScore
-      
-      // Check if this is first win (simplified - could check localStorage for win history)
-      const isFirstWin = !localStorage.getItem(`hasWon_${identity.address || 'guest'}`)
-      
-      const points = calculateGamePoints(gameMode, true, playerScore, winningScore)
-      const tickets = 1 // Always 1 ticket per win
-      const achievements = getGameAchievements(gameMode, true, isFirstWin, perfectScore)
-      
-      // Sync to hub (UNRANKED only)
-      syncPointsToHub({
-        gameId: 'ape-in',
-        points,
-        tickets,
-        achievements
-      })
-      
-      // Mark as synced to avoid double-syncing
-      setPointsSynced(true)
-      
-      // Mark that user has won (for first win achievement)
-      if (identity.address) {
-        localStorage.setItem(`hasWon_${identity.address}`, 'true')
+
+      // Calculate and send points (only if player won and didn't forfeit)
+      if (winner === playerName && !hasForfeited && gameMode !== 'sandy') {
+        // Calculate rounds remaining (bonus for completing in fewer rounds)
+        const roundsRemaining = Math.max(0, maxRounds - roundCount)
+        
+        const points = calculatePoints({
+          gameMode,
+          roundsRemaining,
+          maxRounds,
+          hasForfeited,
+        })
+        
+        const timeSeconds = Math.floor((Date.now() - gameStartTime) / 1000)
+        
+        // Send points to arcade hub via postMessage
+        if (points > 0) {
+          sendPointsToArcade({
+            points,
+            gameMode,
+            score: playerScore,
+            timeSeconds,
+            roundsRemaining,
+          })
+          console.log('💰 Sent points to arcade hub:', { 
+            points, 
+            gameMode, 
+            score: playerScore, 
+            timeSeconds, 
+            roundsRemaining,
+            roundsUsed: roundCount,
+            maxRounds 
+          })
+        }
       }
-      
-      console.log('💰 Synced points to arcade hub (unranked mode):', { points, tickets, achievements })
     }
-  }, [gameStatus, winner, playerName, pointsSynced, gameMode, playerScore, identity.address])
+  }, [gameStatus, winner, playerName, gameMode, playerScore, gameStartTime, hasForfeited, identity.address, roundCount, maxRounds])
 
   if (gameStatus === 'finished') {
     const playerWon = winner === playerName
