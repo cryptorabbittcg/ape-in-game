@@ -3,7 +3,7 @@
  * Handles postMessage communication with parent window (Arcade Hub)
  */
 
-import type { ArcadeIdentity, ArcadeMessage, ArcadeMessageType } from '../types/identity'
+import type { ArcadeIdentity, ArcadeMessage } from '../types/identity'
 
 // Allowed origins for postMessage security
 const ALLOWED_ORIGINS = [
@@ -103,20 +103,64 @@ export function setupIdentityListener(
     console.log('📥 Received valid message from parent:', message.type, 'Origin:', event.origin)
 
     // Handle identity response
-    if (message.type === 'ARCADE_IDENTITY' && message.data) {
-      const identity = message.data
+    if (message.type === 'ARCADE_IDENTITY') {
+      // Arcade sends identity in message.session OR as flattened properties on message
+      // Structure: { type: "ARCADE_IDENTITY", session: {...}, sessionId, userId, username, address, ... }
+      const sessionData = (message as any).session || message
+      const flattenedData = message as any
 
-      // Validate identity data
-      if (!identity.address) {
+      // Extract identity - prefer flattened properties, fallback to session object
+      const rawAddress = flattenedData.address ?? sessionData.address
+      const rawUsername = flattenedData.username ?? sessionData.username
+      const rawUserId = flattenedData.userId ?? sessionData.userId
+      const rawSessionId = flattenedData.sessionId ?? sessionData.sessionId
+
+      // Log the received structure for debugging
+      console.log('📦 Parsing identity from arcade message:', {
+        hasSession: !!(message as any).session,
+        hasFlattened: !!(flattenedData.address || flattenedData.username),
+        rawAddress,
+        rawUsername,
+        rawUserId
+      })
+
+      // Handle guest users (address can be null from arcade)
+      // Generate a guest address if needed (Ape In requires address)
+      let address = rawAddress
+      if (!address || address === null) {
+        // Generate a deterministic guest address from userId/sessionId
+        const guestId = rawUserId || rawSessionId || `guest-${Date.now()}`
+        // Create a pseudo-address for guests (not a real wallet, but consistent)
+        address = `0xGuest${guestId.slice(0, 40).padEnd(40, '0')}`
+        console.log('👤 Guest user detected, generated guest address:', address)
+      }
+
+      // Validate required fields
+      if (!address) {
         const error = 'Invalid identity: missing address'
         console.error('❌', error)
         onError?.(error)
         return
       }
 
-      console.log('✅ Identity received:', {
+      // Map arcade session structure to Ape In's ArcadeIdentity format
+      const identity: ArcadeIdentity = {
+        address: address,
+        username: rawUsername || 'Guest',
+        displayName: rawUsername || 'Guest',
+        userId: rawUserId,
+        sessionId: rawSessionId,
+        // Optional fields from arcade (if available)
+        chainId: flattenedData.chainId ?? sessionData.chainId,
+        avatarUrl: flattenedData.avatarUrl ?? sessionData.avatarUrl,
+      }
+
+      console.log('✅ Identity received and mapped:', {
         address: identity.address,
-        displayName: identity.displayName || identity.username,
+        username: identity.username,
+        displayName: identity.displayName,
+        userId: identity.userId,
+        sessionId: identity.sessionId,
         origin: event.origin
       })
 
