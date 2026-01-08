@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useActiveAccount } from 'thirdweb/react'
+import { useIdentity } from './useIdentity'
 import { GameMode } from '../types/game'
 
 interface IntroTracking {
@@ -11,8 +11,8 @@ interface IntroTracking {
 const LOCAL_STORAGE_KEY = 'ape_in_intro_tracking'
 
 export function useIntroTracking() {
-  const account = useActiveAccount()
-  const walletAddress = account?.address || 'guest'
+  const identity = useIdentity()
+  const walletAddress = identity.address || 'guest'
 
   const [introTracking, setIntroTracking] = useState<IntroTracking>(() => {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY)

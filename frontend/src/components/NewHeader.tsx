@@ -1,11 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
-import { ConnectButton, useActiveAccount, useDisconnect } from 'thirdweb/react'
-import { client, wallet } from '../lib/thirdweb'
-import { createWallet } from 'thirdweb/wallets'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { useTokenBalance } from '../services/paymentService'
 import { getArcadeSession } from '../lib/arcade-session'
+import { useIdentity } from '../hooks/useIdentity'
 
 interface UserProfile {
   name: string
@@ -15,8 +13,7 @@ interface UserProfile {
 }
 
 export default function NewHeader() {
-  const account = useActiveAccount()
-  const { disconnect } = useDisconnect()
+  const identity = useIdentity()
   const location = useLocation()
   const [scrolled, setScrolled] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
@@ -39,7 +36,7 @@ export default function NewHeader() {
       const profile: UserProfile = {
         name: arcadeSession.username,
         avatar: generateRandomAvatar(), // Could use session avatar if available
-        walletAddress: arcadeSession.address || account?.address || '',
+        walletAddress: arcadeSession.address || identity.address || '',
       }
       setUserProfile(profile)
       setPlayerName(arcadeSession.username)
@@ -48,8 +45,8 @@ export default function NewHeader() {
     }
     
     // Fall back to local profile for standalone mode
-    if (account) {
-      const savedProfile = localStorage.getItem(`profile_${account.address}`)
+    if (identity.address) {
+      const savedProfile = localStorage.getItem(`profile_${identity.address}`)
       if (savedProfile) {
         setUserProfile(JSON.parse(savedProfile))
         setPlayerName(JSON.parse(savedProfile).name)
@@ -57,19 +54,20 @@ export default function NewHeader() {
         // Generate random abstract avatar
         const avatar = generateRandomAvatar()
         const profile: UserProfile = {
-          name: '',
-          avatar,
-          walletAddress: account.address
+          name: identity.displayName || identity.username || '',
+          avatar: identity.avatarUrl || avatar,
+          walletAddress: identity.address
         }
         setUserProfile(profile)
-        // Only show name modal in standalone mode
+        setPlayerName(identity.displayName || identity.username || '')
+        // Only show name modal in standalone mode if no name provided
         const allowStandalone = import.meta.env.VITE_ALLOW_STANDALONE === 'true'
-        if (allowStandalone) {
+        if (allowStandalone && !identity.displayName && !identity.username) {
           setShowNameModal(true)
         }
       }
     }
-  }, [account])
+  }, [identity])
 
   // Track scroll for glassmorphism effect
   useEffect(() => {
@@ -113,15 +111,15 @@ export default function NewHeader() {
 
   // Save user profile
   const saveProfile = () => {
-    if (account && playerName.trim()) {
+    if (identity.address && playerName.trim()) {
       const profile: UserProfile = {
         name: playerName.trim(),
         avatar: userProfile?.avatar || generateRandomAvatar(),
         pfp: userProfile?.pfp,
-        walletAddress: account.address
+        walletAddress: identity.address
       }
       setUserProfile(profile)
-      localStorage.setItem(`profile_${account.address}`, JSON.stringify(profile))
+      localStorage.setItem(`profile_${identity.address}`, JSON.stringify(profile))
       setShowNameModal(false)
     }
   }
@@ -250,7 +248,7 @@ export default function NewHeader() {
               </Link>
 
               {/* Wallet Connection / Account */}
-              {account ? (
+              {identity.address ? (
                 <div className="relative" ref={accountMenuRef}>
                   {/* Account Button */}
                   <motion.button
@@ -278,7 +276,7 @@ export default function NewHeader() {
                         {userProfile?.name || 'Player'}
                       </span>
                       <span className="text-xs font-mono text-green-400">
-                        {formatAddress(account.address)}
+                        {formatAddress(identity.address)}
                       </span>
                     </div>
                     
@@ -311,8 +309,8 @@ export default function NewHeader() {
                               )}
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-semibold text-white">{userProfile?.name || 'Player'}</h3>
-                              <p className="text-xs text-slate-400 font-mono">{formatAddress(account.address)}</p>
+                              <h3 className="font-semibold text-white">{userProfile?.name || identity.displayName || 'Player'}</h3>
+                              <p className="text-xs text-slate-400 font-mono">{formatAddress(identity.address)}</p>
                             </div>
                           </div>
                           
@@ -398,41 +396,14 @@ export default function NewHeader() {
                           </button>
                         </div>
 
-                        {/* Disconnect */}
-                        <div className="p-2 border-t border-slate-700/50">
-                          <button
-                            onClick={handleDisconnect}
-                            className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-900/20 transition-colors flex items-center space-x-3"
-                          >
-                            <span>🚪</span>
-                            <span>Disconnect</span>
-                          </button>
-                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               ) : (
-                <ConnectButton
-                  client={client}
-                  wallets={[
-                    wallet,
-                    createWallet('io.metamask'),
-                    createWallet('com.coinbase.wallet'),
-                    createWallet('me.rainbow'),
-                  ]}
-                  theme="dark"
-                  connectButton={{
-                    label: 'Connect Wallet',
-                    className: 'custom-connect-button',
-                  }}
-                  connectModal={{
-                    size: 'compact',
-                    title: 'Welcome to Ape In!',
-                    titleIcon: '🎮',
-                    showThirdwebBranding: false,
-                  }}
-                />
+                <div className="px-4 py-2 bg-slate-700/50 rounded-lg border border-slate-600/50">
+                  <p className="text-xs text-slate-400">Waiting for identity...</p>
+                </div>
               )}
             </div>
           </div>

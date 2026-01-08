@@ -2,8 +2,14 @@ import { create } from 'zustand'
 import { GameState, Card, GameMode } from '../types/game'
 
 interface GameStore extends GameState {
+  // Play token fields for ranked games
+  playToken?: string | null
+  runId?: string | null
+  
   // Actions
   setGameState: (state: Partial<GameState>) => void
+  setPlayToken: (token: string | null) => void
+  setRunId: (id: string | null) => void
   updateScore: (playerScore: number, opponentScore?: number) => void
   setCurrentCard: (card: Card | null) => void
   setLastRoll: (roll: number) => void
@@ -36,8 +42,14 @@ const initialState: GameState = {
 
 export const useGameStore = create<GameStore>((set) => ({
   ...initialState,
+  playToken: null,
+  runId: null,
 
   setGameState: (state) => set((prev) => ({ ...prev, ...state })),
+
+  setPlayToken: (token) => set({ playToken: token }),
+
+  setRunId: (id) => set({ runId: id }),
 
   updateScore: (playerScore, opponentScore) =>
     set((state) => ({
@@ -51,7 +63,7 @@ export const useGameStore = create<GameStore>((set) => ({
 
   incrementRound: () => set((state) => ({ roundCount: state.roundCount + 1 })),
 
-  resetGame: () => set(initialState),
+  resetGame: () => set({ ...initialState, playToken: null, runId: null }),
 
   endGame: (winner) =>
     set({

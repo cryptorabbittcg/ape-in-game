@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { ThirdwebProvider } from 'thirdweb/react'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import './index.css'
+import { IdentityProvider } from './providers/IdentityProvider'
 import { getArcadeSession, redirectToArcadeHub } from './lib/arcade-session'
 
 console.log('🚀 Starting React app...')
@@ -80,13 +80,13 @@ try {
 
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <ThirdwebProvider>
+      <IdentityProvider>
         <BrowserRouter>
           <ArcadeSessionGuard>
             <App />
           </ArcadeSessionGuard>
         </BrowserRouter>
-      </ThirdwebProvider>
+      </IdentityProvider>
     </React.StrictMode>,
   )
   

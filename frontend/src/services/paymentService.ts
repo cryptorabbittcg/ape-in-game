@@ -1,6 +1,5 @@
-import { useActiveAccount } from 'thirdweb/react'
 import { useState, useEffect } from 'react'
-import { client, curtisChain } from '../lib/thirdweb'
+import { useIdentity } from '../hooks/useIdentity'
 
 // CURTIS testnet configuration (matching Cryptoku working setup)
 const CURTIS_RPC_URL = import.meta.env.VITE_RPC_URL || "https://curtis.rpc.caldera.xyz/http"
@@ -16,8 +15,8 @@ export interface PaymentValidation {
 }
 
 export class PaymentService {
-  static async validatePayment(account: any, requiredAmount: number): Promise<PaymentValidation> {
-    if (!account) {
+  static async validatePayment(address: string, requiredAmount: number): Promise<PaymentValidation> {
+    if (!address) {
       return {
         hasEnoughBalance: false,
         requiredAmount,
@@ -36,7 +35,7 @@ export class PaymentService {
         body: JSON.stringify({
           jsonrpc: '2.0',
           method: 'eth_getBalance',
-          params: [account.address, 'latest'],
+          params: [address, 'latest'],
           id: 1,
         }),
       })
@@ -77,13 +76,13 @@ export class PaymentService {
 
   /**
    * Execute payment for a game by transferring APE to a game contract or treasury
-   * @param {any} account The Thirdweb active account object
+   * @param {string} address The wallet address
    * @param {number} amount The amount of APE to transfer
    * @returns {Promise<{ success: boolean; transactionHash?: string; error?: string }>}
    */
-  static async executePayment(account: any, amount: number): Promise<{ success: boolean; transactionHash?: string; error?: string }> {
-    if (!account) {
-      return { success: false, error: 'No account connected' }
+  static async executePayment(address: string, amount: number): Promise<{ success: boolean; transactionHash?: string; error?: string }> {
+    if (!address) {
+      return { success: false, error: 'No address provided' }
     }
 
     try {
@@ -91,7 +90,7 @@ export class PaymentService {
       
       // For now, we'll simulate the payment since we don't have a game contract
       // In production, this would send APE to a smart contract or treasury address
-      console.log('🎯 Payment simulation: Would transfer', amount, TOKEN_SYMBOL, 'from', account.address)
+      console.log('🎯 Payment simulation: Would transfer', amount, TOKEN_SYMBOL, 'from', address)
       
       // TODO: Implement actual blockchain transaction
       // This would use Thirdweb's sendTransaction or contract interaction
@@ -112,22 +111,22 @@ export class PaymentService {
 }
 
 /**
- * Custom hook to fetch the token balance for the active account
+ * Custom hook to fetch the token balance for the active identity
  * Uses direct RPC calls like Cryptoku for better compatibility
  */
 export function useTokenBalance() {
-  const account = useActiveAccount()
+  const identity = useIdentity()
   const [balance, setBalance] = useState('0.00')
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (!account?.address) {
+    if (!identity.address) {
       setBalance('0.00')
       return
     }
 
     const fetchBalance = async () => {
-      console.log('🔄 Fetching balance for address:', account.address)
+      console.log('🔄 Fetching balance for address:', identity.address)
       console.log('🌐 Using RPC URL:', CURTIS_RPC_URL)
       
       setIsLoading(true)
@@ -141,7 +140,7 @@ export function useTokenBalance() {
           body: JSON.stringify({
             jsonrpc: '2.0',
             method: 'eth_getBalance',
-            params: [account.address, 'latest'],
+            params: [identity.address, 'latest'],
             id: 1,
           }),
         })
@@ -173,7 +172,7 @@ export function useTokenBalance() {
     // Refresh balance every 30 seconds
     const interval = setInterval(fetchBalance, 30000)
     return () => clearInterval(interval)
-  }, [account?.address])
+  }, [identity.address])
 
   return { balance, isLoading }
 }

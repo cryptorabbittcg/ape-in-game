@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useActiveAccount } from 'thirdweb/react'
-import { getBalance } from 'thirdweb/extensions/erc20'
-import { client } from '../lib/thirdweb'
+import { useIdentity } from './useIdentity'
 
 // Token config via env for easy switching between CURTIS testnet and APE mainnet
-const TOKEN_ADDRESS = import.meta.env.VITE_TOKEN_ADDRESS || ''
+const CURTIS_RPC_URL = import.meta.env.VITE_RPC_URL || "https://curtis.rpc.caldera.xyz/http"
 const TOKEN_SYMBOL = import.meta.env.VITE_TOKEN_SYMBOL || 'CURTIS'
 const TOKEN_DECIMALS = Number(import.meta.env.VITE_TOKEN_DECIMALS || 18)
 
@@ -12,11 +10,11 @@ export function useTokenBalance() {
   const [balance, setBalance] = useState<string>('0')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const account = useActiveAccount()
+  const identity = useIdentity()
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!account || !TOKEN_ADDRESS) {
+      if (!identity.address) {
         setBalance('0')
         setError(null)
         return
@@ -26,16 +24,24 @@ export function useTokenBalance() {
       setError(null)
 
       try {
-        const balanceResult = await getBalance({
-          contract: {
-            address: TOKEN_ADDRESS,
-            chain: client.chain,
-            client: client,
+        // Use direct RPC call for native balance
+        const response = await fetch(CURTIS_RPC_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          address: account.address,
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'eth_getBalance',
+            params: [identity.address, 'latest'],
+            id: 1,
+          }),
         })
 
-        const formattedBalance = (Number(balanceResult) / 10 ** TOKEN_DECIMALS).toFixed(4)
+        const data = await response.json()
+        const balanceHex = data.result || "0x0"
+        const balanceWei = parseInt(balanceHex, 16)
+        const formattedBalance = (balanceWei / (10 ** TOKEN_DECIMALS)).toFixed(4)
         setBalance(formattedBalance)
       } catch (err) {
         console.error(`Failed to fetch ${TOKEN_SYMBOL} balance:`, err)
@@ -49,7 +55,7 @@ export function useTokenBalance() {
     fetchBalance()
     const interval = setInterval(fetchBalance, 30000)
     return () => clearInterval(interval)
-  }, [account])
+  }, [identity.address])
 
   return { balance, isLoading, error, symbol: TOKEN_SYMBOL }
 }

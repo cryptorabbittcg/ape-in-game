@@ -2,13 +2,16 @@ import { motion } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import Card from './Card'
 import Dice from './Dice'
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { gameAPI } from '../services/api'
 import { GameMode } from '../types/game'
 import { verifyApeInGameWithZkVerify, mockVerifyApeInGame, createGameStateFromGame, type ApeInGameState, type GameMove } from '../lib/zkverify'
-import { useActiveAccount } from 'thirdweb/react'
+import { useIdentity } from '../hooks/useIdentity'
 import { useNavigate } from 'react-router-dom'
 import { syncPointsToHub, calculateGamePoints, getGameAchievements } from '../lib/arcade-session'
+import { submitResult } from '../services/resultSubmissionService'
+import { isRankedMode } from '../config/gameModes'
+import type { GameResult } from '../types/result'
 
 interface GameBoardProps {
   gameId: string
@@ -19,9 +22,21 @@ interface GameBoardProps {
 }
 
 export default function GameBoard({ gameId, playerName, opponentName, gameMode, onPlayIntro }: GameBoardProps) {
-  const account = useActiveAccount()
+  const identity = useIdentity()
   const navigate = useNavigate()
   const [playerProfile, setPlayerProfile] = useState<{pfp?: string, avatar?: string} | null>(null)
+  const [gameStartTime, setGameStartTime] = useState(() => Date.now()) // Track game start for duration
+  const [resultSubmissionState, setResultSubmissionState] = useState<{
+    isSubmitting: boolean
+    submitted: boolean
+    error: string | null
+  }>({
+    isSubmitting: false,
+    submitted: false,
+    error: null,
+  })
+  const [hasForfeited, setHasForfeited] = useState(false) // Track if player forfeited
+  const submitLockRef = useRef(false) // Ref-based lock to prevent double submission across renders
   
   const {
     playerScore,
@@ -36,6 +51,8 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
     roundCount,
     maxRounds,
     unlimitedRounds,
+    playToken,
+    runId,
     setCurrentCard,
     setLastRoll,
     updateScore,
@@ -45,8 +62,8 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
 
   // Load player profile for PFP display
   useEffect(() => {
-    if (account?.address) {
-      const savedProfile = localStorage.getItem(`profile_${account.address}`)
+    if (identity.address) {
+      const savedProfile = localStorage.getItem(`profile_${identity.address}`)
       if (savedProfile) {
         try {
           const profile = JSON.parse(savedProfile)
@@ -56,7 +73,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
         }
       }
     }
-  }, [account?.address])
+  }, [identity.address])
 
   const [isDrawing, setIsDrawing] = useState(false)
   const [isRolling, setIsRolling] = useState(false)
@@ -332,6 +349,9 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
   const handleForfeit = async () => {
     if (window.confirm('Are you sure you want to forfeit?')) {
       try {
+        // Mark as forfeited for result submission
+        setHasForfeited(true)
+        
         // Track forfeit move for zkVerify
         const move: GameMove = {
           type: 'forfeit',
@@ -342,11 +362,13 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
         
         await gameAPI.forfeitGame(gameId)
         setFloatingMessage({text: 'Game forfeited.'})
+        // Game will end and result submission will pick up FORFEIT status
         setTimeout(() => {
           window.location.href = '/'
         }, 2000)
       } catch (error) {
         console.error('Failed to forfeit:', error)
+        setHasForfeited(false) // Reset on error
       }
     }
   }
@@ -374,7 +396,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
         cardsDrawn,
         diceRolls,
         gameMoves,
-        '0x0000000000000000000000000000000000000000' // TODO: Get actual wallet address
+        identity.address || '0x0000000000000000000000000000000000000000'
       )
 
       let verificationResult
@@ -404,7 +426,7 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
     } finally {
       setIsVerifying(false)
     }
-  }, [gameId, playerName, gameMode, playerScore, roundCount, cardsDrawn, diceRolls, gameMoves, isVerifying])
+  }, [gameId, playerName, gameMode, playerScore, roundCount, cardsDrawn, diceRolls, gameMoves, isVerifying, identity.address])
 
   // Check for victory condition and trigger verification
   useEffect(() => {
@@ -412,23 +434,177 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
       // Player won - trigger zkVerify validation
       handleZkVerifyValidation()
     }
-  }, [gameStatus, winner, playerName, isVerifying, verificationProofId, handleZkVerifyValidation])
+  }, [gameStatus, winner, playerName, isVerifying, verificationProofId, handleZkVerifyValidation, identity.address])
 
-  // Sync points to arcade hub when player wins
+  // Reset result submission state when game status changes away from finished or when new game starts
+  useEffect(() => {
+    if (gameStatus !== 'finished') {
+      // Game is not finished - reset submission state for next run
+      setResultSubmissionState({
+        isSubmitting: false,
+        submitted: false,
+        error: null,
+      })
+      setHasForfeited(false)
+      setGameStartTime(Date.now()) // Reset game start time for new game
+      submitLockRef.current = false // Reset submission lock for new run
+    }
+  }, [gameStatus])
+
+  // Submit result to Arcade Hub when game ends
+  useEffect(() => {
+    if (
+      gameStatus === 'finished' &&
+      !resultSubmissionState.isSubmitting &&
+      !resultSubmissionState.submitted &&
+      !submitLockRef.current && // Check ref lock to prevent double submission
+      gameMode &&
+      identity.address
+    ) {
+      const submitGameResult = async () => {
+        // Set lock immediately to prevent duplicate submissions across renders
+        submitLockRef.current = true
+        // Set submitting state immediately to prevent double triggers from re-renders
+        setResultSubmissionState({ isSubmitting: true, submitted: false, error: null })
+
+        try {
+          // Determine result type - check for forfeit first
+          let result: GameResult
+          if (hasForfeited) {
+            result = 'FORFEIT'
+          } else if (!winner) {
+            result = 'DRAW'
+          } else if (winner === playerName) {
+            result = 'WIN'
+          } else {
+            result = 'LOSS'
+          }
+
+          // Check if mode is ranked
+          const isRanked = isRankedMode(gameMode)
+
+          // Sandy (tutorial/unranked) should NOT submit ranked results
+          // Only submit if ranked mode OR if explicitly unranked (will be submitted with isRanked=false)
+          if (!isRanked) {
+            // Sandy/tutorial mode: Don't submit result at all (simplest approach)
+            console.log('ℹ️ Skipping result submission for unranked mode (Sandy):', gameMode)
+            setResultSubmissionState({ isSubmitting: false, submitted: false, error: null })
+            submitLockRef.current = false // Release lock when skipping
+            return
+          }
+
+          // Ranked modes require playToken
+          if (!playToken) {
+            const error = 'Play token required for ranked result submission'
+            console.error('❌', error)
+            setResultSubmissionState({ isSubmitting: false, submitted: false, error })
+            submitLockRef.current = false // Release lock on error
+            return
+          }
+
+          if (!runId) {
+            const error = 'Run ID required for result submission'
+            console.error('❌', error)
+            setResultSubmissionState({ isSubmitting: false, submitted: false, error })
+            submitLockRef.current = false // Release lock on error
+            return
+          }
+
+          // Calculate game duration
+          const durationMs = Date.now() - gameStartTime
+
+          // Determine opponent (bot id for single-player modes)
+          const opponent = gameMode === 'pvp' 
+            ? 'pvp' 
+            : gameMode === 'multiplayer' || gameMode === 'tournament'
+            ? gameMode
+            : gameMode // Bot id: aida, lana, nifty, enj1n, sandy
+
+          // Get client version from package.json via Vite env or fallback
+          const clientVersion = import.meta.env.VITE_APP_VERSION || '1.0.0'
+          
+          // Submit result
+          const submissionPayload = {
+            playerAddress: identity.address!,
+            modeId: gameMode, // Uses same modeId as in GAME_MODE_CONFIGS
+            isRanked: true,
+            result,
+            runId,
+            playToken,
+            meta: {
+              durationMs,
+              rawScore: playerScore,
+              opponent,
+              clientVersion,
+            },
+          }
+
+          console.log('📤 Submitting ranked result:', submissionPayload)
+
+          const response = await submitResult(submissionPayload)
+
+          if (response.success) {
+            console.log('✅ Result submitted successfully:', response.message)
+            setResultSubmissionState({ isSubmitting: false, submitted: true, error: null })
+            // Keep lock true when successfully submitted to prevent re-submission
+          } else {
+            const error = response.error || 'Failed to submit result'
+            console.error('❌ Result submission failed:', error)
+            setResultSubmissionState({ isSubmitting: false, submitted: false, error })
+            submitLockRef.current = false // Release lock on error so user can retry if needed
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          console.error('❌ Exception during result submission:', error)
+          setResultSubmissionState({ isSubmitting: false, submitted: false, error: errorMessage })
+          submitLockRef.current = false // Release lock on exception
+        }
+      }
+
+      submitGameResult()
+    }
+    // Remove resultSubmissionState from dependencies to prevent re-triggering
+    // The state checks in the condition above prevent double submission
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    gameStatus,
+    winner,
+    playerName,
+    gameMode,
+    playerScore,
+    identity.address,
+    playToken,
+    runId,
+    gameStartTime,
+    hasForfeited,
+  ])
+
+  // Sync points to arcade hub when player wins (ONLY for UNRANKED modes like Sandy)
+  // RANKED modes use the backend submission pipeline instead - DO NOT sync points for ranked
   useEffect(() => {
     if (gameStatus === 'finished' && winner === playerName && !pointsSynced && gameMode) {
-      // Calculate points based on game mode
+      // Check if mode is ranked - if ranked, skip points syncing (backend handles it)
+      const isRanked = isRankedMode(gameMode)
+      
+      if (isRanked) {
+        // Ranked modes: Do NOT sync points - backend handles scoring via result submission
+        console.log('ℹ️ Skipping points sync for ranked mode (backend handles scoring):', gameMode)
+        setPointsSynced(true) // Mark as synced to prevent retry
+        return
+      }
+      
+      // Only sync points for UNRANKED modes (e.g., Sandy tutorial)
       const winningScore = useGameStore.getState().winningScore || 150
       const perfectScore = playerScore === winningScore
       
       // Check if this is first win (simplified - could check localStorage for win history)
-      const isFirstWin = !localStorage.getItem(`hasWon_${account?.address || 'guest'}`)
+      const isFirstWin = !localStorage.getItem(`hasWon_${identity.address || 'guest'}`)
       
       const points = calculateGamePoints(gameMode, true, playerScore, winningScore)
       const tickets = 1 // Always 1 ticket per win
       const achievements = getGameAchievements(gameMode, true, isFirstWin, perfectScore)
       
-      // Sync to hub
+      // Sync to hub (UNRANKED only)
       syncPointsToHub({
         gameId: 'ape-in',
         points,
@@ -440,16 +616,18 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
       setPointsSynced(true)
       
       // Mark that user has won (for first win achievement)
-      if (account?.address) {
-        localStorage.setItem(`hasWon_${account.address}`, 'true')
+      if (identity.address) {
+        localStorage.setItem(`hasWon_${identity.address}`, 'true')
       }
       
-      console.log('💰 Synced points to arcade hub:', { points, tickets, achievements })
+      console.log('💰 Synced points to arcade hub (unranked mode):', { points, tickets, achievements })
     }
-  }, [gameStatus, winner, playerName, pointsSynced, gameMode, playerScore, account])
+  }, [gameStatus, winner, playerName, pointsSynced, gameMode, playerScore, identity.address])
 
   if (gameStatus === 'finished') {
     const playerWon = winner === playerName
+    const isRanked = gameMode ? isRankedMode(gameMode) : false
+    
     return (
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -461,6 +639,52 @@ export default function GameBoard({ gameId, playerName, opponentName, gameMode, 
         </h2>
         {!playerWon && (
           <p className="text-xl text-slate-300 mb-6">Better luck next game!</p>
+        )}
+
+        {/* Result Submission Status (for ranked modes) */}
+        {isRanked && (
+          <div className="mb-6 max-w-md mx-auto">
+            {resultSubmissionState.isSubmitting && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4 backdrop-blur-sm"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <div className="animate-spin text-xl">⏳</div>
+                  <span className="text-blue-300 font-medium">Submitting result...</span>
+                </div>
+              </motion.div>
+            )}
+
+            {resultSubmissionState.submitted && !resultSubmissionState.error && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl p-4 backdrop-blur-sm"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <div className="text-xl">✅</div>
+                  <span className="text-emerald-300 font-medium">Result submitted</span>
+                </div>
+              </motion.div>
+            )}
+
+            {resultSubmissionState.error && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 backdrop-blur-sm"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <div className="text-xl">❌</div>
+                  <span className="text-red-300 font-medium">
+                    Submission failed: {resultSubmissionState.error}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </div>
         )}
         
         {/* zkVerify Verification Status */}

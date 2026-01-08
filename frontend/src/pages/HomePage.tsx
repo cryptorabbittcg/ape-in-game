@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { GameMode } from '../types/game'
 import { useState } from 'react'
 import ParticleBackground from '../components/ParticleBackground'
-import { useActiveAccount } from 'thirdweb/react'
+import { useIdentity } from '../hooks/useIdentity'
 import { PaymentService } from '../services/paymentService'
 import { BOT_CONFIGS } from '../config/botConfig'
 import { DailyFreeGameService } from '../services/dailyFreeGames'
@@ -107,7 +107,7 @@ const rarityGlow = {
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const account = useActiveAccount()
+  const identity = useIdentity()
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [hoveredGuide, setHoveredGuide] = useState<string | null>(null)
   const [paymentError, setPaymentError] = useState<string | null>(null)
@@ -118,19 +118,19 @@ export default function HomePage() {
     setPaymentLoading(mode)
     
     try {
-      // Check if wallet is connected for paid games
-      if (mode !== 'sandy' && !account) {
-        setPaymentError('Please connect your wallet to play paid games')
+      // Check if identity is available for paid games
+      if (mode !== 'sandy' && !identity.address) {
+        setPaymentError('Please wait for identity to play paid games')
         return
       }
 
     // Check if this is a daily free game
-    const isDailyFreeEligible = account && DailyFreeGameService.isEligibleForDailyFree(account.address, mode)
+    const isDailyFreeEligible = identity.address && DailyFreeGameService.isEligibleForDailyFree(identity.address, mode)
     
     // Validate and execute payment for paid games (skip if using daily free)
-    if (mode !== 'sandy' && !isDailyFreeEligible) {
+    if (mode !== 'sandy' && !isDailyFreeEligible && identity.address) {
       const requiredAmount = PaymentService.getGamePrice(mode)
-      const validation = await PaymentService.validatePayment(account, requiredAmount)
+      const validation = await PaymentService.validatePayment(identity.address, requiredAmount)
       
       if (!validation.hasEnoughBalance) {
         setPaymentError(`Insufficient ApeCoin balance. You need ${PaymentService.formatApeCoin(validation.requiredAmount)} but only have ${PaymentService.formatApeCoin(validation.currentBalance)}`)
@@ -139,7 +139,7 @@ export default function HomePage() {
 
       // Execute the actual payment
       console.log('💸 Executing payment for game mode:', mode)
-      const paymentResult = await PaymentService.executePayment(account, requiredAmount)
+      const paymentResult = await PaymentService.executePayment(identity.address, requiredAmount)
       
       if (!paymentResult.success) {
         setPaymentError(`Payment failed: ${paymentResult.error}`)
@@ -150,8 +150,8 @@ export default function HomePage() {
     }
 
     // Mark daily free game as used if applicable
-    if (isDailyFreeEligible && account) {
-      DailyFreeGameService.useDailyFreeGame(account.address, mode)
+    if (isDailyFreeEligible && identity.address) {
+      DailyFreeGameService.useDailyFreeGame(identity.address, mode)
     }
 
       navigate(`/game/${mode}`)
@@ -335,7 +335,7 @@ export default function HomePage() {
                 onSelect={handleModeSelect}
                 isHovered={hoveredCard === gameMode.mode}
                 onHoverChange={setHoveredCard}
-                account={account}
+                identity={identity}
                 isLoading={paymentLoading === gameMode.mode}
               />
             ))}
@@ -353,7 +353,7 @@ function CompactGameCard({
   onSelect,
   isHovered,
   onHoverChange,
-  account,
+  identity,
   isLoading = false
 }: { 
   gameMode: GameModeCard
@@ -361,13 +361,13 @@ function CompactGameCard({
   onSelect: (mode: GameMode) => void
   isHovered: boolean
   onHoverChange: (mode: string | null) => void
-  account: any
+  identity: ReturnType<typeof useIdentity>
   isLoading?: boolean
 }) {
   const disabled = ['pvp', 'multiplayer', 'tournament'].includes(gameMode.mode)
   
   // Check if this is a daily free game
-  const isDailyFreeEligible = account && DailyFreeGameService.isEligibleForDailyFree(account.address, gameMode.mode)
+  const isDailyFreeEligible = identity.address && DailyFreeGameService.isEligibleForDailyFree(identity.address, gameMode.mode)
   const botConfig = BOT_CONFIGS[gameMode.mode]
   
   // Determine display price
