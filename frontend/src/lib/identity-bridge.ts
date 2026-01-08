@@ -6,6 +6,7 @@
 import type { ArcadeIdentity, ArcadeMessage } from '../types/identity'
 
 // Allowed origins for postMessage security
+// Only accept messages from the arcade hub (parent window)
 const ALLOWED_ORIGINS = [
   'https://arcade.thecryptorabbithole.io',
   'http://localhost:3000',

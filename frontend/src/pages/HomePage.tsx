@@ -370,10 +370,6 @@ function CompactGameCard({
 }) {
   const disabled = ['pvp', 'multiplayer', 'tournament'].includes(gameMode.mode)
   
-  // Check if this is a daily free game
-  const isDailyFreeEligible = identity.address && DailyFreeGameService.isEligibleForDailyFree(identity.address, gameMode.mode)
-  const botConfig = BOT_CONFIGS[gameMode.mode]
-  
   // Determine display price
   const getDisplayPrice = () => {
     if (gameMode.mode === 'sandy') return { price: 0, text: 'FREE', isFree: true }
