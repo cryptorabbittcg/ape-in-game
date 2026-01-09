@@ -80,14 +80,20 @@ export function setupIdentityListener(
   onError?: (error: string) => void
 ): () => void {
   const messageHandler = (event: MessageEvent<ArcadeMessage>) => {
+    // Ignore messages from self (should only receive from parent)
+    if (event.origin === window.location.origin) {
+      return // Silently ignore messages from self
+    }
+
     // Log all messages for debugging (even if rejected)
     console.log('📨 Message event received:', {
       origin: event.origin,
       type: event.data?.type,
-      isValidOrigin: isValidOrigin(event.origin)
+      isValidOrigin: isValidOrigin(event.origin),
+      isFromSelf: event.origin === window.location.origin
     })
 
-    // Validate origin
+    // Validate origin - only accept from parent (arcade hub)
     if (!isValidOrigin(event.origin)) {
       console.warn('⚠️ Rejected message from unauthorized origin:', event.origin, 'Allowed origins:', ALLOWED_ORIGINS)
       return
@@ -115,6 +121,8 @@ export function setupIdentityListener(
       const rawUsername = flattenedData.username ?? sessionData.username
       const rawUserId = flattenedData.userId ?? sessionData.userId
       const rawSessionId = flattenedData.sessionId ?? sessionData.sessionId
+      // Arcade sends avatar as base64 image in "avatar" field (not "avatarUrl")
+      const rawAvatar = flattenedData.avatar ?? sessionData.avatar
 
       // Log the received structure for debugging
       console.log('📦 Parsing identity from arcade message:', {
@@ -122,7 +130,8 @@ export function setupIdentityListener(
         hasFlattened: !!(flattenedData.address || flattenedData.username),
         rawAddress,
         rawUsername,
-        rawUserId
+        rawUserId,
+        hasAvatar: !!rawAvatar
       })
 
       // Handle guest users (address can be null from arcade)
@@ -153,7 +162,8 @@ export function setupIdentityListener(
         sessionId: rawSessionId,
         // Optional fields from arcade (if available)
         chainId: flattenedData.chainId ?? sessionData.chainId,
-        avatarUrl: flattenedData.avatarUrl ?? sessionData.avatarUrl,
+        // Arcade sends avatar as base64 image in "avatar" field
+        avatarUrl: rawAvatar || flattenedData.avatarUrl || sessionData.avatarUrl,
       }
 
       console.log('✅ Identity received and mapped:', {
@@ -162,6 +172,7 @@ export function setupIdentityListener(
         displayName: identity.displayName,
         userId: identity.userId,
         sessionId: identity.sessionId,
+        hasAvatar: !!identity.avatarUrl,
         origin: event.origin
       })
 

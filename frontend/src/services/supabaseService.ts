@@ -6,6 +6,15 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
+// Validate Supabase configuration
+if (SUPABASE_URL && SUPABASE_URL.includes('placeholder')) {
+  console.warn('⚠️ Supabase URL appears to be a placeholder. Please set VITE_SUPABASE_URL environment variable.')
+}
+
+if (SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.includes('placeholder')) {
+  console.warn('⚠️ Supabase key appears to be a placeholder. Please set VITE_SUPABASE_ANON_KEY environment variable.')
+}
+
 export interface GameSession {
   id: string
   user_id?: string
