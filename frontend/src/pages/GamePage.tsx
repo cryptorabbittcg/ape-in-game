@@ -41,13 +41,17 @@ export default function GamePage() {
   const { hasCompletedIntro, markIntroCompleted } = useIntroTracking()
 
   useEffect(() => {
+    console.log('🔍 GamePage useEffect triggered:', { mode, isLoading, hasAddress: !!address })
+    
     if (!mode) {
+      console.log('❌ No mode parameter, navigating home')
       navigate('/')
       return
     }
 
     // Prevent multiple initializations
     if (isLoading === false) {
+      console.log('⚠️ Already initialized, skipping')
       return
     }
 
@@ -59,35 +63,42 @@ export default function GamePage() {
         // URGENT: Sandy (tutorial) should always launch, no checks
         if (mode === 'sandy') {
           console.log('✅ Launching Sandy tutorial (always allowed, no checks)')
+          console.log('📋 Sandy bypasses all identity, payment, and token checks')
           
           // Get player name - Sandy works without identity
-          let name = identity.displayName || identity.username || 'Player'
-          if (!name || name === 'Player') {
-            name = 'Player'
+          // Use identity if available, otherwise default to 'Player'
+          let name = 'Player'
+          if (identity && (identity.displayName || identity.username)) {
+            name = identity.displayName || identity.username || 'Player'
           }
           console.log('📝 Player name for Sandy:', name)
           setPlayerName(name)
           
-          // Create Sandy game immediately - no token, no payment, no checks
+          // Create Sandy game immediately - no token, no payment, no checks, no address
           console.log('🚀 Creating Sandy tutorial game...')
-          const game = await gameAPI.createGame('sandy', name, undefined, false)
-          
-          if (!game || !game.gameId) {
-            throw new Error('Sandy game creation failed: No game ID returned')
+          try {
+            const game = await gameAPI.createGame('sandy', name, undefined, false)
+            
+            if (!game || !game.gameId) {
+              throw new Error('Sandy game creation failed: No game ID returned')
+            }
+            
+            console.log('✅ Sandy game created:', game.gameId)
+            setGameId(game.gameId)
+            setGameState(game)
+            
+            // Initialize intro state
+            const shouldShowIntro = !hasCompletedIntro('sandy')
+            console.log('🎬 Should show intro:', shouldShowIntro)
+            setShowIntro(shouldShowIntro)
+            
+            console.log('✅ Sandy tutorial initialization complete')
+            setIsLoading(false)
+            return // Exit early - Sandy needs no other checks
+          } catch (gameError) {
+            console.error('❌ Sandy game creation error:', gameError)
+            throw gameError // Re-throw to be caught by outer catch
           }
-          
-          console.log('✅ Sandy game created:', game.gameId)
-          setGameId(game.gameId)
-          setGameState(game)
-          
-          // Initialize intro state
-          const shouldShowIntro = !hasCompletedIntro('sandy')
-          console.log('🎬 Should show intro:', shouldShowIntro)
-          setShowIntro(shouldShowIntro)
-          
-          console.log('✅ Sandy tutorial initialization complete')
-          setIsLoading(false)
-          return // Exit early - Sandy needs no other checks
         }
         
         // Skip health check - game creation will test backend connectivity
@@ -231,7 +242,10 @@ export default function GamePage() {
     return () => {
       wsService.disconnect()
     }
-  }, [mode, address, navigate, setGameState, hasCompletedIntro, identity])
+    // For Sandy, don't wait for identity - allow immediate launch
+    // Removed identity and address from deps so Sandy can launch without them
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, navigate, setGameState, hasCompletedIntro])
 
   const handleIntroComplete = (skip: boolean) => {
     if (!skip) {
