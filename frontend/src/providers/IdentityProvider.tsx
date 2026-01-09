@@ -5,7 +5,6 @@
  */
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import { useLocation } from 'react-router-dom'
 import {
   isEmbedded,
   requestIdentity,
@@ -27,7 +26,6 @@ interface IdentityProviderProps {
 }
 
 export function IdentityProvider({ children }: IdentityProviderProps) {
-  const location = useLocation()
   const [identity, setIdentity] = useState<ArcadeIdentity | null>(null)
   const [isReady, setIsReady] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -35,7 +33,8 @@ export function IdentityProvider({ children }: IdentityProviderProps) {
   const [embedded] = useState(() => isEmbedded())
   
   // Check if current route is Sandy (tutorial) - Sandy should bypass identity requirement
-  const isSandyRoute = location.pathname === '/game/sandy'
+  // Use window.location since IdentityProvider is outside BrowserRouter
+  const isSandyRoute = typeof window !== 'undefined' && window.location.pathname === '/game/sandy'
   
   // Use ref to track if identity has been received (avoids stale closures)
   const identityReceivedRef = useRef(false)
@@ -131,7 +130,9 @@ export function IdentityProvider({ children }: IdentityProviderProps) {
 
   // Show loading state while waiting for identity (embedded mode)
   // BUT: Allow Sandy (tutorial) to bypass this - it doesn't need identity
-  if (embedded && !isReady && isLoading && !isSandyRoute) {
+  // Re-check route on each render in case pathname changed (client-side navigation)
+  const currentIsSandyRoute = typeof window !== 'undefined' && window.location.pathname === '/game/sandy'
+  if (embedded && !isReady && isLoading && !currentIsSandyRoute) {
     return (
       <IdentityContext.Provider value={contextValue}>
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
