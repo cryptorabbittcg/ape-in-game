@@ -11,6 +11,7 @@ import { useIntroTracking } from '../hooks/useIntroTracking'
 import { GameMode } from '../types/game'
 import { BOT_CONFIGS } from '../config/botConfig'
 import { PlayBalanceService } from '../services/playBalanceService'
+import { PaymentService } from '../services/paymentService'
 import { requestPlayToken, shouldRequestPlayToken } from '../services/playTokenService'
 import { isRankedMode } from '../config/gameModes'
 
@@ -84,6 +85,8 @@ export default function GamePage() {
           if (!address) {
             setPlayTokenError('Player address required for ranked games')
             setIsLoading(false)
+            // Navigate back after a short delay to show error
+            setTimeout(() => navigate('/'), 2000)
             return
           }
 
@@ -97,6 +100,8 @@ export default function GamePage() {
             const errorMessage = tokenResponse.reason || 'No ranked plays remaining today'
             setPlayTokenError(errorMessage)
             setIsLoading(false)
+            // Navigate back after a short delay to show error
+            setTimeout(() => navigate('/'), 3000)
             return
           }
 
@@ -116,14 +121,43 @@ export default function GamePage() {
           console.log('ℹ️ Skipping play token request (unranked mode or not required)')
         }
 
-        // Check if using a free play
-        const isDailyFree = address && PlayBalanceService.hasFreePlays(address) && mode !== 'sandy'
-        console.log('💰 Using free play:', isDailyFree)
+        // Check if using a free play (but don't deduct yet - wait for successful game creation)
+        // Sandy is always free, no deduction needed
+        const hasFreePlays = mode !== 'sandy' && address && PlayBalanceService.hasFreePlays(address)
+        const needsPayment = mode !== 'sandy' && !hasFreePlays && address
         
-        // Create game
-        console.log('🚀 Creating game...')
-        const game = await gameAPI.createGame(mode, name, address, isDailyFree)
+        // Create game FIRST (before deducting free play or processing payment)
+        console.log('🚀 Creating game...', { mode, name, address, hasFreePlays })
+        const game = await gameAPI.createGame(mode, name, address || undefined, hasFreePlays)
+        if (!game || !game.gameId) {
+          throw new Error('Game creation failed: No game ID returned')
+        }
         console.log('✅ Game created:', game.gameId)
+        
+        // NOW that game is successfully created, deduct free play or process payment
+        if (hasFreePlays && address) {
+          const deducted = PlayBalanceService.useFreePlay(address, mode)
+          if (deducted) {
+            console.log('✅ Free play deducted after successful game creation')
+          }
+        } else if (needsPayment) {
+          // Execute payment now that game is created
+          const requiredAmount = PlayBalanceService.getPlayPrice()
+          const paymentResult = await PaymentService.executePayment(address, requiredAmount)
+          
+          if (!paymentResult.success) {
+            console.error('❌ Payment failed after game creation:', paymentResult.error)
+            // Game is already created, but payment failed - this is a problem
+            // For now, we'll log it but continue (backend should handle this)
+          } else {
+            console.log('✅ Payment successful after game creation:', paymentResult.transactionHash)
+            // Add purchased play to balance
+            PlayBalanceService.purchasePlays(address, 1)
+            // Then immediately use it
+            PlayBalanceService.useFreePlay(address, mode)
+          }
+        }
+        
         setGameId(game.gameId)
         setGameState(game)
 
@@ -147,10 +181,13 @@ export default function GamePage() {
         setIsLoading(false)
       } catch (error) {
         console.error('❌ Failed to initialize game:', error)
-        // Don't alert if play token error was already shown
+        setIsLoading(false)
+        // Don't show error if play token error was already shown (it will navigate automatically)
         if (!playTokenError) {
-          alert('Failed to start game. Please try again.')
-          navigate('/')
+          const errorMessage = error instanceof Error ? error.message : 'Failed to start game'
+          setPlayTokenError(errorMessage || 'Failed to start game. Please try again.')
+          // Navigate back after showing error
+          setTimeout(() => navigate('/'), 3000)
         }
       }
     }

@@ -124,12 +124,14 @@ export default function HomePage() {
         return
       }
 
-    // Check if user has free plays available
+    // Check if user has free plays available (for display/validation only)
+    // NOTE: Free plays are NOT deducted here - they are deducted in GamePage.tsx
+    // after the game is successfully created to prevent loss if game creation fails
     const hasFreePlays = identity.address && PlayBalanceService.hasFreePlays(identity.address)
     
-    // Validate and execute payment for paid games (skip if using free play)
+    // Validate payment for paid games (but don't execute yet - wait for game creation)
     if (mode !== 'sandy' && !hasFreePlays && identity.address) {
-      // Need to purchase a play
+      // Check if user can afford a play
       const requiredAmount = PlayBalanceService.getPlayPrice()
       const validation = await PaymentService.validatePayment(identity.address, requiredAmount)
       
@@ -137,28 +139,13 @@ export default function HomePage() {
         setPaymentError(`Insufficient ApeCoin balance. You need ${PaymentService.formatApeCoin(validation.requiredAmount)} to purchase a play, but only have ${PaymentService.formatApeCoin(validation.currentBalance)}`)
         return
       }
-
-      // Execute the actual payment
-      console.log('💸 Purchasing play for game mode:', mode)
-      const paymentResult = await PaymentService.executePayment(identity.address, requiredAmount)
       
-      if (!paymentResult.success) {
-        setPaymentError(`Payment failed: ${paymentResult.error}`)
-        return
-      }
-      
-      console.log('✅ Payment successful! Transaction hash:', paymentResult.transactionHash)
-      
-      // Add purchased play to balance
-      PlayBalanceService.purchasePlays(identity.address, 1)
+      // Payment will be executed in GamePage.tsx after game is created
+      console.log('✅ Payment validation passed - will execute after game creation')
     }
 
-    // Use a free play if available
-    if (hasFreePlays && identity.address) {
-      PlayBalanceService.useFreePlay(identity.address, mode)
-    }
-
-      navigate(`/game/${mode}`)
+    // Navigate to game page (this happens regardless of payment validation)
+    navigate(`/game/${mode}`)
     } catch (error) {
       console.error('❌ Game mode selection failed:', error)
       setPaymentError('Failed to start game. Please try again.')

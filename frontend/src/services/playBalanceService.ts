@@ -3,9 +3,10 @@
  * Manages free play balance, purchases, and rewards
  * 
  * System:
- * - Start with 5 free plays (one-time, not daily reset)
+ * - Start with 5 free plays (one-time, no daily reset)
  * - Can purchase plays for 0.1 APE each
- * - After every 10 games, receive 5 free plays as reward
+ * - After every 10 completed games (excluding Sandy), receive 5 free plays as reward
+ * - Rewards accumulate and are added to balance
  */
 
 import { GameMode } from '../types/game'
@@ -17,7 +18,7 @@ const PLAY_PRICE_APE = 0.1
 
 export interface PlayBalance {
   freePlays: number // Current free play balance
-  totalGamesPlayed: number // Total games completed (for reward tracking)
+  totalGamesPlayed: number // Total games completed (excluding Sandy, for reward tracking)
   lastRewardGame: number // Last game number that triggered a reward
 }
 
@@ -31,6 +32,7 @@ export class PlayBalanceService {
 
   /**
    * Get current play balance for a wallet
+   * Initializes with 5 free plays on first use
    */
   static getBalance(walletAddress: string): PlayBalance {
     if (!walletAddress) {
@@ -56,7 +58,20 @@ export class PlayBalanceService {
     }
 
     try {
-      return JSON.parse(stored) as PlayBalance
+      const balance = JSON.parse(stored) as PlayBalance
+      
+      // Ensure all required fields exist (for legacy data)
+      if (balance.freePlays === undefined) {
+        balance.freePlays = INITIAL_FREE_PLAYS
+      }
+      if (balance.totalGamesPlayed === undefined) {
+        balance.totalGamesPlayed = 0
+      }
+      if (balance.lastRewardGame === undefined) {
+        balance.lastRewardGame = 0
+      }
+      
+      return balance
     } catch (error) {
       console.error('Error parsing play balance:', error)
       // Return initial balance on error
@@ -128,6 +143,8 @@ export class PlayBalanceService {
 
   /**
    * Record a completed game and check for rewards
+   * Only counts games that are NOT Sandy (Sandy is tutorial and doesn't count)
+   * After every 10 completed games, awards 5 free plays
    */
   static recordGameCompleted(walletAddress: string, gameMode: GameMode): {
     receivedReward: boolean
@@ -137,7 +154,7 @@ export class PlayBalanceService {
       return { receivedReward: false, newBalance: 0 }
     }
 
-    // Sandy doesn't count toward total games
+    // Sandy doesn't count toward total games (tutorial mode)
     if (gameMode === 'sandy') {
       return { receivedReward: false, newBalance: this.getFreePlaysRemaining(walletAddress) }
     }
@@ -150,11 +167,11 @@ export class PlayBalanceService {
     let receivedReward = false
 
     if (gamesSinceLastReward >= GAMES_FOR_REWARD) {
-      // Award 5 free plays
+      // Award 5 free plays (added to existing balance)
       balance.freePlays += REWARD_PLAYS
       balance.lastRewardGame = balance.totalGamesPlayed
       receivedReward = true
-      console.log(`🎉 Reward! Received ${REWARD_PLAYS} free plays after ${GAMES_FOR_REWARD} games`)
+      console.log(`🎉 Reward! Received ${REWARD_PLAYS} free plays after ${GAMES_FOR_REWARD} games. New balance: ${balance.freePlays}`)
     }
 
     this.saveBalance(walletAddress, balance)
