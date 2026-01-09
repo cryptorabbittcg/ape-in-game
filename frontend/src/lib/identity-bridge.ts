@@ -34,6 +34,7 @@ export function isEmbedded(): boolean {
 /**
  * Validate origin against allowlist
  * Canonical allowlist - only one source of truth
+ * CRITICAL: arcade.thecryptorabbithole.io MUST always be accepted
  */
 function isValidOrigin(origin: string): boolean {
   // Ignore self-origin messages (iframe sending to itself)
@@ -41,12 +42,30 @@ function isValidOrigin(origin: string): boolean {
     return false
   }
   
-  // Allow localhost during development
-  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+  // CRITICAL: Always accept arcade hub origin (exact match or contains check)
+  if (origin.includes('arcade.thecryptorabbithole.io')) {
     return true
   }
   
-  return ALLOWED_ORIGINS.includes(origin)
+  // Normalize origin (remove trailing slash if present)
+  const normalizedOrigin = origin.replace(/\/$/, '')
+  
+  // Allow localhost during development
+  if (normalizedOrigin.includes('localhost') || normalizedOrigin.includes('127.0.0.1')) {
+    return true
+  }
+  
+  // Check exact match first
+  if (ALLOWED_ORIGINS.includes(normalizedOrigin)) {
+    return true
+  }
+  
+  // Check if origin matches any allowed origin (case-insensitive, handle trailing slashes)
+  return ALLOWED_ORIGINS.some(allowed => {
+    const normalizedAllowed = allowed.replace(/\/$/, '')
+    return normalizedOrigin === normalizedAllowed || 
+           normalizedOrigin.toLowerCase() === normalizedAllowed.toLowerCase()
+  })
 }
 
 /**
@@ -169,12 +188,21 @@ export function setupIdentityListener(
     }
 
     // ✅ Validate origin against canonical allowlist
-    if (!isValidOrigin(event.origin)) {
-      // Only log if it's not a known parent origin (to reduce spam)
-      if (!event.origin.includes('arcade.thecryptorabbithole.io') && 
-          !event.origin.includes('localhost') && 
-          !event.origin.includes('127.0.0.1')) {
+    // CRITICAL: arcade.thecryptorabbithole.io MUST be accepted
+    const isValid = isValidOrigin(event.origin)
+    
+    if (!isValid) {
+      // Only log if it's truly an unknown origin (not arcade hub)
+      const isArcadeHub = event.origin.includes('arcade.thecryptorabbithole.io')
+      if (!isArcadeHub && !event.origin.includes('localhost') && !event.origin.includes('127.0.0.1')) {
         console.warn('⚠️ Rejected message from unauthorized origin:', event.origin)
+      } else if (isArcadeHub) {
+        // This should never happen - log error if arcade hub is rejected
+        console.error('❌ CRITICAL: Arcade hub origin rejected!', {
+          origin: event.origin,
+          allowedOrigins: ALLOWED_ORIGINS,
+          normalized: event.origin.replace(/\/$/, ''),
+        })
       }
       return
     }

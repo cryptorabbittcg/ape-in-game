@@ -1,40 +1,10 @@
 /**
  * Supabase Service
- * Handles queries to Supabase game_sessions table for leaderboard and stats
+ * Handles queries to Supabase game_sessions and profiles tables
+ * All functions are non-blocking and return safe fallbacks when Supabase is not configured
  */
 
-// Get Supabase config from environment only - no fallbacks
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-
-// Validate Supabase configuration (non-blocking - only logs warnings once)
-// Check for any invalid URL patterns that would cause failed requests
-const isValidSupabaseUrl = (url: string): boolean => {
-  if (!url || url.length === 0) return false
-  if (url.includes('placeholder')) return false
-  if (url.includes('placeholder.supabase.co')) return false
-  if (url.includes('supabase-not-configured')) return false
-  if (!url.startsWith('http://') && !url.startsWith('https://')) return false
-  return true
-}
-
-if (!isValidSupabaseUrl(SUPABASE_URL)) {
-  const lastWarnTime = sessionStorage.getItem('last_supabase_url_warn_time')
-  const now = Date.now()
-  if (!lastWarnTime || now - parseInt(lastWarnTime) > 30000) {
-    console.warn('⚠️ Supabase URL not configured. Please set VITE_SUPABASE_URL environment variable.')
-    sessionStorage.setItem('last_supabase_url_warn_time', now.toString())
-  }
-}
-
-if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('placeholder')) {
-  const lastWarnTime = sessionStorage.getItem('last_supabase_key_warn_time')
-  const now = Date.now()
-  if (!lastWarnTime || now - parseInt(lastWarnTime) > 30000) {
-    console.warn('⚠️ Supabase key not configured. Please set VITE_SUPABASE_ANON_KEY environment variable.')
-    sessionStorage.setItem('last_supabase_key_warn_time', now.toString())
-  }
-}
+import { supabase, hasSupabaseConfig } from '../lib/supabase/client'
 
 export interface GameSession {
   id: string
@@ -92,107 +62,29 @@ export interface PlayerStats {
 }
 
 /**
- * Check if Supabase is properly configured
- * Returns false if URL/key are missing or contain placeholder values
- * Never blocks UI - all Supabase calls are non-blocking
- */
-export function hasSupabaseConfig(): boolean {
-  // Strict validation - must be a valid HTTPS URL and have a key
-  const hasUrl = !!(SUPABASE_URL && 
-                   !SUPABASE_URL.includes('placeholder') && 
-                   !SUPABASE_URL.includes('placeholder.supabase.co') &&
-                   !SUPABASE_URL.includes('supabase-not-configured') &&
-                   SUPABASE_URL.startsWith('https://') &&
-                   SUPABASE_URL.length > 0)
-  const hasKey = !!(SUPABASE_ANON_KEY && 
-                   !SUPABASE_ANON_KEY.includes('placeholder') &&
-                   SUPABASE_ANON_KEY.length > 0)
-  const isConfigured = hasUrl && hasKey
-  
-  // Only log once to avoid console spam
-  if (!isConfigured) {
-    const lastLogTime = sessionStorage.getItem('last_supabase_log_time')
-    const now = Date.now()
-    if (!lastLogTime || now - parseInt(lastLogTime) > 10000) {
-      console.log('🔍 Supabase config check:', {
-        hasUrl,
-        hasKey,
-        urlConfigured: hasUrl,
-        keyConfigured: hasKey,
-        isConfigured: false,
-        note: 'Supabase calls will be skipped (non-blocking)'
-      })
-      sessionStorage.setItem('last_supabase_log_time', now.toString())
-    }
-  }
-  
-  return isConfigured
-}
-
-/**
- * Make a Supabase query (non-blocking - returns empty data if not configured)
- * Wrapped in try/catch to ensure errors never block UI
- */
-async function supabaseQuery(endpoint: string, params: Record<string, string> = {}): Promise<any> {
-  // Early return if not configured - never block
-  if (!hasSupabaseConfig()) {
-    return { data: [], error: null } // Return empty data, not an error
-  }
-
-  const queryString = new URLSearchParams(params).toString()
-  const url = `${SUPABASE_URL}/rest/v1/${endpoint}${queryString ? `?${queryString}` : ''}`
-
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation',
-      },
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error')
-      console.error('❌ Supabase query failed:', response.status, errorText)
-      return { data: [], error: `Query failed: ${response.status}` }
-    }
-
-    const data = await response.json()
-    return { data, error: null }
-  } catch (error) {
-    // Catch all errors to prevent UI blocking
-    console.error('❌ Supabase query error (non-blocking):', error)
-    return { data: [], error: error instanceof Error ? error.message : 'Unknown error' }
-  }
-}
-
-/**
  * Fetch leaderboard entries from Supabase
  * @param subtype - Filter by game_subtype ('single_player', 'pvp', 'multiplayer', or null for all)
  * @param limit - Number of entries to return
+ * @returns Promise<LeaderboardEntry[]> - Empty array if Supabase not configured or on error
  */
 export async function fetchLeaderboard(
   subtype: 'single_player' | 'pvp' | 'multiplayer' | null = null,
   limit: number = 50
 ): Promise<LeaderboardEntry[]> {
   // Non-blocking: return empty array if Supabase not configured
-  if (!hasSupabaseConfig()) {
-    console.log('⚠️ Supabase not configured - returning empty leaderboard (non-blocking)')
+  if (!supabase || !hasSupabaseConfig()) {
     return []
   }
-  
+
   try {
     // Build query parameters
     const params: Record<string, string> = {
       select: 'score,game_mode,duration_ms,created_at,wallet_address,profiles!inner(wallet_address,username,avatar_url)',
       game_type: 'eq.ape_in',
+      game_mode: 'neq.sandy', // Exclude Sandy mode
       order: 'score.desc',
       limit: limit.toString(),
     }
-
-    // Exclude Sandy mode
-    params.game_mode = 'neq.sandy'
 
     // Filter by subtype if provided
     if (subtype) {
@@ -200,33 +92,34 @@ export async function fetchLeaderboard(
     }
 
     const queryString = new URLSearchParams(params).toString()
-    const url = `${SUPABASE_URL}/rest/v1/game_sessions?${queryString}`
+    const url = `${supabase.url}/rest/v1/game_sessions?${queryString}`
 
     const response = await fetch(url, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: supabase.headers,
     })
 
     if (!response.ok) {
-      console.error('❌ Failed to fetch leaderboard:', response.status)
+      const errorText = await response.text().catch(() => 'Unknown error')
+      console.error('❌ Supabase leaderboard query error:', response.status, errorText)
       return []
     }
 
-    const sessions: GameSession[] = await response.json()
+    const data = await response.json()
+
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return []
+    }
 
     // Group by wallet_address and get best score per user
     const userBestScores = new Map<string, { session: GameSession; rank: number }>()
     
-    sessions.forEach((session) => {
+    data.forEach((session: any) => {
       const addr = session.wallet_address?.toLowerCase() || ''
       if (!addr) return
 
       const existing = userBestScores.get(addr)
       if (!existing || session.score > existing.session.score) {
-        userBestScores.set(addr, { session, rank: 0 })
+        userBestScores.set(addr, { session: session as GameSession, rank: 0 })
       }
     })
 
@@ -255,43 +148,58 @@ export async function fetchLeaderboard(
 /**
  * Fetch player stats from Supabase
  * @param walletAddress - Player's wallet address
+ * @returns Promise<PlayerStats | null> - null if Supabase not configured or on error
  */
 export async function fetchPlayerStats(walletAddress: string): Promise<PlayerStats | null> {
   if (!walletAddress) return null
 
   // Non-blocking: return null if Supabase not configured
-  if (!hasSupabaseConfig()) {
-    console.log('⚠️ Supabase not configured - returning null stats (non-blocking)')
+  if (!supabase || !hasSupabaseConfig()) {
     return null
   }
 
   try {
-      const params = new URLSearchParams({
+    const params = new URLSearchParams({
       select: 'score,game_mode,game_subtype,duration_ms,created_at,points_earned,result',
       wallet_address: `eq.${walletAddress.toLowerCase()}`,
       game_type: 'eq.ape_in',
       order: 'created_at.desc',
     })
 
-    const url = `${SUPABASE_URL}/rest/v1/game_sessions?${params}`
+    const url = `${supabase.url}/rest/v1/game_sessions?${params}`
 
     const response = await fetch(url, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: supabase.headers,
     })
 
     if (!response.ok) {
-      console.error('❌ Failed to fetch player stats:', response.status)
+      const errorText = await response.text().catch(() => 'Unknown error')
+      console.error('❌ Supabase player stats query error:', response.status, errorText)
       return null
     }
 
-    const sessions: any[] = await response.json()
+    const data = await response.json()
+
+    if (!data || data.length === 0) {
+      return {
+        totalGames: 0,
+        wins: 0,
+        losses: 0,
+        winRate: 0,
+        totalPoints: 0,
+        averageScore: 0,
+        bestScore: 0,
+        currentWinStreak: 0,
+        bestWinStreak: 0,
+        totalPlayTime: 0,
+        averageTime: 0,
+        modeBreakdown: {},
+        subtypeBreakdown: {},
+      }
+    }
 
     // Filter out Sandy mode
-    const filteredSessions = sessions.filter(s => s.game_mode !== 'sandy')
+    const filteredSessions = data.filter((s: any) => s.game_mode !== 'sandy')
 
     if (filteredSessions.length === 0) {
       return {
@@ -311,7 +219,7 @@ export async function fetchPlayerStats(walletAddress: string): Promise<PlayerSta
       }
     }
 
-    // Calculate stats from existing scores (don't recalculate)
+    // Calculate stats from existing scores
     let wins = 0
     let losses = 0
     let totalScore = 0
@@ -327,11 +235,11 @@ export async function fetchPlayerStats(walletAddress: string): Promise<PlayerSta
     let bestStreak = 0
 
     // Process sessions in chronological order for streaks
-    const sortedSessions = [...filteredSessions].sort((a, b) => 
+    const sortedSessions = [...filteredSessions].sort((a: any, b: any) => 
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     )
 
-    sortedSessions.forEach((session) => {
+    sortedSessions.forEach((session: any) => {
       // Use result field if available, otherwise infer from score for legacy data
       const hasResult = session.result !== undefined && session.result !== null
       const isWin = session.result === 'WIN' || (!hasResult && session.score && session.score > 0)
@@ -346,9 +254,8 @@ export async function fetchPlayerStats(walletAddress: string): Promise<PlayerSta
         losses++
         currentStreak = 0
       }
-      // If result is null/undefined and no score, skip counting
 
-      // Aggregate existing scores (don't recalculate)
+      // Aggregate existing scores
       if (session.score) {
         totalScore += session.score
         if (session.score > bestScore) bestScore = session.score
@@ -430,3 +337,7 @@ export async function fetchPlayerStats(walletAddress: string): Promise<PlayerSta
   }
 }
 
+/**
+ * Re-export hasSupabaseConfig for convenience
+ */
+export { hasSupabaseConfig }
