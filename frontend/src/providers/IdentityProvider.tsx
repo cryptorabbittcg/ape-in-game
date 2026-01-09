@@ -132,7 +132,20 @@ export function IdentityProvider({ children }: IdentityProviderProps) {
   // BUT: Allow Sandy (tutorial) to bypass this - it doesn't need identity
   // Re-check route on each render in case pathname changed (client-side navigation)
   const currentIsSandyRoute = typeof window !== 'undefined' && window.location.pathname === '/game/sandy'
-  if (embedded && !isReady && isLoading && !currentIsSandyRoute) {
+  const currentIsGameRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/game/')
+  
+  console.log('🔍 IdentityProvider render check:', {
+    embedded,
+    isReady,
+    isLoading,
+    currentIsSandyRoute,
+    currentIsGameRoute,
+    pathname: typeof window !== 'undefined' ? window.location.pathname : 'N/A'
+  })
+  
+  // Allow ALL game routes to bypass identity loading (not just Sandy)
+  // This ensures games can launch even if identity isn't ready yet
+  if (embedded && !isReady && isLoading && !currentIsGameRoute) {
     return (
       <IdentityContext.Provider value={contextValue}>
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">

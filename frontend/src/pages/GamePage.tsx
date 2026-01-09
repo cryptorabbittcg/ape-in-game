@@ -27,10 +27,13 @@ const gameNames: Record<GameMode, string> = {
 }
 
 export default function GamePage() {
+  console.log('🎯 GamePage component rendered')
   const { mode } = useParams<{ mode: GameMode }>()
+  console.log('🎯 GamePage mode from params:', mode)
   const navigate = useNavigate()
   const identity = useIdentity()
   const address = identity.address
+  console.log('🎯 GamePage identity state:', { hasIdentity: !!identity, address, isReady: identity.isReady })
   const [isLoading, setIsLoading] = useState(true)
   const [playerName, setPlayerName] = useState('')
   const [gameId, setGameId] = useState('')

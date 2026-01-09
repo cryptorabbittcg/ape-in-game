@@ -15,6 +15,13 @@ function App() {
 
   // Show splash only on first visit (when URL is first entered)
   useEffect(() => {
+    // Don't show splash for game routes (especially Sandy)
+    if (location.pathname.startsWith('/game/')) {
+      console.log('🎮 Game route detected, skipping splash:', location.pathname)
+      setShowSplash(false)
+      return
+    }
+    
     // Check if user has visited before in this session
     const hasVisited = sessionStorage.getItem('hasVisited')
     if (hasVisited) {
@@ -25,8 +32,11 @@ function App() {
     }
     
     // TEMPORARY: Force splash screen for testing (remove this line later)
-    setShowSplash(true)
-  }, [])
+    // BUT: Don't force for game routes
+    if (!location.pathname.startsWith('/game/')) {
+      setShowSplash(true)
+    }
+  }, [location.pathname])
 
   const handleSplashComplete = () => {
     setShowSplash(false)
