@@ -118,34 +118,41 @@ export default function HomePage() {
     setPaymentLoading(mode)
     
     try {
+      // URGENT: Sandy (tutorial) should always launch, no checks
+      if (mode === 'sandy') {
+        console.log('✅ Launching Sandy tutorial (always allowed, no checks)')
+        navigate(`/game/${mode}`)
+        return // Exit early - Sandy needs no other checks
+      }
+
       // Check if identity is available for paid games
-      if (mode !== 'sandy' && !identity.address) {
+      if (!identity.address) {
         setPaymentError('Please wait for identity to play paid games')
         return
       }
 
-    // Check if user has free plays available (for display/validation only)
-    // NOTE: Free plays are NOT deducted here - they are deducted in GamePage.tsx
-    // after the game is successfully created to prevent loss if game creation fails
-    const hasFreePlays = identity.address && PlayBalanceService.hasFreePlays(identity.address)
-    
-    // Validate payment for paid games (but don't execute yet - wait for game creation)
-    if (mode !== 'sandy' && !hasFreePlays && identity.address) {
-      // Check if user can afford a play
-      const requiredAmount = PlayBalanceService.getPlayPrice()
-      const validation = await PaymentService.validatePayment(identity.address, requiredAmount)
+      // Check if user has free plays available (for display/validation only)
+      // NOTE: Free plays are NOT deducted here - they are deducted in GamePage.tsx
+      // after the game is successfully created to prevent loss if game creation fails
+      const hasFreePlays = PlayBalanceService.hasFreePlays(identity.address)
       
-      if (!validation.hasEnoughBalance) {
-        setPaymentError(`Insufficient ApeCoin balance. You need ${PaymentService.formatApeCoin(validation.requiredAmount)} to purchase a play, but only have ${PaymentService.formatApeCoin(validation.currentBalance)}`)
-        return
+      // Validate payment for paid games (but don't execute yet - wait for game creation)
+      if (!hasFreePlays) {
+        // Check if user can afford a play
+        const requiredAmount = PlayBalanceService.getPlayPrice()
+        const validation = await PaymentService.validatePayment(identity.address, requiredAmount)
+        
+        if (!validation.hasEnoughBalance) {
+          setPaymentError(`Insufficient ApeCoin balance. You need ${PaymentService.formatApeCoin(validation.requiredAmount)} to purchase a play, but only have ${PaymentService.formatApeCoin(validation.currentBalance)}`)
+          return
+        }
+        
+        // Payment will be executed in GamePage.tsx after game is created
+        console.log('✅ Payment validation passed - will execute after game creation')
       }
-      
-      // Payment will be executed in GamePage.tsx after game is created
-      console.log('✅ Payment validation passed - will execute after game creation')
-    }
 
-    // Navigate to game page (this happens regardless of payment validation)
-    navigate(`/game/${mode}`)
+      // Navigate to game page (this happens regardless of payment validation)
+      navigate(`/game/${mode}`)
     } catch (error) {
       console.error('❌ Game mode selection failed:', error)
       setPaymentError('Failed to start game. Please try again.')

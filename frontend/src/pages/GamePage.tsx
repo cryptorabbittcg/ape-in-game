@@ -52,14 +52,48 @@ export default function GamePage() {
     }
 
     const initGame = async () => {
-              try {
-                console.log('🎮 Initializing game for mode:', mode)
-                console.log('👤 Address:', address)
-                
-                // Skip health check - game creation will test backend connectivity
-                console.log('🚀 Proceeding directly to game creation...')
+      try {
+        console.log('🎮 Initializing game for mode:', mode)
+        console.log('👤 Address:', address)
         
-        // Get player name from identity or stored profile
+        // URGENT: Sandy (tutorial) should always launch, no checks
+        if (mode === 'sandy') {
+          console.log('✅ Launching Sandy tutorial (always allowed, no checks)')
+          
+          // Get player name - Sandy works without identity
+          let name = identity.displayName || identity.username || 'Player'
+          if (!name || name === 'Player') {
+            name = 'Player'
+          }
+          console.log('📝 Player name for Sandy:', name)
+          setPlayerName(name)
+          
+          // Create Sandy game immediately - no token, no payment, no checks
+          console.log('🚀 Creating Sandy tutorial game...')
+          const game = await gameAPI.createGame('sandy', name, undefined, false)
+          
+          if (!game || !game.gameId) {
+            throw new Error('Sandy game creation failed: No game ID returned')
+          }
+          
+          console.log('✅ Sandy game created:', game.gameId)
+          setGameId(game.gameId)
+          setGameState(game)
+          
+          // Initialize intro state
+          const shouldShowIntro = !hasCompletedIntro('sandy')
+          console.log('🎬 Should show intro:', shouldShowIntro)
+          setShowIntro(shouldShowIntro)
+          
+          console.log('✅ Sandy tutorial initialization complete')
+          setIsLoading(false)
+          return // Exit early - Sandy needs no other checks
+        }
+        
+        // Skip health check - game creation will test backend connectivity
+        console.log('🚀 Proceeding directly to game creation...')
+        
+        // Get player name from identity or stored profile (for non-Sandy modes)
         let name = identity.displayName || identity.username || 'Player'
         if (address) {
           const savedProfile = localStorage.getItem(`profile_${address}`)
