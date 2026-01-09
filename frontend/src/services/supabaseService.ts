@@ -7,13 +7,33 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
-// Validate Supabase configuration (non-blocking - only logs warnings)
-if (!SUPABASE_URL || SUPABASE_URL.includes('placeholder') || SUPABASE_URL.includes('placeholder.supabase.co')) {
-  console.warn('⚠️ Supabase URL not configured. Please set VITE_SUPABASE_URL environment variable.')
+// Validate Supabase configuration (non-blocking - only logs warnings once)
+// Check for any invalid URL patterns that would cause failed requests
+const isValidSupabaseUrl = (url: string): boolean => {
+  if (!url || url.length === 0) return false
+  if (url.includes('placeholder')) return false
+  if (url.includes('placeholder.supabase.co')) return false
+  if (url.includes('supabase-not-configured')) return false
+  if (!url.startsWith('http://') && !url.startsWith('https://')) return false
+  return true
+}
+
+if (!isValidSupabaseUrl(SUPABASE_URL)) {
+  const lastWarnTime = sessionStorage.getItem('last_supabase_url_warn_time')
+  const now = Date.now()
+  if (!lastWarnTime || now - parseInt(lastWarnTime) > 30000) {
+    console.warn('⚠️ Supabase URL not configured. Please set VITE_SUPABASE_URL environment variable.')
+    sessionStorage.setItem('last_supabase_url_warn_time', now.toString())
+  }
 }
 
 if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('placeholder')) {
-  console.warn('⚠️ Supabase key not configured. Please set VITE_SUPABASE_ANON_KEY environment variable.')
+  const lastWarnTime = sessionStorage.getItem('last_supabase_key_warn_time')
+  const now = Date.now()
+  if (!lastWarnTime || now - parseInt(lastWarnTime) > 30000) {
+    console.warn('⚠️ Supabase key not configured. Please set VITE_SUPABASE_ANON_KEY environment variable.')
+    sessionStorage.setItem('last_supabase_key_warn_time', now.toString())
+  }
 }
 
 export interface GameSession {
@@ -77,9 +97,12 @@ export interface PlayerStats {
  * Never blocks UI - all Supabase calls are non-blocking
  */
 export function hasSupabaseConfig(): boolean {
+  // Strict validation - must be a valid HTTPS URL and have a key
   const hasUrl = !!(SUPABASE_URL && 
                    !SUPABASE_URL.includes('placeholder') && 
                    !SUPABASE_URL.includes('placeholder.supabase.co') &&
+                   !SUPABASE_URL.includes('supabase-not-configured') &&
+                   SUPABASE_URL.startsWith('https://') &&
                    SUPABASE_URL.length > 0)
   const hasKey = !!(SUPABASE_ANON_KEY && 
                    !SUPABASE_ANON_KEY.includes('placeholder') &&

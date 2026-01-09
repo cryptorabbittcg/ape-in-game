@@ -74,8 +74,14 @@ export default function NewHeader() {
 
   const isHomePage = location.pathname === '/'
   
-  // Get arcade session for stats display
-  const arcadeSession = getArcadeSession()
+  // Get arcade session for stats display - memoize to prevent infinite loop
+  const [arcadeSession, setArcadeSession] = useState<ReturnType<typeof getArcadeSession>>(null)
+  
+  useEffect(() => {
+    // Only check once on mount and when identity changes
+    const session = getArcadeSession()
+    setArcadeSession(session)
+  }, [identity.sessionId]) // Only re-check if session ID changes
 
   return (
     <>

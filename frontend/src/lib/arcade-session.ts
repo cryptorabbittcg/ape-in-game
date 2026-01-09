@@ -69,11 +69,17 @@ export function getArcadeSession(): ArcadeSession | null {
       return null
     }
 
-    console.log('✅ Arcade session found:', {
-      userId: session.userId,
-      username: session.username,
-      sessionAge: Math.floor(sessionAge / 1000 / 60) + ' minutes old'
-    })
+    // Throttle logging to prevent infinite loop spam - only log once per 10 seconds
+    const lastFoundLogTime = sessionStorage.getItem('last_session_found_log_time')
+    const now = Date.now()
+    if (!lastFoundLogTime || now - parseInt(lastFoundLogTime) > 10000) {
+      console.log('✅ Arcade session found:', {
+        userId: session.userId,
+        username: session.username,
+        sessionAge: Math.floor(sessionAge / 1000 / 60) + ' minutes old'
+      })
+      sessionStorage.setItem('last_session_found_log_time', now.toString())
+    }
 
     return session
   } catch (error) {
