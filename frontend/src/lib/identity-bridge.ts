@@ -80,22 +80,39 @@ export function setupIdentityListener(
   onError?: (error: string) => void
 ): () => void {
   const messageHandler = (event: MessageEvent<ArcadeMessage>) => {
-    // Ignore messages from self (should only receive from parent)
-    if (event.origin === window.location.origin) {
-      return // Silently ignore messages from self
-    }
-
-    // Log all messages for debugging (even if rejected)
+    // Log ALL messages for comprehensive debugging
     console.log('📨 Message event received:', {
       origin: event.origin,
+      ownOrigin: window.location.origin,
       type: event.data?.type,
       isValidOrigin: isValidOrigin(event.origin),
-      isFromSelf: event.origin === window.location.origin
+      isFromSelf: event.origin === window.location.origin,
+      isEmbedded: isEmbedded(),
+      hasParent: window.parent !== window.self,
     })
 
-    // Validate origin - only accept from parent (arcade hub)
+    // ⚠️ CRITICAL: Ignore messages from self (iframe sending to itself)
+    if (event.origin === window.location.origin) {
+      console.log('⏭️ Ignoring message from self (own origin)')
+      return
+    }
+
+    // ✅ Accept messages from PARENT (arcade hub)
+    // Enhanced validation: check if message is from parent window
+    const isFromParent = isEmbedded() && window.parent !== window.self
+    
     if (!isValidOrigin(event.origin)) {
-      console.warn('⚠️ Rejected message from unauthorized origin:', event.origin, 'Allowed origins:', ALLOWED_ORIGINS)
+      // If we're embedded and this might be from parent, log more details
+      if (isFromParent) {
+        console.warn('⚠️ Message from parent but origin not in allowlist:', {
+          origin: event.origin,
+          allowedOrigins: ALLOWED_ORIGINS,
+          isEmbedded,
+          parentOrigin: 'unknown (cross-origin)',
+        })
+      } else {
+        console.warn('⚠️ Rejected message from unauthorized origin:', event.origin, 'Allowed origins:', ALLOWED_ORIGINS)
+      }
       return
     }
 
@@ -107,10 +124,12 @@ export function setupIdentityListener(
       return
     }
 
-    console.log('📥 Received valid message from parent:', message.type, 'Origin:', event.origin)
+    console.log('✅ Received valid message from parent:', message.type, 'Origin:', event.origin)
+    console.log('📦 Full message data:', JSON.stringify(message, null, 2))
 
     // Handle identity response
     if (message.type === 'ARCADE_IDENTITY') {
+      console.log('🎯 Processing ARCADE_IDENTITY message...')
       // Arcade sends identity in message.session OR as flattened properties on message
       // Structure: { type: "ARCADE_IDENTITY", session: {...}, sessionId, userId, username, address, ... }
       const sessionData = (message as any).session || message

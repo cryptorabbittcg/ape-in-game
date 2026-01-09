@@ -71,12 +71,33 @@ export interface PlayerStats {
 }
 
 /**
- * Make a Supabase query
+ * Check if Supabase is properly configured
+ */
+export function hasSupabaseConfig(): boolean {
+  const hasUrl = !!(SUPABASE_URL && !SUPABASE_URL.includes('placeholder'))
+  const hasKey = !!(SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('placeholder'))
+  const isConfigured = hasUrl && hasKey
+  
+  if (!isConfigured) {
+    console.log('🔍 Supabase config check:', {
+      hasUrl,
+      hasKey,
+      urlIncludesPlaceholder: SUPABASE_URL?.includes('placeholder'),
+      keyIncludesPlaceholder: SUPABASE_ANON_KEY?.includes('placeholder'),
+      isConfigured: false,
+    })
+  }
+  
+  return isConfigured
+}
+
+/**
+ * Make a Supabase query (non-blocking - returns empty data if not configured)
  */
 async function supabaseQuery(endpoint: string, params: Record<string, string> = {}): Promise<any> {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.warn('⚠️ Supabase not configured - missing URL or key')
-    return { data: [], error: 'Supabase not configured' }
+  if (!hasSupabaseConfig()) {
+    console.log('⚠️ Supabase not configured - skipping query (non-blocking)')
+    return { data: [], error: null } // Return empty data, not an error
   }
 
   const queryString = new URLSearchParams(params).toString()
@@ -115,6 +136,12 @@ export async function fetchLeaderboard(
   subtype: 'single_player' | 'pvp' | 'multiplayer' | null = null,
   limit: number = 50
 ): Promise<LeaderboardEntry[]> {
+  // Non-blocking: return empty array if Supabase not configured
+  if (!hasSupabaseConfig()) {
+    console.log('⚠️ Supabase not configured - returning empty leaderboard (non-blocking)')
+    return []
+  }
+  
   try {
     // Build query parameters
     const params: Record<string, string> = {
@@ -190,6 +217,12 @@ export async function fetchLeaderboard(
  */
 export async function fetchPlayerStats(walletAddress: string): Promise<PlayerStats | null> {
   if (!walletAddress) return null
+
+  // Non-blocking: return null if Supabase not configured
+  if (!hasSupabaseConfig()) {
+    console.log('⚠️ Supabase not configured - returning null stats (non-blocking)')
+    return null
+  }
 
   try {
       const params = new URLSearchParams({

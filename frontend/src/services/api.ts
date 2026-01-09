@@ -80,30 +80,59 @@ export const testAPI = {
 // Game API
 export const gameAPI = {
   // Create a new game
+  // NOTE: This function does NOT require session, Supabase, or wallet
+  // Sandy mode can be created with just playerName
   createGame: async (mode: GameMode, playerName: string, walletAddress?: string, isDailyFree?: boolean) => {
-    console.log('🚀 API: Creating game with data:', { mode, playerName, walletAddress, isDailyFree })
+    const isSandy = mode.toLowerCase() === 'sandy'
+    
+    console.log('🚀 API: Creating game with data:', { 
+      mode, 
+      playerName, 
+      walletAddress, 
+      isDailyFree,
+      isSandy,
+      requiresWallet: !isSandy,
+    })
     console.log('🌐 API: Using base URL:', API_BASE_URL)
+    
+    // Sandy mode validation: should work without wallet
+    if (isSandy && walletAddress) {
+      console.warn('⚠️ Sandy mode received walletAddress (unexpected, but continuing)')
+    }
     
     try {
       const requestData = {
         mode,
         playerName,
+        // Only include walletAddress if provided (Sandy doesn't need it)
         ...(walletAddress && { walletAddress }),
         isDailyFree: isDailyFree || false,
       }
       console.log('📤 API: Sending request data:', requestData)
       
       const response = await api.post<GameState>('/api/game/create', requestData)
-      console.log('✅ API: Game created successfully:', response.data)
+      console.log('✅ API: Game created successfully:', {
+        gameId: response.data?.gameId,
+        mode: response.data?.mode,
+        playerName: response.data?.playerName,
+      })
       return response.data
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ API: Game creation failed:', error)
       console.error('❌ API: Error details:', {
+        message: error.message,
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
-        headers: error.response?.headers
+        stack: error.stack,
       })
+      
+      // For Sandy, provide more helpful error message
+      if (isSandy) {
+        console.error('❌ Sandy game creation failed - this should work without any checks!')
+        console.error('   Check backend logs to see why Sandy creation was rejected')
+      }
+      
       throw error
     }
   },

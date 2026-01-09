@@ -78,15 +78,32 @@ export default function GamePage() {
           setPlayerName(name)
           
           // Create Sandy game immediately - no token, no payment, no checks, no address
+          // Sandy works completely independently - no session, no Supabase, no wallet needed
           console.log('🚀 Creating Sandy tutorial game...')
+          console.log('📋 Sandy game creation parameters:', {
+            mode: 'sandy',
+            playerName: name,
+            walletAddress: undefined,
+            isDailyFree: false,
+            hasIdentity: !!identity,
+            hasAddress: !!address,
+          })
+          
           try {
+            // Call API directly - no pre-checks, no session validation, no Supabase
             const game = await gameAPI.createGame('sandy', name, undefined, false)
             
             if (!game || !game.gameId) {
+              console.error('❌ Sandy game creation failed: No game ID returned')
+              console.error('Response:', game)
               throw new Error('Sandy game creation failed: No game ID returned')
             }
             
-            console.log('✅ Sandy game created:', game.gameId)
+            console.log('✅ Sandy game created successfully:', {
+              gameId: game.gameId,
+              mode: game.mode,
+              playerName: game.playerName,
+            })
             setGameId(game.gameId)
             setGameState(game)
             
