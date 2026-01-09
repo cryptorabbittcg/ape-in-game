@@ -8,6 +8,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import {
   isEmbedded,
   requestIdentity,
+  requestSession,
   setupIdentityListener,
   getDevFallbackIdentity,
 } from '../lib/identity-bridge'
@@ -71,34 +72,46 @@ export function IdentityProvider({ children }: IdentityProviderProps) {
       // Setup listener first
       const cleanup = setupIdentityListener(handleIdentity, handleError)
       
-      // Request identity from parent with retry mechanism
+      // Request session from parent with retry mechanism
+      // Retry until session is received or component unmounts
+      let retryInterval: NodeJS.Timeout | null = null
       let retryCount = 0
-      const maxRetries = 20 // Retry for up to 10 seconds (20 * 500ms)
+      const maxRetries = 60 // Retry for up to 30 seconds (60 * 500ms)
       
-      const requestIdentityWithRetry = () => {
+      const requestSessionWithRetry = () => {
         if (identityReceivedRef.current) {
-          // Identity already received, stop retrying
+          // Session already received, stop retrying
+          if (retryInterval) {
+            clearInterval(retryInterval)
+            retryInterval = null
+          }
           return
         }
         
-        requestIdentity()
+        // Use ARCADE_SESSION_REQUEST (new protocol)
+        requestSession()
         retryCount++
         
-        if (retryCount < maxRetries) {
-          // Retry every 500ms
-          setTimeout(requestIdentityWithRetry, 500)
-        } else {
-          console.warn('⏰ Identity request retries exhausted - still waiting for parent')
+        if (retryCount >= maxRetries) {
+          console.warn('⏰ Session request retries exhausted - continuing in anonymous mode')
+          // Don't block - allow app to continue without session (for Sandy mode)
+          setIsLoading(false)
+          setIsReady(true) // Mark as ready even without identity (allows Sandy to launch)
+          if (retryInterval) {
+            clearInterval(retryInterval)
+            retryInterval = null
+          }
         }
       }
       
-      // Start requesting after a short delay
-      const initialTimer = setTimeout(() => {
-        requestIdentityWithRetry()
-      }, 100)
+      // Start requesting immediately, then retry every 500ms
+      requestSessionWithRetry()
+      retryInterval = setInterval(requestSessionWithRetry, 500)
 
       return () => {
-        clearTimeout(initialTimer)
+        if (retryInterval) {
+          clearInterval(retryInterval)
+        }
         cleanup()
       }
     } else {

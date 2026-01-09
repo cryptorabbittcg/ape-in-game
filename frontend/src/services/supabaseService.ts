@@ -3,16 +3,17 @@
  * Handles queries to Supabase game_sessions table for leaderboard and stats
  */
 
+// Get Supabase config from environment only - no fallbacks
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
-// Validate Supabase configuration
-if (SUPABASE_URL && SUPABASE_URL.includes('placeholder')) {
-  console.warn('⚠️ Supabase URL appears to be a placeholder. Please set VITE_SUPABASE_URL environment variable.')
+// Validate Supabase configuration (non-blocking - only logs warnings)
+if (!SUPABASE_URL || SUPABASE_URL.includes('placeholder') || SUPABASE_URL.includes('placeholder.supabase.co')) {
+  console.warn('⚠️ Supabase URL not configured. Please set VITE_SUPABASE_URL environment variable.')
 }
 
-if (SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.includes('placeholder')) {
-  console.warn('⚠️ Supabase key appears to be a placeholder. Please set VITE_SUPABASE_ANON_KEY environment variable.')
+if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('placeholder')) {
+  console.warn('⚠️ Supabase key not configured. Please set VITE_SUPABASE_ANON_KEY environment variable.')
 }
 
 export interface GameSession {
@@ -72,20 +73,34 @@ export interface PlayerStats {
 
 /**
  * Check if Supabase is properly configured
+ * Returns false if URL/key are missing or contain placeholder values
+ * Never blocks UI - all Supabase calls are non-blocking
  */
 export function hasSupabaseConfig(): boolean {
-  const hasUrl = !!(SUPABASE_URL && !SUPABASE_URL.includes('placeholder'))
-  const hasKey = !!(SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('placeholder'))
+  const hasUrl = !!(SUPABASE_URL && 
+                   !SUPABASE_URL.includes('placeholder') && 
+                   !SUPABASE_URL.includes('placeholder.supabase.co') &&
+                   SUPABASE_URL.length > 0)
+  const hasKey = !!(SUPABASE_ANON_KEY && 
+                   !SUPABASE_ANON_KEY.includes('placeholder') &&
+                   SUPABASE_ANON_KEY.length > 0)
   const isConfigured = hasUrl && hasKey
   
+  // Only log once to avoid console spam
   if (!isConfigured) {
-    console.log('🔍 Supabase config check:', {
-      hasUrl,
-      hasKey,
-      urlIncludesPlaceholder: SUPABASE_URL?.includes('placeholder'),
-      keyIncludesPlaceholder: SUPABASE_ANON_KEY?.includes('placeholder'),
-      isConfigured: false,
-    })
+    const lastLogTime = sessionStorage.getItem('last_supabase_log_time')
+    const now = Date.now()
+    if (!lastLogTime || now - parseInt(lastLogTime) > 10000) {
+      console.log('🔍 Supabase config check:', {
+        hasUrl,
+        hasKey,
+        urlConfigured: hasUrl,
+        keyConfigured: hasKey,
+        isConfigured: false,
+        note: 'Supabase calls will be skipped (non-blocking)'
+      })
+      sessionStorage.setItem('last_supabase_log_time', now.toString())
+    }
   }
   
   return isConfigured
@@ -93,10 +108,11 @@ export function hasSupabaseConfig(): boolean {
 
 /**
  * Make a Supabase query (non-blocking - returns empty data if not configured)
+ * Wrapped in try/catch to ensure errors never block UI
  */
 async function supabaseQuery(endpoint: string, params: Record<string, string> = {}): Promise<any> {
+  // Early return if not configured - never block
   if (!hasSupabaseConfig()) {
-    console.log('⚠️ Supabase not configured - skipping query (non-blocking)')
     return { data: [], error: null } // Return empty data, not an error
   }
 
@@ -114,7 +130,7 @@ async function supabaseQuery(endpoint: string, params: Record<string, string> = 
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
+      const errorText = await response.text().catch(() => 'Unknown error')
       console.error('❌ Supabase query failed:', response.status, errorText)
       return { data: [], error: `Query failed: ${response.status}` }
     }
@@ -122,7 +138,8 @@ async function supabaseQuery(endpoint: string, params: Record<string, string> = 
     const data = await response.json()
     return { data, error: null }
   } catch (error) {
-    console.error('❌ Supabase query error:', error)
+    // Catch all errors to prevent UI blocking
+    console.error('❌ Supabase query error (non-blocking):', error)
     return { data: [], error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
@@ -206,7 +223,8 @@ export async function fetchLeaderboard(
 
     return entries
   } catch (error) {
-    console.error('❌ Error fetching leaderboard:', error)
+    // Catch all errors to prevent UI blocking
+    console.error('❌ Error fetching leaderboard (non-blocking):', error)
     return []
   }
 }
@@ -383,7 +401,8 @@ export async function fetchPlayerStats(walletAddress: string): Promise<PlayerSta
       subtypeBreakdown,
     }
   } catch (error) {
-    console.error('❌ Error fetching player stats:', error)
+    // Catch all errors to prevent UI blocking
+    console.error('❌ Error fetching player stats (non-blocking):', error)
     return null
   }
 }

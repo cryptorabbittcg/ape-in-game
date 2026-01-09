@@ -21,7 +21,8 @@ export interface IdentityState {
 }
 
 export type ArcadeMessageType = 
-  | 'ARCADE_REQUEST_IDENTITY'
+  | 'ARCADE_SESSION_REQUEST'
+  | 'ARCADE_REQUEST_IDENTITY' // Legacy support
   | 'ARCADE_PING'
   | 'ARCADE_IDENTITY'
   | 'ARCADE_PONG'

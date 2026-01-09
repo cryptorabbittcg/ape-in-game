@@ -4,6 +4,7 @@
  */
 
 import type { ArcadeIdentity, ArcadeMessage } from '../types/identity'
+import type { ArcadeSession } from './arcade-session'
 
 // Allowed origins for postMessage security
 // Only accept messages from the arcade hub (parent window)
@@ -14,6 +15,9 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
 ]
+
+// Store parent origin when we receive first message from it
+let parentOrigin: string | null = null
 
 /**
  * Check if current window is embedded in an iframe
@@ -40,9 +44,38 @@ function isValidOrigin(origin: string): boolean {
 }
 
 /**
- * Send message to parent window
+ * Get parent origin for secure postMessage
+ * Falls back to '*' if parent origin is unknown (for initial handshake)
  */
-export function sendToParent(message: ArcadeMessage): void {
+function getParentOrigin(): string {
+  // Use stored parent origin if available
+  if (parentOrigin) {
+    return parentOrigin
+  }
+  
+  // Try to get from document.referrer (may not work in cross-origin)
+  try {
+    if (document.referrer) {
+      const referrerUrl = new URL(document.referrer)
+      const origin = referrerUrl.origin
+      if (isValidOrigin(origin)) {
+        parentOrigin = origin
+        return origin
+      }
+    }
+  } catch (e) {
+    // Cross-origin referrer may not be accessible
+  }
+  
+  // Fallback to '*' for initial handshake (parent will validate)
+  return '*'
+}
+
+/**
+ * Send message to parent window
+ * Uses exact parent origin when known, otherwise '*' for initial handshake
+ */
+export function sendToParent(message: ArcadeMessage, targetOrigin?: string): void {
   if (!isEmbedded()) {
     console.log('⚠️ Not embedded, skipping postMessage to parent')
     return
@@ -50,8 +83,9 @@ export function sendToParent(message: ArcadeMessage): void {
 
   try {
     if (window.parent && window.parent !== window.self) {
-      window.parent.postMessage(message, '*') // '*' allows any origin - parent validates
-      console.log('📤 Sent message to parent:', message.type)
+      const origin = targetOrigin || getParentOrigin()
+      window.parent.postMessage(message, origin)
+      console.log('📤 Sent message to parent:', message.type, 'Origin:', origin)
     }
   } catch (error) {
     console.error('❌ Failed to send message to parent:', error)
@@ -59,21 +93,64 @@ export function sendToParent(message: ArcadeMessage): void {
 }
 
 /**
- * Request identity from parent window
+ * Request session from parent window
+ * Uses ARCADE_SESSION_REQUEST message type
  */
-export function requestIdentity(): void {
+export function requestSession(): void {
   if (!isEmbedded()) {
-    console.log('⚠️ Not embedded, skipping identity request')
+    console.log('⚠️ Not embedded, skipping session request')
     return
   }
 
-  // Send both ping and request
-  sendToParent({ type: 'ARCADE_PING' })
+  // Send session request (new protocol)
+  sendToParent({ type: 'ARCADE_SESSION_REQUEST' })
+  
+  // Also send legacy request for backward compatibility
   sendToParent({ type: 'ARCADE_REQUEST_IDENTITY' })
 }
 
 /**
+ * Store arcade session in localStorage for compatibility with getArcadeSession()
+ */
+function storeArcadeSession(identity: ArcadeIdentity, rawMessage: any): void {
+  try {
+    // Extract thirdwebClientId from message if available
+    const thirdwebClientId = rawMessage.thirdwebClientId || rawMessage.session?.thirdwebClientId || import.meta.env.VITE_THIRDWEB_CLIENT_ID || ''
+    
+    // Extract points and tickets if available
+    const points = rawMessage.points ?? rawMessage.session?.points ?? 0
+    const tickets = rawMessage.tickets ?? rawMessage.session?.tickets ?? 0
+    
+    // Create session object compatible with ArcadeSession interface
+    const session: ArcadeSession = {
+      sessionId: identity.sessionId || `session-${Date.now()}`,
+      userId: identity.userId || `user-${Date.now()}`,
+      username: identity.username || identity.displayName || 'Guest',
+      address: identity.address,
+      thirdwebClientId: thirdwebClientId,
+      tickets: tickets,
+      points: points,
+      timestamp: Date.now(),
+    }
+    
+    // Store in both localStorage and sessionStorage for cross-tab compatibility
+    const sessionJson = JSON.stringify(session)
+    localStorage.setItem('crypto_rabbit_session', sessionJson)
+    sessionStorage.setItem('crypto_rabbit_session', sessionJson)
+    
+    console.log('💾 Stored arcade session in localStorage:', {
+      sessionId: session.sessionId,
+      userId: session.userId,
+      username: session.username,
+    })
+  } catch (error) {
+    console.error('❌ Failed to store arcade session:', error)
+  }
+}
+
+/**
  * Setup message listener for identity from parent
+ * Implements robust handshake with retry mechanism
  */
 export function setupIdentityListener(
   onIdentity: (identity: ArcadeIdentity) => void,
@@ -114,6 +191,12 @@ export function setupIdentityListener(
         console.warn('⚠️ Rejected message from unauthorized origin:', event.origin, 'Allowed origins:', ALLOWED_ORIGINS)
       }
       return
+    }
+
+    // Store parent origin for future secure postMessage
+    if (isFromParent && !parentOrigin) {
+      parentOrigin = event.origin
+      console.log('✅ Stored parent origin:', parentOrigin)
     }
 
     const message = event.data
@@ -195,6 +278,9 @@ export function setupIdentityListener(
         origin: event.origin
       })
 
+      // Store session in localStorage for getArcadeSession() compatibility
+      storeArcadeSession(identity, message as any)
+
       onIdentity(identity)
     } else if (message.type === 'ARCADE_PONG') {
       console.log('✅ Received PONG from parent')
@@ -209,6 +295,14 @@ export function setupIdentityListener(
     window.removeEventListener('message', messageHandler)
     console.log('🔇 Stopped listening for identity messages')
   }
+}
+
+/**
+ * Request identity from parent window (legacy function name)
+ * Now uses ARCADE_SESSION_REQUEST
+ */
+export function requestIdentity(): void {
+  requestSession()
 }
 
 /**

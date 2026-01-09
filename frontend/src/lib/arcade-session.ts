@@ -37,7 +37,14 @@ export function getArcadeSession(): ArcadeSession | null {
                  sessionStorage.getItem('crypto_rabbit_session')
 
   if (!stored) {
-    console.log('🔍 No arcade session found')
+    // Don't log repeatedly - only log once per session check
+    // This prevents console spam when Sandy mode launches without session
+    const lastLogTime = sessionStorage.getItem('last_session_log_time')
+    const now = Date.now()
+    if (!lastLogTime || now - parseInt(lastLogTime) > 5000) {
+      console.log('🔍 No arcade session found (this is OK for Sandy/anonymous mode)')
+      sessionStorage.setItem('last_session_log_time', now.toString())
+    }
     return null
   }
 
