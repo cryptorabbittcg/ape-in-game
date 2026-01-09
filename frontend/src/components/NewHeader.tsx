@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useTokenBalance } from '../services/paymentService'
 import { getArcadeSession } from '../lib/arcade-session'
 import { useIdentity } from '../hooks/useIdentity'
+import LeaderboardModal from './LeaderboardModal'
+import StatsModal from './StatsModal'
 
 interface UserProfile {
   name: string
@@ -17,6 +19,8 @@ export default function NewHeader() {
   const location = useLocation()
   const [scrolled, setScrolled] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false)
+  const [showStatsModal, setShowStatsModal] = useState(false)
   const [playerName, setPlayerName] = useState('')
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
@@ -120,13 +124,13 @@ export default function NewHeader() {
               </div>
 
               {/* Leaderboard Button */}
-              <Link
-                to="/leaderboard"
+              <button
+                onClick={() => setShowLeaderboardModal(true)}
                 className="flex items-center px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:border-purple-500/50 transition-all group"
               >
                 <span className="text-sm sm:text-lg">🏆</span>
                 <span className="hidden sm:inline text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-white ml-1 sm:ml-2">Leaderboard</span>
-              </Link>
+              </button>
 
               {/* Wallet Connection / Account */}
               {identity.address ? (
@@ -259,7 +263,7 @@ export default function NewHeader() {
                         <div className="py-2">
                           <button
                             onClick={() => {
-                              // TODO: Show profile stats
+                              setShowStatsModal(true)
                               setShowAccountMenu(false)
                             }}
                             className="w-full px-4 py-3 text-left text-slate-300 hover:bg-slate-700/50 transition-colors flex items-center space-x-3"
@@ -286,6 +290,10 @@ export default function NewHeader() {
 
       {/* Add top padding to body to account for fixed header */}
       <div className="h-20"></div>
+
+      {/* Modals */}
+      <LeaderboardModal isOpen={showLeaderboardModal} onClose={() => setShowLeaderboardModal(false)} />
+      <StatsModal isOpen={showStatsModal} onClose={() => setShowStatsModal(false)} />
     </>
   )
 }
